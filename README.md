@@ -1,19 +1,35 @@
 # 開発規則
 
-ソフトウェア開発で使用する、プロジェクトに依存しない設計規則、言語固有規則、UI規則、仕様書作成規則を管理する。
+ソフトウェア開発で使用する、プロジェクトに依存しない設計規則、技術固有規則、UI規則、仕様書作成規則を管理する。
 
-## 文書
+## AIエージェントから使う
 
-| 文書 | 対象 |
-| --- | --- |
-| `arch-rules.md` | ソフトウェアの種別と言語に依存しない設計原則。 |
-| `app-arch-rules.md` | アプリケーションとソースコードの構成。 |
-| `typescript-rules.md` | TypeScript固有の構成と検証。 |
-| `rust-rules.md` | Rust固有の構成と検証。 |
-| `flutter-rules.md` | Flutter固有の構成、BLoC、依存方向、検証。 |
-| `web-design-rules.md` | Web UIのデザイン値、部品、状態、操作。 |
-| `api-spec-rules.md` | API仕様書の構成と記述方法。 |
-| `ui-spec-rules.md` | UI仕様書の構成と記述方法。 |
+AIエージェントは最初に [`AGENTS.md`](AGENTS.md) を読み、[`rules/README.md`](rules/README.md) の適用表から作業に必要な文書だけを選ぶ。複数の条件に該当する場合は、該当する文書をすべて併用する。
+
+このリポジトリをsubmoduleとして利用する場合、利用側リポジトリのルートにある `AGENTS.md` から明示的に入口を参照する。
+
+```md
+## 共通開発規則
+
+実装、設計、レビューの前に `<path-to-dev-rules>/AGENTS.md` を読み、
+同ファイルが案内する該当規則に従うこと。
+```
+
+## 構成
+
+```text
+.
+├── AGENTS.md                 # AIエージェント向けの入口
+├── README.md                 # 人向けの概要と導入方法
+└── rules/
+    ├── README.md             # 適用条件、読み順、優先順位
+    ├── core/                 # 共通の設計規則
+    ├── implementation/       # 技術固有の実装規則
+    ├── design/               # UIデザイン規則
+    └── specifications/       # 仕様書作成規則
+```
+
+文書の一覧と適用条件は [`rules/README.md`](rules/README.md) を正とする。
 
 ## 利用方法
 
