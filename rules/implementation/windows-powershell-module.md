@@ -521,14 +521,9 @@ function Set-MyModuleMonitorInternal {
 
 ## 12. 外部実行ファイル
 
-### 12.1 コマンドの解決と実行
+### 12.1 実行
 
-| 項目 | 規則 |
-| --- | --- |
-| 解決・存在確認 | `Get-Command -CommandType Application -ErrorAction Ignore` で取得し、結果を判定する。 |
-| 実行 | 原則として呼び出し演算子 `&` を使用する。別ウィンドウ、待機、資格情報など、`&` では扱えないプロセス制御が必要な場合は `Start-Process` を使用する。 |
-
-呼び出し全体で同じ実行ファイルを使用する場合は、`begin` で1回だけ解決する。見つからない場合は、関数全体を続行できないため終了エラーにする。
+外部実行ファイルのディレクトリは環境変数 `PATH` に登録されていることを前提とし、コマンド名を指定して呼び出し演算子 `&` で実行する。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
 
 ### 12.2 引数
 
@@ -540,7 +535,7 @@ $arguments = @(
     $Name
 )
 
-& $command.Source $arguments
+& example.exe $arguments
 ```
 
 ### 12.3 終了コードと出力
@@ -548,7 +543,7 @@ $arguments = @(
 Windows PowerShell 5.1 では、外部実行ファイルの非0終了コードを PowerShell の終了エラーとして扱わない。外部実行ファイルの実行直後に `$LASTEXITCODE` を保存し、成否はその実行ファイル固有の終了コード仕様に従って判定する。
 
 ```powershell
-$output = & $command.Source $arguments
+$output = & example.exe $arguments
 $exitCode = $LASTEXITCODE
 ```
 
@@ -565,7 +560,7 @@ $utf8 = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = $utf8
 $OutputEncoding = $utf8
 
-$output = & $command.Source $arguments
+$output = & example.exe $arguments
 ```
 
 ---
