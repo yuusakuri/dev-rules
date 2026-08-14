@@ -828,37 +828,12 @@ MyModule.Monitor
 
 ## 18. 構文チェック
 
-PowerShellコードの構文チェックには `System.Management.Automation.Language.Parser` を使用する。実行中のPowerShellの構文を検査するため、別のPowerShellバージョンとの互換性は判定しない。
+PowerShellコードの構文チェックには `System.Management.Automation.Language.Parser` を使用する。
 
-ファイルには `ParseFile()` を使用する。
-
-```powershell
-$tokens = $null
-$errors = $null
-
-[void][System.Management.Automation.Language.Parser]::ParseFile(
-    $Path,
-    [ref]$tokens,
-    [ref]$errors
-)
-
-if ($errors.Count -gt 0) {
-    throw 'PowerShell syntax errors were found.'
-}
-```
-
-文字列には `ParseInput()` を使用する。
-
-```powershell
-$tokens = $null
-$errors = $null
-
-[void][System.Management.Automation.Language.Parser]::ParseInput(
-    $Script,
-    [ref]$tokens,
-    [ref]$errors
-)
-```
+| 対象 | メソッド |
+| --- | --- |
+| ファイル | `ParseFile()` |
+| 文字列 | `ParseInput()` |
 
 ## 19. 静的解析
 
