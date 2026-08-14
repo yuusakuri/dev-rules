@@ -14,6 +14,26 @@
 | テスト | Pester |
 | パッケージ管理 | Microsoft.PowerShell.PSResourceGet |
 
+### 1.1 実行ポリシー
+
+開発端末では、現在の利用者に `RemoteSigned` を設定する。ローカルで作成したスクリプトを実行でき、インターネットから取得したスクリプトには署名を要求できる。
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+CIや検証用の自動実行では、起動する `powershell.exe` プロセスだけに `Bypass` を指定する。端末へ永続的な `Bypass` を設定せず、自動実行に必要な範囲だけで実行ポリシーによる確認を省略する。
+
+```powershell
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\run.ps1 ci
+```
+
+適用中の実行ポリシーは、スコープごとに確認する。組織のグループポリシーで `MachinePolicy` または `UserPolicy` が設定されている場合は、その設定に従う。
+
+```powershell
+Get-ExecutionPolicy -List
+```
+
 ---
 
 ## 2. リポジトリ構成
@@ -800,7 +820,13 @@ Contract Test では、ビルド済みマニフェストと公開関数の Help 
 
 ## 20. CI
 
-GitHub Actions を CI に使用する場合は、`.github/workflows/ci.yml` で Windows ランナーの `shell: powershell` から `.\run.ps1 ci` を実行する。
+GitHub Actions を CI に使用する場合は、`.github/workflows/ci.yml` のWindowsランナーで、実行ポリシーをプロセス単位の `Bypass` にして `.\run.ps1 ci` を実行する。
+
+```yaml
+- name: Validate
+  shell: cmd
+  run: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\run.ps1 ci
+```
 
 `run.ps1` は処理をサブコマンド単位で実行できるようにする。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。
 
