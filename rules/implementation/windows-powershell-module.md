@@ -84,7 +84,6 @@
 | `PowerShellVersion` | `5.1` を指定する。 |
 | `CompatiblePSEditions` | `Desktop` を指定する。 |
 | `FunctionsToExport` | ソースでは `@()` とし、ModuleBuilder が `Public/*.ps1` から明示的な関数名を反映する。 |
-| `VariablesToExport` | 原則として `@()` とする。 |
 | `TypesToProcess` | `.types.ps1xml` を使用する場合だけ指定する。 |
 | `FormatsToProcess` | `.format.ps1xml` を使用する場合だけ指定する。 |
 
