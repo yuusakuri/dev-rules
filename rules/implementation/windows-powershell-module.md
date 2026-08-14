@@ -826,7 +826,41 @@ MyModule.Monitor
 }
 ```
 
-## 18. 静的解析
+## 18. 構文チェック
+
+PowerShellコードの構文チェックには `System.Management.Automation.Language.Parser` を使用する。実行中のPowerShellの構文を検査するため、別のPowerShellバージョンとの互換性は判定しない。
+
+ファイルには `ParseFile()` を使用する。
+
+```powershell
+$tokens = $null
+$errors = $null
+
+[void][System.Management.Automation.Language.Parser]::ParseFile(
+    $Path,
+    [ref]$tokens,
+    [ref]$errors
+)
+
+if ($errors.Count -gt 0) {
+    throw 'PowerShell syntax errors were found.'
+}
+```
+
+文字列には `ParseInput()` を使用する。
+
+```powershell
+$tokens = $null
+$errors = $null
+
+[void][System.Management.Automation.Language.Parser]::ParseInput(
+    $Script,
+    [ref]$tokens,
+    [ref]$errors
+)
+```
+
+## 19. 静的解析
 
 静的解析には PSScriptAnalyzer の `Invoke-ScriptAnalyzer` を使用し、リポジトリ直下の `PSScriptAnalyzerSettings.psd1` を使用する。既定ルールを使用し、重大度が `Error` または `Warning` の指摘を検査する。
 
@@ -855,23 +889,23 @@ MyModule.Monitor
 | 未使用 | 未使用変数など PSScriptAnalyzer で検出可能なものを検査する。 |
 | BOM | ソースは UTF-8（BOMなし）かつ ASCII-only とするため、`PSUseBOMForUnicodeEncodedFile` は除外する。 |
 
-## 19. テスト
+## 20. テスト
 
 テストには Pester を使用する。Unit Test、Integration Test、Contract Test は、ビルド済みの `output/<ModuleName>/<ModuleName>.psd1` をインポートして実施する。
 
 状態変更関数では、Unit Test または Integration Test の該当箇所で `-WhatIf` により状態変更が実行されないことを確認する。
 
-### 19.1 Unit Test
+### 20.1 Unit Test
 
 入力、出力、分岐、検証、パラメーターセット、パイプライン、エラー経路、内部ロジックを検証する。外部依存は `Mock` などで分離する。
 
 内部関数を検証する場合は、`InModuleScope` などを使用してビルド済みモジュールのスコープ内から検証する。
 
-### 19.2 Integration Test
+### 20.2 Integration Test
 
 ファイルシステム、レジストリ、サービス、Windows API、外部実行ファイル、外部モジュールとの連携を検証する。
 
-### 19.3 Contract Test
+### 20.3 Contract Test
 
 Contract Test では、ビルド済みマニフェストと公開関数の Help を検証する。
 
@@ -880,7 +914,7 @@ Contract Test では、ビルド済みマニフェストと公開関数の Help 
 | マニフェスト | ビルド済みの `output/<ModuleName>/<ModuleName>.psd1` に対して `Test-ModuleManifest` を実行し、成功することを確認する。 |
 | Help | すべての公開関数に必要な Help が存在する。 |
 
-## 20. CI
+## 21. CI
 
 GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `powershell.exe` の起動引数を使用して `.\run.ps1 ci` を実行する。
 
@@ -909,11 +943,11 @@ GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `p
 
 ---
 
-## 21. PowerShell Gallery
+## 22. PowerShell Gallery
 
 PowerShell Galleryは、モジュールを検索、取得、公開するリポジトリとして使用する。各操作には `Microsoft.PowerShell.PSResourceGet` を使用する。
 
-### 21.1 検索
+### 22.1 検索
 
 モジュールを検索する場合は `Find-PSResource` を使用する。
 
@@ -921,7 +955,7 @@ PowerShell Galleryは、モジュールを検索、取得、公開するリポ�
 Find-PSResource -Name 'ModuleName' -Repository PSGallery
 ```
 
-### 21.2 インストール
+### 22.2 インストール
 
 モジュールをインストールする場合は `Install-PSResource` を使用する。
 
@@ -929,7 +963,7 @@ Find-PSResource -Name 'ModuleName' -Repository PSGallery
 Install-PSResource -Name 'ModuleName' -Scope CurrentUser -Repository PSGallery
 ```
 
-### 21.3 公開
+### 22.3 公開
 
 ビルド済みの `output/<ModuleName>/` を公開対象にする。
 
@@ -946,11 +980,11 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 本書の章 | 参考資料 |
 | --- | --- |
 | 1. 環境<br>4. モジュールマニフェスト | [about_PowerShell_Editions - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_editions?view=powershell-5.1) |
-| 1. 環境<br>17. 自動フォーマット<br>18. 静的解析<br>20. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) |
-| 1. 環境<br>19. テスト<br>20. CI | [Quick Start \| Pester](https://pester.dev/docs/v5/quick-start) |
+| 1. 環境<br>17. 自動フォーマット<br>19. 静的解析<br>21. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) |
+| 1. 環境<br>20. テスト<br>21. CI | [Quick Start \| Pester](https://pester.dev/docs/v5/quick-start) |
 | 1. 環境<br>2. リポジトリ構成<br>5. ビルド | [ModuleBuilder](https://github.com/PoshCode/ModuleBuilder) |
 | 3. ソースファイル<br>12. 外部実行ファイル<br>13. ファイル | [about_Character_Encoding - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1) |
-| 4. モジュールマニフェスト<br>21. PowerShell Gallery | [about_Module_Manifests - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests?view=powershell-5.1) |
+| 4. モジュールマニフェスト<br>22. PowerShell Gallery | [about_Module_Manifests - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests?view=powershell-5.1) |
 | 4. モジュールマニフェスト | [New-ModuleManifest (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest?view=powershell-5.1) |
 | 6. 命名 | [Get-Verb (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/get-verb?view=powershell-5.1) |
 | 6. 命名 | [Strongly Encouraged Development Guidelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/strongly-encouraged-development-guidelines?view=powershell-5.1) |
@@ -978,9 +1012,9 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 15. コードスタイル | [about_Comparison_Operators - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comparison_operators?view=powershell-5.1) |
 | 16. ヘルプ | [about_Comment_Based_Help - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1) |
 | 17. 自動フォーマット | [Invoke-Formatter (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-formatter?view=ps-modules) |
-| 18. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) |
-| 4. モジュールマニフェスト<br>18. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) |
-| 19. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) |
-| 20. CI | [Workflow syntax for GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) |
+| 19. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) |
+| 4. モジュールマニフェスト<br>19. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) |
+| 20. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) |
+| 21. CI | [Workflow syntax for GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) |
 | 1. 環境 | [Install a package manager for PowerShell - PowerShell \| Microsoft Learn](https://learn.microsoft.com/powershell/gallery/powershellget/update-powershell-51) |
-| 1. 環境<br>21. PowerShell Gallery | [Microsoft.PowerShell.PSResourceGet Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/?view=powershellget-3.x) |
+| 1. 環境<br>22. PowerShell Gallery | [Microsoft.PowerShell.PSResourceGet Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/?view=powershellget-3.x) |
