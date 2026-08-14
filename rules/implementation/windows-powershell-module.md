@@ -20,16 +20,16 @@
 
 | 設定 | 説明 |
 | --- | --- |
-| `Bypass` | すべてのスクリプトを警告や確認なしで実行する。CIや管理された開発環境で使用する。 |
-| `RemoteSigned` | ローカルで作成したスクリプトを実行し、インターネットから取得したスクリプトには信頼された発行元の署名を要求する。 |
+| `Bypass` | すべてのスクリプトを警告や確認なしで実行可能。 |
+| `RemoteSigned` | ローカルで作成したスクリプトは実行可能。インターネットから取得したスクリプトは、信頼された発行元によって署名されている場合に実行可能。 |
 
-`Bypass` は、使用する範囲に応じて次のいずれかで設定する。
+実行ポリシーを `Bypass` に設定する方法を次に示す。
 
-| 設定範囲 | 実行例 |
+| 設定方法 | 実行例 |
 | --- | --- |
 | ユーザースコープ | `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force` |
 | プロセススコープ | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` |
-| `powershell.exe` の引数 | `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\run.ps1 ci` |
+| `powershell.exe` の起動引数 | `powershell.exe -ExecutionPolicy Bypass` |
 
 ---
 
@@ -817,7 +817,7 @@ Contract Test では、ビルド済みマニフェストと公開関数の Help 
 
 ## 20. CI
 
-GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `powershell.exe` の引数を使用して `.\run.ps1 ci` を実行する。
+GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `powershell.exe` の起動引数を使用して `.\run.ps1 ci` を実行する。
 
 `run.ps1` は処理をサブコマンド単位で実行できるようにする。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。
 
