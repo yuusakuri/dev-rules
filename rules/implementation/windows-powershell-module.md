@@ -31,6 +31,47 @@
 | プロセススコープ | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` |
 | `powershell.exe` の起動引数 | `powershell.exe -ExecutionPolicy Bypass` |
 
+### 1.2 パッケージ管理
+
+Windows PowerShell 5.1へ `Microsoft.PowerShell.PSResourceGet` を導入し、開発ツールと配布モジュールを管理する。
+
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
+Install-PackageProvider -Name NuGet -Scope CurrentUser -Force
+Install-Module -Name PowerShellGet -Scope CurrentUser -Repository PSGallery -Force -AllowClobber
+Install-Module -Name Microsoft.PowerShell.PSResourceGet -Scope CurrentUser -Repository PSGallery
+```
+
+### 1.3 開発ツール
+
+ModuleBuilder、PSScriptAnalyzer、Pesterは開発時とCIで使用するモジュールとし、`required-modules.psd1`へ必要なバージョンと取得先を記載する。
+
+```powershell
+@{
+    ModuleBuilder = @{
+        version = '<version>'
+        repository = 'PSGallery'
+    }
+
+    PSScriptAnalyzer = @{
+        version = '<version>'
+        repository = 'PSGallery'
+    }
+
+    Pester = @{
+        version = '<version>'
+        repository = 'PSGallery'
+    }
+}
+```
+
+開発ツールは、`required-modules.psd1`をもとに、`Install-PSResource -RequiredResourceFile`を使用して現在の利用者のモジュールディレクトリへ導入する。
+
+```powershell
+Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope CurrentUser
+```
+
 ---
 
 ## 2. リポジトリ構成
@@ -46,6 +87,7 @@
 | `tests/unit/` | 単体テスト。 |
 | `tests/integration/` | OS や外部コンポーネントとの統合テスト。 |
 | `tests/contract/` | ビルド済みマニフェストと公開関数の Help の契約テスト。 |
+| `required-modules.psd1` | ModuleBuilder、PSScriptAnalyzer、Pesterのバージョンと取得先。 |
 | `PSScriptFormatterSettings.psd1` | `Invoke-Formatter` の設定。 |
 | `PSScriptAnalyzerSettings.psd1` | `Invoke-ScriptAnalyzer` の設定。 |
 | `.github/workflows/ci.yml` | GitHub Actions を使用する場合の CI ワークフロー。 |
@@ -845,23 +887,9 @@ GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `p
 
 ## 21. PowerShell Gallery
 
-PowerShell Gallery のモジュール検索、インストール、公開には `Microsoft.PowerShell.PSResourceGet` を使用する。
+PowerShell Galleryは、モジュールを検索、取得、公開するリポジトリとして使用する。各操作には `Microsoft.PowerShell.PSResourceGet` を使用する。
 
-### 21.1 導入
-
-Windows PowerShell 5.1 には `PowerShellGet` と `PackageManagement` 1.0.0.1 が標準搭載されており、`Microsoft.PowerShell.PSResourceGet` は標準搭載されていない。PowerShell Gallery へ接続するには TLS 1.2 以上が必要であり、標準搭載の `PowerShellGet` からモジュールを取得するには NuGet Provider も必要になる。
-
-`Microsoft.PowerShell.PSResourceGet` を導入する場合は、TLS 1.2 を有効にし、NuGet Provider を導入してから `PowerShellGet` と `Microsoft.PowerShell.PSResourceGet` をインストールする。`PowerShellGet` を更新すると `PackageManagement` も更新される。
-
-```powershell
-[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-
-Install-PackageProvider -Name NuGet -Force
-Install-Module PowerShellGet -Repository PSGallery -Force -AllowClobber
-Install-Module Microsoft.PowerShell.PSResourceGet -Repository PSGallery
-```
-
-### 21.2 検索
+### 21.1 検索
 
 モジュールを検索する場合は `Find-PSResource` を使用する。
 
@@ -869,7 +897,7 @@ Install-Module Microsoft.PowerShell.PSResourceGet -Repository PSGallery
 Find-PSResource -Name 'ModuleName' -Repository PSGallery
 ```
 
-### 21.3 インストール
+### 21.2 インストール
 
 モジュールをインストールする場合は `Install-PSResource` を使用する。
 
@@ -877,7 +905,7 @@ Find-PSResource -Name 'ModuleName' -Repository PSGallery
 Install-PSResource -Name 'ModuleName' -Scope CurrentUser -Repository PSGallery
 ```
 
-### 21.4 公開
+### 21.3 公開
 
 ビルド済みの `output/<ModuleName>/` を公開対象にする。
 
@@ -930,5 +958,5 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 4. モジュールマニフェスト<br>18. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) |
 | 19. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) |
 | 20. CI | [Workflow syntax for GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) |
-| 21. PowerShell Gallery | [Install a package manager for PowerShell - PowerShell \| Microsoft Learn](https://learn.microsoft.com/powershell/gallery/powershellget/update-powershell-51) |
-| 21. PowerShell Gallery | [Microsoft.PowerShell.PSResourceGet Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/?view=powershellget-3.x) |
+| 1. 環境 | [Install a package manager for PowerShell - PowerShell \| Microsoft Learn](https://learn.microsoft.com/powershell/gallery/powershellget/update-powershell-51) |
+| 1. 環境<br>21. PowerShell Gallery | [Microsoft.PowerShell.PSResourceGet Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/?view=powershellget-3.x) |
