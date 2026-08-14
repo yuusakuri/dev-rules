@@ -14,6 +14,23 @@
 | テスト | Pester |
 | パッケージ管理 | Microsoft.PowerShell.PSResourceGet |
 
+### 1.1 実行ポリシー
+
+開発・検証用スクリプトを実行ポリシーによって停止させずに実行するため、以下のいずれかを設定する。
+
+| 設定 | 説明 |
+| --- | --- |
+| `Bypass` | すべてのスクリプトを警告や確認なしで実行可能。 |
+| `RemoteSigned` | ローカルで作成したスクリプトは実行可能。インターネットから取得したスクリプトは、信頼された発行元によって署名されている場合に実行可能。 |
+
+実行ポリシーを `Bypass` に設定する方法を次に示す。
+
+| 設定方法 | 実行例 |
+| --- | --- |
+| ユーザースコープ | `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force` |
+| プロセススコープ | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` |
+| `powershell.exe` の起動引数 | `powershell.exe -ExecutionPolicy Bypass` |
+
 ---
 
 ## 2. リポジトリ構成
@@ -67,7 +84,6 @@
 | `PowerShellVersion` | `5.1` を指定する。 |
 | `CompatiblePSEditions` | `Desktop` を指定する。 |
 | `FunctionsToExport` | ソースでは `@()` とし、ModuleBuilder が `Public/*.ps1` から明示的な関数名を反映する。 |
-| `VariablesToExport` | 原則として `@()` とする。 |
 | `TypesToProcess` | `.types.ps1xml` を使用する場合だけ指定する。 |
 | `FormatsToProcess` | `.format.ps1xml` を使用する場合だけ指定する。 |
 
@@ -800,7 +816,7 @@ Contract Test では、ビルド済みマニフェストと公開関数の Help 
 
 ## 20. CI
 
-GitHub Actions を CI に使用する場合は、`.github/workflows/ci.yml` で Windows ランナーの `shell: powershell` から `.\run.ps1 ci` を実行する。
+GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `powershell.exe` の起動引数を使用して `.\run.ps1 ci` を実行する。
 
 `run.ps1` は処理をサブコマンド単位で実行できるようにする。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。
 
