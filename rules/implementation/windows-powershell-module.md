@@ -82,7 +82,9 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | `src/<ModuleName>/build.psd1` | ModuleBuilder のビルド設定。 |
 | `src/<ModuleName>/Public/` | 公開関数。 |
 | `src/<ModuleName>/Private/` | 内部関数。 |
+| `src/<ModuleName>/data/` | 実行時に使用するデータファイル。使用する場合だけ配置する。 |
 | `src/<ModuleName>/formats/` | `.format.ps1xml`。使用する場合だけ配置する。 |
+| `src/<ModuleName>/scripts/` | `ScriptsToProcess`で実行する `.ps1`。使用する場合だけ配置する。 |
 | `src/<ModuleName>/types/` | `.types.ps1xml`。使用する場合だけ配置する。 |
 | `tests/unit/` | 単体テスト。 |
 | `tests/integration/` | OS や外部コンポーネントとの統合テスト。 |
@@ -109,6 +111,7 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | 改行コード | LF |
 | 文字 | ASCII-only |
 | 対象拡張子 | `.ps1`、`.psd1`、`.ps1xml` |
+| LF検査 | `[System.IO.File]::ReadAllBytes()` で読み込み、`0x0D` を含まないことを確認する。 |
 
 `.gitattributes`には、対象拡張子をLFへ統一するGit属性を記載する。
 
@@ -136,6 +139,7 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | `PowerShellVersion` | `5.1` を指定する。 |
 | `CompatiblePSEditions` | `Desktop` を指定する。 |
 | `FunctionsToExport` | ソースでは `@()` とし、ModuleBuilder が `Public/*.ps1` から明示的な関数名を反映する。 |
+| `ScriptsToProcess` | モジュールの読み込み時に実行する `.ps1` がある場合だけ指定する。 |
 | `TypesToProcess` | `.types.ps1xml` を使用する場合だけ指定する。 |
 | `FormatsToProcess` | `.format.ps1xml` を使用する場合だけ指定する。 |
 
@@ -179,16 +183,16 @@ ModuleBuilder によるビルドでは、以下の処理が行われる。
 }
 ```
 
-`CopyPaths` には、配布対象として実際に存在するサブディレクトリだけを追加する。`formats/` や `types/` を使用する場合も `CopyPaths` に追加する。
+`CopyPaths` には、配布対象として実際に存在するサブディレクトリだけを追加する。`data/`、`formats/`、`scripts/`、`types/` を使用する場合は `CopyPaths` に追加する。
 
 Windows PowerShell 5.1 では `UTF8NoBom` を指定できないため、ModuleBuilder は `Encoding = 'ASCII'` とする。
 
-ModuleBuilderによる生成とマニフェストの更新後に、配布する `.psm1`、`.psd1`、`.ps1xml` をUTF-8（BOMなし）かつLFへ変換する。
+ModuleBuilderによる生成とマニフェストの更新後に、配布する `.ps1`、`.psm1`、`.psd1`、`.ps1xml` をUTF-8（BOMなし）かつLFへ変換する。
 
 ```powershell
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 $outputFiles = Get-ChildItem -LiteralPath './output/<ModuleName>' -Recurse -File |
-    Where-Object { $_.Extension -in @('.psm1', '.psd1', '.ps1xml') }
+    Where-Object { $_.Extension -in @('.ps1', '.psm1', '.psd1', '.ps1xml') }
 
 foreach ($outputFile in $outputFiles) {
     $content = [System.IO.File]::ReadAllText($outputFile.FullName)
@@ -598,6 +602,10 @@ Windows PowerShell 5.1 の `-Encoding UTF8` は UTF-8（BOMあり）であり、
 | 行を追記する | `[System.IO.File]::AppendAllLines` | `[System.IO.File]::AppendAllLines($Path, $lines, [System.Text.UTF8Encoding]::new($false))` |
 | 内容を逐次書き込む | `[System.IO.StreamWriter]` | `[System.IO.StreamWriter]::new($Path, $false, [System.Text.UTF8Encoding]::new($false))` |
 
+### 13.3 PowerShellデータファイル
+
+`.psd1` は `Import-PowerShellDataFile` で読み込む。ルートの型、必要なキー、値を検証し、すべての検証が成功してから状態を変更する。
+
 ---
 
 ## 14. 通信
@@ -832,8 +840,10 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 
 | 対象 | メソッド |
 | --- | --- |
-| ファイル | `ParseFile()` |
-| 文字列 | `ParseInput()` |
+| ファイル | `[System.Management.Automation.Language.Parser]::ParseFile()` |
+| 文字列 | `[System.Management.Automation.Language.Parser]::ParseInput()` |
+
+各メソッドから解析エラーを `$parseErrors` で受け取り、エラー件数が0件であることを確認する。
 
 ## 19. 静的解析
 
@@ -891,7 +901,7 @@ Contract Test では、ビルド済みマニフェストと公開関数の Help 
 
 ## 21. CI
 
-GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `powershell.exe` の起動引数を使用して `.\run.ps1 ci` を実行する。
+GitHub Actionsを使用する場合は、Windowsランナーで `powershell.exe -ExecutionPolicy Bypass -File .\run.ps1 ci` を実行する。
 
 `run.ps1` は処理をサブコマンド単位で実行できるようにする。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。
 
@@ -911,10 +921,11 @@ GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `p
 | 順序 | 処理 |
 | --- | --- |
 | 1 | ソースのファイル構成、エンコーディング、BOM、改行コード、ASCII-only、Windows PowerShell 5.1 パーサー、フォーマット、静的解析を検査する。 |
-| 2 | `.\run.ps1 build` と同じ処理で `.psm1` を生成し、ソースマニフェストを配布先の `.psd1` へコピーして必要な項目を更新する。配布する `.psm1`、`.psd1`、`.ps1xml` をUTF-8（BOMなし）かつLFへ変換する。 |
+| 2 | `.\run.ps1 build` と同じ処理で `.psm1` を生成し、ソースマニフェストを配布先の `.psd1` へコピーして必要な項目を更新する。配布する `.ps1`、`.psm1`、`.psd1`、`.ps1xml` をUTF-8（BOMなし）かつLFへ変換する。 |
 | 3 | 生成物を Windows PowerShell 5.1 のパーサーで検査し、エンコーディング、BOM、改行コード、ASCII-only、マニフェストを検査する。マニフェストが参照するファイルがすべて存在することを確認し、新しい Windows PowerShell 5.1 プロセスで `output/<ModuleName>/<ModuleName>.psd1` をインポートする。 |
 | 4 | `.\run.ps1 test all` と同じテストを実行する。 |
-| 5 | 配布成果物に、分割された `Public` / `Private` の `.ps1`、`build.psd1`、テスト、フォーマット設定、静的解析設定などが含まれていないことを確認する。 |
+| 5 | `output/<ModuleName>/<ModuleName>.psd1` と `output/<ModuleName>/<ModuleName>.psm1` の存在を確認する。検査対象は実際の配布構成から取得し、`data/`、`formats/`、`scripts/`、`types/` の実行時ファイルを含める。 |
+| 6 | 配布先を空のディレクトリまで再帰的に検査し、`Public/`、`Private/`、`tests/`、`.github/`、`.gitkeep`、`build.psd1`、`run.ps1`、`*.Tests.ps1` などの開発用ファイルを拒否する。 |
 
 ---
 
