@@ -525,7 +525,7 @@ function Set-MyModuleMonitorInternal {
 
 外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。
 
-外部実行ファイルはPATHに登録されていることを前提とし、コマンド名を指定して呼び出し演算子 `&` で実行する。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
+外部実行ファイルは呼び出し演算子 `&` で実行する。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
 
 ### 12.2 引数
 
