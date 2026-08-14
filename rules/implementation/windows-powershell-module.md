@@ -16,23 +16,20 @@
 
 ### 1.1 実行ポリシー
 
-開発端末では、現在の利用者に `RemoteSigned` を設定する。ローカルで作成したスクリプトを実行でき、インターネットから取得したスクリプトには署名を要求できる。
+開発・検証用スクリプトを実行ポリシーによって停止させずに実行するため、以下のいずれかを設定する。
 
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-```
+| 設定 | 説明 |
+| --- | --- |
+| `Bypass` | すべてのスクリプトを警告や確認なしで実行する。CIや管理された開発環境で使用する。 |
+| `RemoteSigned` | ローカルで作成したスクリプトを実行し、インターネットから取得したスクリプトには信頼された発行元の署名を要求する。 |
 
-CIや検証用の自動実行では、起動する `powershell.exe` プロセスだけに `Bypass` を指定する。端末へ永続的な `Bypass` を設定せず、自動実行に必要な範囲だけで実行ポリシーによる確認を省略する。
+`Bypass` は、使用する範囲に応じて次のいずれかで設定する。
 
-```powershell
-powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\run.ps1 ci
-```
-
-適用中の実行ポリシーは、スコープごとに確認する。組織のグループポリシーで `MachinePolicy` または `UserPolicy` が設定されている場合は、その設定に従う。
-
-```powershell
-Get-ExecutionPolicy -List
-```
+| 設定範囲 | 実行例 |
+| --- | --- |
+| ユーザースコープ | `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force` |
+| プロセススコープ | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force` |
+| `powershell.exe` の引数 | `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\run.ps1 ci` |
 
 ---
 
@@ -820,13 +817,7 @@ Contract Test では、ビルド済みマニフェストと公開関数の Help 
 
 ## 20. CI
 
-GitHub Actions を CI に使用する場合は、`.github/workflows/ci.yml` のWindowsランナーで、実行ポリシーをプロセス単位の `Bypass` にして `.\run.ps1 ci` を実行する。
-
-```yaml
-- name: Validate
-  shell: cmd
-  run: powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File .\run.ps1 ci
-```
+GitHub Actions を CI に使用する場合は、Windowsランナーで1.1の `powershell.exe` の引数を使用して `.\run.ps1 ci` を実行する。
 
 `run.ps1` は処理をサブコマンド単位で実行できるようにする。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。
 
