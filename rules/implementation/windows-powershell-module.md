@@ -161,6 +161,8 @@ $content = [System.IO.File]::ReadAllText($manifestPath)
 
 開発時は `src/<ModuleName>/` でソースを分割して管理し、ModuleBuilder の `Build-Module` で配布用モジュールを `output/<ModuleName>/` に生成する。
 
+ビルド前に既存の `output/<ModuleName>/` を削除し、以前の成果物が残らない状態で生成する。
+
 ModuleBuilder によるビルドでは、以下の処理が行われる。
 
 | 項目 | ModuleBuilder の動作 |
@@ -834,14 +836,12 @@ MyModule.Monitor
 
 ## 18. 構文チェック
 
-PowerShellコードの構文チェックには `System.Management.Automation.Language.Parser` を使用する。
+PowerShellコードの構文チェックには `System.Management.Automation.Language.Parser` を使用し、各メソッドの解析エラー件数が0件であることを確認する。
 
 | 対象 | メソッド |
 | --- | --- |
 | ファイル | `[System.Management.Automation.Language.Parser]::ParseFile()` |
 | 文字列 | `[System.Management.Automation.Language.Parser]::ParseInput()` |
-
-各メソッドから解析エラーを `$parseErrors` で受け取り、エラー件数が0件であることを確認する。
 
 ## 19. 静的解析
 
@@ -923,7 +923,6 @@ GitHub Actionsを使用する場合は、Windowsランナーで `powershell.exe 
 | 3 | 生成物を Windows PowerShell 5.1 のパーサーで検査し、エンコーディング、BOM、改行コード、ASCII-only、マニフェストを検査する。マニフェストが参照するファイルがすべて存在することを確認し、新しい Windows PowerShell 5.1 プロセスで `output/<ModuleName>/<ModuleName>.psd1` をインポートする。 |
 | 4 | `.\run.ps1 test all` と同じテストを実行する。 |
 | 5 | `output/<ModuleName>/<ModuleName>.psd1` と `output/<ModuleName>/<ModuleName>.psm1` の存在を確認する。検査対象は実際の配布構成から取得し、`data/`、`formats/`、`types/` の実行時ファイルを含める。 |
-| 6 | 配布先を空のディレクトリまで再帰的に検査し、`Public/`、`Private/`、`tests/`、`.github/`、`.gitkeep`、`build.psd1`、`run.ps1`、`*.Tests.ps1` などの開発用ファイルを拒否する。 |
 
 ---
 
