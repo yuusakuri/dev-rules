@@ -84,7 +84,6 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | `src/<ModuleName>/Private/` | 内部関数。 |
 | `src/<ModuleName>/data/` | 実行時に使用するデータファイル。使用する場合だけ配置する。 |
 | `src/<ModuleName>/formats/` | `.format.ps1xml`。使用する場合だけ配置する。 |
-| `src/<ModuleName>/scripts/` | `ScriptsToProcess`で実行する `.ps1`。使用する場合だけ配置する。 |
 | `src/<ModuleName>/types/` | `.types.ps1xml`。使用する場合だけ配置する。 |
 | `tests/unit/` | 単体テスト。 |
 | `tests/integration/` | OS や外部コンポーネントとの統合テスト。 |
@@ -139,7 +138,6 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | `PowerShellVersion` | `5.1` を指定する。 |
 | `CompatiblePSEditions` | `Desktop` を指定する。 |
 | `FunctionsToExport` | ソースでは `@()` とし、ModuleBuilder が `Public/*.ps1` から明示的な関数名を反映する。 |
-| `ScriptsToProcess` | モジュールの読み込み時に実行する `.ps1` がある場合だけ指定する。 |
 | `TypesToProcess` | `.types.ps1xml` を使用する場合だけ指定する。 |
 | `FormatsToProcess` | `.format.ps1xml` を使用する場合だけ指定する。 |
 
@@ -183,7 +181,7 @@ ModuleBuilder によるビルドでは、以下の処理が行われる。
 }
 ```
 
-`CopyPaths` には、配布対象として実際に存在するサブディレクトリだけを追加する。`data/`、`formats/`、`scripts/`、`types/` を使用する場合は `CopyPaths` に追加する。
+`CopyPaths` には、配布対象として実際に存在するサブディレクトリだけを追加する。`data/`、`formats/`、`types/` を使用する場合は `CopyPaths` に追加する。
 
 Windows PowerShell 5.1 では `UTF8NoBom` を指定できないため、ModuleBuilder は `Encoding = 'ASCII'` とする。
 
@@ -924,7 +922,7 @@ GitHub Actionsを使用する場合は、Windowsランナーで `powershell.exe 
 | 2 | `.\run.ps1 build` と同じ処理で `.psm1` を生成し、ソースマニフェストを配布先の `.psd1` へコピーして必要な項目を更新する。配布する `.ps1`、`.psm1`、`.psd1`、`.ps1xml` をUTF-8（BOMなし）かつLFへ変換する。 |
 | 3 | 生成物を Windows PowerShell 5.1 のパーサーで検査し、エンコーディング、BOM、改行コード、ASCII-only、マニフェストを検査する。マニフェストが参照するファイルがすべて存在することを確認し、新しい Windows PowerShell 5.1 プロセスで `output/<ModuleName>/<ModuleName>.psd1` をインポートする。 |
 | 4 | `.\run.ps1 test all` と同じテストを実行する。 |
-| 5 | `output/<ModuleName>/<ModuleName>.psd1` と `output/<ModuleName>/<ModuleName>.psm1` の存在を確認する。検査対象は実際の配布構成から取得し、`data/`、`formats/`、`scripts/`、`types/` の実行時ファイルを含める。 |
+| 5 | `output/<ModuleName>/<ModuleName>.psd1` と `output/<ModuleName>/<ModuleName>.psm1` の存在を確認する。検査対象は実際の配布構成から取得し、`data/`、`formats/`、`types/` の実行時ファイルを含める。 |
 | 6 | 配布先を空のディレクトリまで再帰的に検査し、`Public/`、`Private/`、`tests/`、`.github/`、`.gitkeep`、`build.psd1`、`run.ps1`、`*.Tests.ps1` などの開発用ファイルを拒否する。 |
 
 ---
