@@ -489,11 +489,11 @@ foreach ($pathItem in $Path) {
 
 ファイル、レジストリ、サービス、設定、外部システムなどの状態を変更する公開関数では、`SupportsShouldProcess = $true` を指定する。
 
-利用者が指定した操作の対象と内容を `$PSCmdlet.ShouldProcess()` の `Target` と `Action` に渡し、真の場合だけ状態変更を実行する。
+`ShouldProcess()` は公開関数または状態変更を委譲された内部関数で評価する。評価する関数では `SupportsShouldProcess = $true` を指定し、利用者が指定した操作の対象と内容を `Target` と `Action` に渡す。
 
-公開関数で `ShouldProcess()` を評価して状態変更を内部関数へ委譲する場合、内部関数では同じ変更に対する `ShouldProcess()` を再評価しない。
+同じ状態変更に対する `ShouldProcess()` は1回だけ評価し、真の場合だけ状態を変更する。
 
-追加確認が必要な操作では、公開関数で `$PSCmdlet.ShouldContinue()` を使用する。
+追加確認が必要な操作では、`ShouldProcess()` を評価する関数で `$PSCmdlet.ShouldContinue()` を使用する。
 
 ### 11.2 保護と結果出力
 
@@ -849,7 +849,7 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 | --- | --- |
 | 承認済み動詞 | 公開関数を検査する。内部関数も同じ命名方針を適用する。 |
 | エイリアス | 正式なコマンド名を使用していることを検査する。 |
-| `ShouldProcess` | 状態変更を行う公開関数で `SupportsShouldProcess` が有効であり、`ShouldProcess()` が使用されていることを検査する。 |
+| `ShouldProcess` | 状態変更を行う公開関数で `SupportsShouldProcess` が有効であり、公開関数または委譲先の内部関数で `ShouldProcess()` が1回だけ使用されていることを検査する。 |
 | 危険な構文 | `Invoke-Expression` などを検査する。 |
 | 未使用 | 未使用変数など PSScriptAnalyzer で検出可能なものを検査する。 |
 | BOM | ソースは UTF-8（BOMなし）かつ ASCII-only とするため、`PSUseBOMForUnicodeEncodedFile` は除外する。 |
