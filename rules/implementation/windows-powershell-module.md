@@ -487,28 +487,13 @@ foreach ($pathItem in $Path) {
 
 ### 11.1 実行確認
 
-ファイル、レジストリ、サービス、設定、外部システムなどの状態を変更する関数では、公開関数・内部関数を問わず `SupportsShouldProcess = $true` を指定する。
+ファイル、レジストリ、サービス、設定、外部システムなどの状態を変更する公開関数では、`SupportsShouldProcess = $true` を指定する。
 
-状態変更の直前に `$PSCmdlet.ShouldProcess()` を評価し、真の場合だけ変更を実行する。これにより `-WhatIf` と `-Confirm` が PowerShell の標準動作として利用できる。
+利用者が指定した操作の対象と内容を `$PSCmdlet.ShouldProcess()` の `Target` と `Action` に渡し、真の場合だけ状態変更を実行する。
 
-`ShouldProcess()` に加えて追加確認が必要な場合は `$PSCmdlet.ShouldContinue()` を使用する。
+公開関数で `ShouldProcess()` を評価して状態変更を内部関数へ委譲する場合、内部関数では同じ変更に対する `ShouldProcess()` を再評価しない。
 
-```powershell
-function Set-MyModuleMonitorInternal {
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Name,
-
-        [Parameter(Mandatory = $true)]
-        [string]$Value
-    )
-
-    if ($PSCmdlet.ShouldProcess($Name, 'Update')) {
-        # Apply the change.
-    }
-}
-```
+追加確認が必要な操作では、公開関数で `$PSCmdlet.ShouldContinue()` を使用する。
 
 ### 11.2 保護と結果出力
 
@@ -864,7 +849,7 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 | --- | --- |
 | 承認済み動詞 | 公開関数を検査する。内部関数も同じ命名方針を適用する。 |
 | エイリアス | 正式なコマンド名を使用していることを検査する。 |
-| `ShouldProcess` | 状態変更を行う公開関数・内部関数で `SupportsShouldProcess` が有効であり、`ShouldProcess()` が使用されていることを検査する。 |
+| `ShouldProcess` | 状態変更を行う公開関数で `SupportsShouldProcess` が有効であり、`ShouldProcess()` が使用されていることを検査する。 |
 | 危険な構文 | `Invoke-Expression` などを検査する。 |
 | 未使用 | 未使用変数など PSScriptAnalyzer で検出可能なものを検査する。 |
 | BOM | ソースは UTF-8（BOMなし）かつ ASCII-only とするため、`PSUseBOMForUnicodeEncodedFile` は除外する。 |
@@ -873,7 +858,7 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 
 テストには Pester を使用する。Unit Test、Integration Test、Contract Test は、ビルド済みの `output/<ModuleName>/<ModuleName>.psd1` をインポートして実施する。
 
-状態変更関数では、Unit Test または Integration Test の該当箇所で `-WhatIf` により状態変更が実行されないことを確認する。
+状態変更を行う公開関数では、Unit Test または Integration Test の該当箇所で `-WhatIf` により状態変更が実行されないことを確認する。
 
 ### 20.1 Unit Test
 
