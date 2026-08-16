@@ -12,7 +12,8 @@
 | 実装 | [Rust](implementation/rust.md) | Rustのソースコード、テスト、crate構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションのソースコード、テスト、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module.md) | Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
-| デザイン | [Web UI](design/web-ui.md) | Web UIのデザイン、コンポーネント、レイアウト、操作、アクセシビリティを変更する。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
+| デザイン | [コアデザイン規則](design/core-design.md) | UIを持つWebプロジェクトの視覚表現、レイアウト、状態、動きを変更する。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
+| デザイン | [Web UI](design/web-ui.md) | Web UIのデザイン、コンポーネント、レイアウト、操作、アクセシビリティを変更する。 | コアデザイン規則。実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
 | 仕様書 | [API仕様書](specifications/api.md) | API仕様書を新規作成または変更する。 | 実装も変更する場合は該当する共通・実装規則 |
 | 仕様書 | [UI仕様書](specifications/ui.md) | UI仕様書を新規作成または変更する。 | Web UIが対象ならWeb UI規則。実装も変更する場合は該当する共通・実装規則 |
 
@@ -21,13 +22,14 @@
 | 作業 | 読む文書 |
 | --- | --- |
 | TypeScriptバックエンドの実装 | 共通設計原則 → アプリケーション設計規則 → TypeScript |
-| TypeScript製WebアプリのUI実装 | 共通設計原則 → アプリケーション設計規則 → TypeScript → Web UI |
+| TypeScript製WebアプリのUI実装 | 共通設計原則 → アプリケーション設計規則 → TypeScript → コアデザイン規則 → Web UI |
 | Flutterアプリの実装 | 共通設計原則 → アプリケーション設計規則 → Flutter |
 | Rust製CLIの実装 | 共通設計原則 → アプリケーション設計規則 → Rust |
 | Windows PowerShell 5.1向けモジュールの実装 | 共通設計原則 → アプリケーション設計規則 → Windows PowerShellモジュール |
+| Web UIの視覚表現と動きの設計 | コアデザイン規則 → Web UI |
 | API仕様書だけを作成 | API仕様書 |
-| WebのUI仕様書だけを作成 | Web UI → UI仕様書 |
-| UI仕様書に基づいてWeb UIを実装 | 共通設計原則 → アプリケーション設計規則 → 該当する実装規則 → Web UI → UI仕様書 |
+| WebのUI仕様書だけを作成 | コアデザイン規則 → Web UI → UI仕様書 |
+| UI仕様書に基づいてWeb UIを実装 | 共通設計原則 → アプリケーション設計規則 → 該当する実装規則 → コアデザイン規則 → Web UI → UI仕様書 |
 
 ## 適用手順
 
