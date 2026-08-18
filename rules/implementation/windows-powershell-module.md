@@ -16,7 +16,7 @@
 
 ### 1.1 実行ポリシー
 
-開発・検証用スクリプトを実行ポリシーによって停止させずに実行するため、以下のいずれかを設定する。
+開発・検証用スクリプトを実行ポリシーによって停止させずに実行するため、次のいずれかを満たす。
 
 | 設定 | 説明 |
 | --- | --- |
@@ -78,7 +78,7 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 
 | パス | 用途 |
 | --- | --- |
-| `src/<ModuleName>/<ModuleName>.psd1` | 人が管理するソースマニフェスト。ビルド時に配布先へコピーされる。 |
+| `src/<ModuleName>/<ModuleName>.psd1` | モジュールマニフェスト。ModuleBuilder によって配布用ディレクトリへコピーされ、必要な項目が更新される。 |
 | `src/<ModuleName>/build.psd1` | ModuleBuilder のビルド設定。 |
 | `src/<ModuleName>/Public/` | 公開関数。 |
 | `src/<ModuleName>/Private/` | 内部関数。 |
@@ -94,11 +94,9 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | `PSScriptAnalyzerSettings.psd1` | `Invoke-ScriptAnalyzer` の設定。 |
 | `.github/workflows/ci.yml` | GitHub Actions を使用する場合の CI ワークフロー。 |
 | `run.ps1` | 開発・検証処理をサブコマンド単位で実行するスクリプト。 |
-| `output/<ModuleName>/` | 生成した `.psm1`、コピー・更新した `.psd1` などの配布成果物。 |
+| `output/<ModuleName>/` | `.psm1` `.psd1`などの配布用成果物。実行に必要なファイルのみを配置する。 |
 
-公開関数と内部関数は1関数1ファイルとし、ファイル名を関数名と一致させる。`Public` と `Private` の `.ps1` は開発用の分割ソースとして扱い、配布物へそのまま含めない。
-
-`output/<ModuleName>/` には実行に必要なファイルだけを配置する。テスト、ビルド用ファイル、フォーマット設定、静的解析設定、`build.psd1`、分割されたソースファイルは含めない。
+公開関数と内部関数は1関数1ファイルとし、ファイル名を関数名と一致させる。
 
 ---
 
@@ -120,13 +118,11 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 *.ps1xml text eol=lf
 ```
 
-`.psm1` は ModuleBuilder がビルド時に生成する配布成果物であり、ソースファイルとして管理しない。
-
 ---
 
 ## 4. モジュールマニフェスト
 
-`src/<ModuleName>/<ModuleName>.psd1` は人が管理するソースマニフェストとし、モジュールのメタデータと実行時依存関係を記述する。ModuleBuilder はこれを `output/<ModuleName>/<ModuleName>.psd1` へコピーし、公開関数などビルドで確定する項目を更新する。
+モジュールマニフェストには主に以下の内容を記載する。
 
 | 項目 | 規則 |
 | --- | --- |
@@ -137,11 +133,11 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | `PrivateData.PSData.LicenseUri` | PowerShell Gallery へ公開するモジュールではライセンスの URL を指定する。 |
 | `PowerShellVersion` | `5.1` を指定する。 |
 | `CompatiblePSEditions` | `Desktop` を指定する。 |
-| `FunctionsToExport` | ソースでは `@()` とし、ModuleBuilder が `Public/*.ps1` から明示的な関数名を反映する。 |
+| `FunctionsToExport` | ソースでは `@()` とし、ビルド時にModuleBuilder が `Public/*.ps1` から明示的な関数名を反映する。 |
 | `TypesToProcess` | `.types.ps1xml` を使用する場合だけ指定する。 |
 | `FormatsToProcess` | `.format.ps1xml` を使用する場合だけ指定する。 |
 
-ASCII-only UTF-8でマニフェストを作成するには、以下を実行する。`<ModuleName>` は作成するモジュールの名前に変更する。
+ASCII-only UTF-8でマニフェストを作成するには、以下を実行する。`New-ModuleManifest` は実行時のUIカルチャーに応じたコメントをファイルへ書き込むため、一時的に `CurrentUICulture` を `en-US` に切り替えてASCII-only で生成する。`<ModuleName>` は作成するモジュールの名前に変更する。
 
 ```powershell
 $manifestPath = Join-Path $PWD '<ModuleName>.psd1'
@@ -159,17 +155,15 @@ $content = [System.IO.File]::ReadAllText($manifestPath)
 
 ## 5. ビルド
 
-開発時は `src/<ModuleName>/` でソースを分割して管理し、ModuleBuilder の `Build-Module` で配布用モジュールを `output/<ModuleName>/` に生成する。
-
 ビルド前に既存の `output/<ModuleName>/` を削除し、以前の成果物が残らない状態で生成する。
 
 ModuleBuilder によるビルドでは、以下の処理が行われる。
 
 | 項目 | ModuleBuilder の動作 |
 | --- | --- |
-| スクリプトモジュール | ModuleBuilder が `Public` と `Private` のソースを統合し、単一の `output/<ModuleName>/<ModuleName>.psm1` を生成する。 |
-| 配布マニフェスト | ModuleBuilder が `src/<ModuleName>/<ModuleName>.psd1` を `output/<ModuleName>/<ModuleName>.psd1` へコピーし、ビルド時に必要な項目を更新する。 |
-| 公開関数 | ModuleBuilder が `Public/*.ps1` のファイル名から `FunctionsToExport` を生成する。 |
+| スクリプトモジュール | `Public` と `Private` のソースを統合し、単一の `output/<ModuleName>/<ModuleName>.psm1` を生成する。 |
+| 配布マニフェスト | `src/<ModuleName>/<ModuleName>.psd1` を `output/<ModuleName>/<ModuleName>.psd1` へコピーし、必要な項目を更新する。 |
+| 公開関数 | `Public/*.ps1` のファイル名から `FunctionsToExport` を生成する。 |
 
 `src/<ModuleName>/build.psd1` では、ソースマニフェスト、出力先、エンコーディング、配布成果物へコピーするディレクトリを指定する。
 
@@ -183,11 +177,9 @@ ModuleBuilder によるビルドでは、以下の処理が行われる。
 }
 ```
 
-`CopyPaths` には、配布対象として実際に存在するサブディレクトリだけを追加する。`data/`、`formats/`、`types/` を使用する場合は `CopyPaths` に追加する。
+`CopyPaths` には、`data/`、`formats/`、`types/`など、配布対象として実際に必要なディレクトリだけを追加する。
 
-Windows PowerShell 5.1 では `UTF8NoBom` を指定できないため、ModuleBuilder は `Encoding = 'ASCII'` とする。
-
-ModuleBuilderによる生成とマニフェストの更新後に、配布する `.ps1`、`.psm1`、`.psd1`、`.ps1xml` をUTF-8（BOMなし）かつLFへ変換する。
+ModuleBuilderによるビルド後に、配布対象の `.ps1`、`.psm1`、`.psd1`、`.ps1xml` をUTF-8（BOMなし）かつLFへ変換する。
 
 ```powershell
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
@@ -327,11 +319,11 @@ if ($PSBoundParameters.ContainsKey('Limit')) {
 
 ### 7.11 組み込みコマンドと同じ名前の関数
 
-モジュールの要件として組み込みCmdletの既定動作を変更する場合だけ、同じ名前の公開関数を使用する。公開関数は元のCmdletと同じパラメーターセットと動的パラメーターを保ち、変更対象以外の処理をモジュール修飾名付きの元のCmdletへ委譲する。
+モジュールの要件として組み込みCmdletの既定動作を変更する場合は、同じ名前の公開関数を使用する。公開関数は `[System.Management.Automation.ProxyCommand]::Create()` を使用して、元のCmdletと同じパラメーターセットと動的パラメーターを持つひな形を生成する。変更対象以外の処理は、モジュール修飾名付きの元のCmdletへ委譲する。
 
-同名関数はCmdletを削除せず、通常のコマンド解決で隠す。元のCmdletを実行できるモジュール修飾名をHelpに記載する。
+追加した同名関数は通常のコマンド解決で隠す。元のCmdletを実行できるモジュール修飾名をHelpに記載する。
 
-Contract Testでは同名関数が優先されること、元のCmdletがモジュール修飾名で呼び出せること、パラメーター名が一致することを確認する。
+Contract Testでは追加した同名関数が優先されること、元のCmdletがモジュール修飾名で呼び出せること、元のCmdletとパラメーター名が一致することを確認する。
 
 ---
 
@@ -495,13 +487,43 @@ foreach ($pathItem in $Path) {
 
 ### 11.1 実行確認
 
-ファイル、レジストリ、サービス、設定、外部システムなどの状態を変更する公開関数では、`SupportsShouldProcess = $true` を指定する。
+ファイル、レジストリ、サービス、設定、外部システムなどの状態を変更する公開関数では、`SupportsShouldProcess = $true` を指定する。この指定により、公開関数の呼び出し元は `-WhatIf` と `-Confirm` を使用できる。
 
-`ShouldProcess()` は公開関数または状態変更を委譲された内部関数で評価する。評価する関数では `SupportsShouldProcess = $true` を指定し、利用者が指定した操作の対象と内容を `Target` と `Action` に渡す。
-
-同じ状態変更に対する `ShouldProcess()` は1回だけ評価し、真の場合だけ状態を変更する。
+`ShouldProcess()` の評価は、公開関数自身で行う場合と、別の関数に委譲して行う場合がある。同じ状態変更に対する評価は1回だけとし、評価を行う関数では `SupportsShouldProcess = $true` を指定したうえで、利用者が指定した操作の対象と内容を `Target` と `Action` に渡す。内部関数へ委譲する場合も公開関数自身の `SupportsShouldProcess = $true` は保持し、公開関数の呼び出し元が指定した `-WhatIf` と `-Confirm` を委譲先の内部関数へ引き継ぐ。
 
 追加確認が必要な操作では、`ShouldProcess()` を評価する関数で `$PSCmdlet.ShouldContinue()` を使用する。
+
+公開関数から委譲された内部関数で `ShouldProcess()` を評価する場合の例を次に示す。
+
+```powershell
+function Set-MyModuleMonitor {
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Value
+    )
+
+    Set-MyModuleMonitorInternal -Name $Name -Value $Value
+}
+
+function Set-MyModuleMonitorInternal {
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Value
+    )
+
+    if ($PSCmdlet.ShouldProcess($Name, 'Update')) {
+        # Apply the change.
+    }
+}
+```
 
 ### 11.2 保護と結果出力
 
@@ -512,13 +534,13 @@ foreach ($pathItem in $Path) {
 
 ---
 
-## 12. 外部実行ファイル
+## 12. 外部呼び出し
 
 ### 12.1 実行
 
-外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。
+外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。確認した結果が `$null` の場合は、関数を続行できないため終了エラーにする。
 
-外部実行ファイルは呼び出し演算子 `&` で実行する。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
+外部実行ファイルは、基本的に呼び出し演算子 `&` でコマンド名を直接指定することで実行する。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
 
 ### 12.2 引数
 
@@ -558,6 +580,50 @@ $OutputEncoding = $utf8
 $output = & example.exe $arguments
 ```
 
+### 12.5 埋め込みC#によるネイティブAPI呼び出し
+
+PowerShellや.NET Frameworkが必要なWindows APIを公開していない場合は、`Add-Type -TypeDefinition` でC#を埋め込む。型はモジュール固有の名前空間に配置する。プロセス内での二重コンパイルを避けるため、`Add-Type` の実行前に対象の型が存在するかを確認し、存在しない場合だけコンパイルする。
+
+```powershell
+if (-not ('MyModule.NativeMethods' -as [type])) {
+    $typeDefinition = @'
+using System;
+using System.Runtime.InteropServices;
+
+namespace MyModule
+{
+    public static class NativeMethods
+    {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool CloseHandle(IntPtr handle);
+    }
+}
+'@
+
+    Add-Type -TypeDefinition $typeDefinition
+}
+```
+
+`StructLayout`、`DllImport`、引数と戻り値の型を明示し、戻り値のステータスを適切な終了エラーへ変換する。戻り値だけでは失敗の理由が分からないWindows APIを呼び出す場合は、`DllImport` に `SetLastError = true` を指定し、戻り値の判定直後に `[System.Runtime.InteropServices.Marshal]::GetLastWin32Error()` でエラーコードを取得する。呼び出しからエラーコード取得までの間に他のコードを実行すると、意図しないエラーコードを取得するため、両者の間に処理を挟まない。
+
+```powershell
+if (-not [MyModule.NativeMethods]::CloseHandle($Handle)) {
+    $win32Exception = [System.ComponentModel.Win32Exception]::new([System.Runtime.InteropServices.Marshal]::GetLastWin32Error())
+    $PSCmdlet.ThrowTerminatingError(
+        [System.Management.Automation.ErrorRecord]::new(
+            $win32Exception,
+            'CloseHandleFailed',
+            [System.Management.Automation.ErrorCategory]::OperationStopped,
+            $Handle
+        )
+    )
+}
+```
+
+ハンドルとアンマネージドメモリは `try/finally` で解放し、秘密値を含むメモリはゼロクリアしてから解放する。
+
+状態変更関数では `ShouldProcess()` の承認後にC#のコンパイルとWindows API呼び出しを行う。Unit Testでは `Add-Type` を `Mock` し、`-WhatIf` を指定した呼び出しで `Add-Type` が呼び出されていないことを確認する。C#のコンパイルとWindows API呼び出しが実際に成功することは、Integration Testで検証する。
+
 ---
 
 ## 13. ファイル
@@ -594,7 +660,7 @@ Windows PowerShell 5.1 の `-Encoding UTF8` は UTF-8（BOMあり）であり、
 
 ### 13.3 PowerShellデータファイル
 
-`.psd1` は `Import-PowerShellDataFile` で読み込む。ルートの型、必要なキー、値を検証し、すべての検証が成功してから状態を変更する。
+`.psd1` は `Import-PowerShellDataFile` で読み込む。読み込んだ結果に対して、`Hashtable` など想定する型であること、必要なキーがすべて存在すること、各値が想定する形式であることを検証し、すべての検証が成功してから状態を変更する。
 
 ---
 
@@ -731,14 +797,6 @@ Get-Content @parameters
 ### 15.8 比較
 
 `$null` を比較する場合は `$null` を左辺に置く。
-
-### 15.9 埋め込みC#によるネイティブAPI呼び出し
-
-PowerShellや.NET Frameworkが必要なWindows APIを公開していない場合だけ、`Add-Type -TypeDefinition`でC#を埋め込む。型はモジュール固有の名前空間に配置し、型の存在を確認してプロセス内で1回だけコンパイルする。
-
-`StructLayout`、`DllImport`、引数と戻り値の型を明示し、戻り値のステータスを適切な終了エラーへ変換する。ハンドルとアンマネージドメモリは `try/finally` で解放し、秘密値を含むメモリはゼロクリアしてから解放する。
-
-状態変更関数では `ShouldProcess()` の承認後にC#のコンパイルとWindows API呼び出しを行う。`-WhatIf` でC#のコンパイルとWindows API呼び出しが行われないことをUnit Testで確認する。
 
 ---
 
@@ -964,7 +1022,8 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 1. 環境<br>17. 自動フォーマット<br>19. 静的解析<br>21. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) |
 | 1. 環境<br>20. テスト<br>21. CI | [Quick Start \| Pester](https://pester.dev/docs/v5/quick-start) |
 | 1. 環境<br>2. リポジトリ構成<br>5. ビルド | [ModuleBuilder](https://github.com/PoshCode/ModuleBuilder) |
-| 3. ソースファイル<br>12. 外部実行ファイル<br>13. ファイル | [about_Character_Encoding - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1) |
+| 3. ソースファイル<br>12. 外部呼び出し<br>13. ファイル | [about_Character_Encoding - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1) |
+| 13. ファイル | [Import-PowerShellDataFile (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/import-powershelldatafile?view=powershell-5.1) |
 | 4. モジュールマニフェスト<br>22. PowerShell Gallery | [about_Module_Manifests - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests?view=powershell-5.1) |
 | 4. モジュールマニフェスト | [New-ModuleManifest (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest?view=powershell-5.1) |
 | 6. 命名 | [Get-Verb (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/get-verb?view=powershell-5.1) |
@@ -973,14 +1032,16 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 7. 関数 | [about_Functions_Advanced - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced?view=powershell-5.1) |
 | 7. 関数 | [about_Functions_OutputTypeAttribute - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute?view=powershell-5.1) |
 | 7. 関数<br>9. 出力 | [Everything you wanted to know about PSCustomObject - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-pscustomobject?view=powershell-5.1) |
+| 7. 関数 | [ProxyCommand.Create Method (System.Management.Automation) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.proxycommand.create?view=powershellsdk-7.4.0) |
 | 8. パイプライン<br>9. 出力 | [about_Pipelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-5.1) |
 | 9. 出力<br>10. エラー処理 | [about_Output_Streams - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_output_streams?view=powershell-5.1) |
 | 9. 出力 | [about_Return - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_return?view=powershell-5.1) |
 | 9. 出力 | [about_Format.ps1xml - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_format.ps1xml?view=powershell-5.1) |
 | 10. エラー処理 | [about_Error_Handling - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_error_handling?view=powershell-5.1) |
 | 11. 状態変更 | [Everything you wanted to know about ShouldProcess - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-shouldprocess?view=powershell-5.1) |
-| 12. 外部実行ファイル | [about_Automatic_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1) |
-| 12. 外部実行ファイル | [about_Preference_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1) |
+| 12. 外部呼び出し | [about_Automatic_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1) |
+| 12. 外部呼び出し | [about_Preference_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1) |
+| 12. 外部呼び出し | [Add-Type (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/add-type?view=powershell-5.1) |
 | 13. ファイル | [about_Path_Syntax - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_path_syntax?view=powershell-5.1) |
 | 14. 通信 | [Invoke-RestMethod (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/Microsoft.PowerShell.Utility/invoke-restmethod?view=powershell-5.1) |
 | 14. 通信 | [Invoke-WebRequest (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-5.1) |
@@ -993,6 +1054,7 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 15. コードスタイル | [about_Comparison_Operators - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comparison_operators?view=powershell-5.1) |
 | 16. ヘルプ | [about_Comment_Based_Help - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1) |
 | 17. 自動フォーマット | [Invoke-Formatter (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-formatter?view=ps-modules) |
+| 18. 構文チェック | [Parser Class (System.Management.Automation.Language) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.parser?view=powershellsdk-7.4.0) |
 | 19. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) |
 | 4. モジュールマニフェスト<br>19. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) |
 | 20. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) |
