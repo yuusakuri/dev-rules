@@ -1,6 +1,6 @@
 # Windows PowerShell モジュール開発規約
 
-> 適用対象: Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する場合。
+本書は、Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する場合に適用する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)を前提とする。
 
 ## 1. 環境
 
@@ -10,13 +10,13 @@
 | PowerShell エディション | `Desktop` |
 | 実行ファイル | `powershell.exe` |
 | ビルド | ModuleBuilder |
-| フォーマット・静的解析 | PSScriptAnalyzer |
+| フォーマット、静的解析 | PSScriptAnalyzer |
 | テスト | Pester |
 | パッケージ管理 | Microsoft.PowerShell.PSResourceGet |
 
 ### 1.1 実行ポリシー
 
-開発・検証用スクリプトを実行ポリシーによって停止させずに実行するため、次のいずれかを満たす。
+開発、検証用スクリプトを実行ポリシーによって停止させずに実行するため、次のいずれかを満たす。
 
 | 設定 | 説明 |
 | --- | --- |
@@ -99,7 +99,7 @@ C#アセンブリを含むモジュールでは、ビルド時に .NET SDK を�
 | `PSScriptFormatterSettings.psd1` | `Invoke-Formatter` の設定。 |
 | `PSScriptAnalyzerSettings.psd1` | `Invoke-ScriptAnalyzer` の設定。 |
 | `.github/workflows/ci.yml` | GitHub Actions を使用する場合の CI ワークフロー。 |
-| `run.ps1` | 開発・検証処理をサブコマンド単位で実行するスクリプト。 |
+| `run.ps1` | 開発、検証処理をサブコマンド単位で実行するスクリプト。 |
 | `output/<ModuleName>/` | `.psm1` `.psd1`などの配布用成果物。実行に必要なファイルのみを配置する。 |
 | `src/<ModuleName>.<Component>/` | モジュールが実行時に使用するC#プロジェクト。C#アセンブリを使用する場合だけ配置する。 |
 | `src/<ModuleName>.<Component>/<ModuleName>.<Component>.csproj` | C#プロジェクト。 |
@@ -621,7 +621,7 @@ $exitCode = $LASTEXITCODE
 
 Windows PowerShell 5.1 では、PowerShell と外部実行ファイルの間で使用される文字コードが UTF-8 に統一されていない。
 
-外部実行ファイルの標準入力・標準出力を UTF-8 とする必要がある場合は、`[Console]::OutputEncoding` と `$OutputEncoding` を UTF-8 に設定する。
+外部実行ファイルの標準入力、標準出力を UTF-8 とする必要がある場合は、`[Console]::OutputEncoding` と `$OutputEncoding` を UTF-8 に設定する。
 
 ```powershell
 $utf8 = [System.Text.UTF8Encoding]::new($false)
@@ -812,7 +812,7 @@ foreach ($path in $paths) {
 | 項目 | 規則 |
 | --- | --- |
 | インデント | 半角スペース4文字とする。 |
-| 波括弧 | 開始波括弧は宣言・制御文と同じ行に置く。 |
+| 波括弧 | 開始波括弧は宣言、制御文と同じ行に置く。 |
 
 ### 15.3 改行
 
