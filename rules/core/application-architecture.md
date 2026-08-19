@@ -40,8 +40,6 @@
 | `apps/<app-name>/config/`                          | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
 | `apps/<app-name>/<generated-dir>/`                 | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
 
-`docker/`、`kubernetes/`、`terraform/`、`tools/`、`scripts/`、`docs/adr/`など、特定のアプリケーションに属さないリポジトリ共通のパスは[リポジトリ規則](repository.md)で定義する。
-
 ### ソース構成
 
 アプリケーションのソースはFeature Firstで構成する。Featureは、`auth`、`search`、`checkout`のように、一つの利用者目的または業務能力を表す。フォルダは配置するファイルが生じた時点で作る。

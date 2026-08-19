@@ -35,8 +35,6 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 | `apps/<app-name>/tests/e2e/<flow>.test.ts` | E2Eテスト。 |
 | `packages/<name>/` | 複数の実行単位から共有するTypeScriptパッケージ。 |
 
-`presentation/`と`handlers/`は、UIを持つフロントエンド（React、Vueなど）か、UIを持たないバックエンド（Node.jsサーバーなど）かで使い分ける。同じTypeScriptでも、アプリケーションの種類によってどちらを使うかが決まる。
-
 ---
 
 ## 3. 型
