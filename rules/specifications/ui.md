@@ -62,7 +62,7 @@
 ### 2-1. ディレクトリ構造（標準）
 
 ```text
-ui-spec/
+docs/specifications/ui/
 ├── README.md
 ├── 00-glossary.md
 ├── 01-common-rules.md

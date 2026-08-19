@@ -13,7 +13,7 @@
 **ルール：** 1エンドポイントグループ（リソース）= 1ファイル
 
 ```
-docs/api/
+docs/specifications/api/
 ├── _rules/          # このルールファイル群
 ├── _template/       # テンプレート群（別ファイル参照）
 ├── auth.md          # 認証・認可
