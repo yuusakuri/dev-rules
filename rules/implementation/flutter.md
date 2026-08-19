@@ -34,6 +34,7 @@
 | `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳リソースを配置する。 |
 | `apps/<app-name>/lib/l10n/generated/` | `apps/myproject-client/lib/l10n/generated/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。手動では編集しない。 |
 | `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/user_id.dart` | 2つ以上のFeatureが実際に共有するドメイン型とエラー型（Shared Kernel）を配置する。使用する場合だけ配置する。アプリケーション設計規則の[coreとinfraの節度](../core/application-architecture.md#coreとinfraの節度)に従う。 |
+| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/analytics_client.dart` | 業務ロジックを持たない技術基盤（Analytics SDK、Crash Reportingなど）の構築処理を配置する。使用する場合だけ配置する。`app/bootstrap.dart`から呼び出す。 |
 | `apps/<app-name>/lib/ui/ui.dart` | `apps/myproject-client/lib/ui/ui.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品だけを`export`する。 |
 | `apps/<app-name>/lib/ui/button/` | `apps/myproject-client/lib/ui/button/primary_button.dart` | ボタンとボタンに付随する表示を配置する。 |
 | `apps/<app-name>/lib/ui/form/` | `apps/myproject-client/lib/ui/form/email_field.dart` | 入力欄、選択欄、入力エラー表示を配置する。 |
@@ -80,8 +81,9 @@ BLoCは対応するFeatureの`presentation/bloc/`へ配置する。一つのScre
 
 | 依存元 | 依存先 |
 | ---- | ---- |
-| `app/` | 各Featureの公開API、`core/`、`ui/` |
+| `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
 | `core/` | Dart標準ライブラリと外部パッケージのみ |
+| `infra/` | 技術基盤の外部SDK、パッケージのみ |
 | Screen、Widget | 同じFeatureのBLoCと型、`core/`、`ui/` |
 | BLoC | 同じFeatureの処理、Repository契約、Gateway契約、型 |
 | Feature内の処理 | 同じFeatureのRepository契約、Gateway契約、型、`core/` |
