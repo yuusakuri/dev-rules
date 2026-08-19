@@ -1,10 +1,8 @@
 # TypeScript固有の追加規則
 
-> 適用対象: TypeScriptの手書きソースコード、テスト、プロジェクト構成を変更する場合。
+## 1. 概要
 
-## 1. 適用範囲
-
-本書は、TypeScriptで記述する手書きソースコードに適用する言語固有の追加規則を定義する。
+本書は、TypeScriptの手書きソースコード、テスト、プロジェクト構成を変更する場合に適用する言語固有の追加規則を定義する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)を前提とする。
 
 TypeScriptソースコードは[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)に従う。本書には、Google TypeScript Style Guideに含まれない追加規則のみを記載する。
 

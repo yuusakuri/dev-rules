@@ -1,12 +1,10 @@
 # Rust固有規則
 
-> 適用対象: Rustのソースコード、テスト、crate構成を変更する場合。
+## 1. 概要
 
-## 1. 適用範囲
+本書は、Rustのソースコード、テスト、crate構成を変更する場合に適用するRust固有の規則を定義する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)を前提とする。
 
-本書は、開発におけるRust固有の規則を定義する。
-
-[The Rust Style Guide](https://doc.rust-lang.org/style-guide/)および[Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html)に従う。
+[The Rust Style Guide](https://doc.rust-lang.org/style-guide/)と[Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html)に従う。
 
 ---
 
