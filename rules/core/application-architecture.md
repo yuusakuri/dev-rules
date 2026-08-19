@@ -30,7 +30,7 @@
 
 フォルダは必要になった時点で作る。ソースコード、設定ファイル、生成物は、使用する言語、フレームワーク、ビルドツールの標準構成に従って配置する。表のパスはリポジトリルートを基準とする。
 
-複数の実行単位を1つのリポジトリで管理するモノレポでは、`apps/<app-name>/`、`packages/<name>/`のように実行単位ごとにディレクトリを分ける。実行単位が1つだけのリポジトリでは`apps/<app-name>/`によるラップを省略し、以降の表で`<source-root>`が指す位置をリポジトリ直下（言語の標準構成が指定する場合はその位置）に置き換える。
+複数の実行単位を1つのリポジトリで管理するモノレポでは、`apps/<app-name>/`、`packages/<name>/`のように実行単位ごとにディレクトリを分ける。実行単位が1つだけのリポジトリでは`apps/<app-name>/`によるラップを省略し、以降の表で`<source-root>`が指す位置を、リポジトリ直下に置く言語標準のソースディレクトリ（`src/`、`lib/`など）に置き換える。リポジトリ直下そのものを`<source-root>`にはしない。
 
 ### リポジトリ構成
 
@@ -39,14 +39,8 @@
 | `apps/<app-name>/`                                 | 実行単位ごとのアプリケーション。 `<app-name>`は任意のアプリ名を指定する。`<project-name>-<responsibility>`を推奨する。|
 | `apps/<app-name>/config/`                          | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
 | `apps/<app-name>/<generated-dir>/`                 | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
-| `docker/`                                          | Dockerfile とコンテナ関連の定義。 |
-| `kubernetes/`                                      | マニフェストとデプロイ定義。 |
-| `terraform/`                                       | インフラのコード定義。 |
-| `docs/adr/`                                        | 設計判断の記録。 |
-| `tools/`                                           | 開発支援ツール。 |
-| `scripts/`                                           | 開発支援スクリプト。 |
-| `justfile`                                           | 開発支援スクリプト。 |
-| `run.sh`                                           | 開発支援スクリプト。 |
+
+`docker/`、`kubernetes/`、`terraform/`、`tools/`、`scripts/`、`docs/adr/`など、特定のアプリケーションに属さないリポジトリ共通のパスは[リポジトリ規則](repository.md)で定義する。
 
 ### ソース構成
 
@@ -55,13 +49,13 @@
 | パス | 説明 |
 | ---- | ---- |
 | `<source-root>/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。 |
-| `<source-root>/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。肥大化する場合はFeatureの境界を見直す。使用する場合だけ配置する。 |
-| `<source-root>/infra/` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。Featureの型や業務ルールに依存せず、`app/`のComposition Rootが呼び出す。使用する場合だけ配置する。 |
+| `<source-root>/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。肥大化する場合はFeatureの境界を見直す。 |
+| `<source-root>/infra/` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。Featureの型や業務ルールに依存せず、`app/`のComposition Rootが呼び出す。 |
 | `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
-| `<source-root>/features/<feature>/handlers/` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。使用する場合だけ配置する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
+| `<source-root>/features/<feature>/handlers/` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
 | `<source-root>/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。例: `postgres_order_repository` |
-| `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。例: `stripe_payment_gateway`。使用する場合だけ配置する。 |
+| `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。例: `stripe_payment_gateway` |
 | `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 
 言語またはフレームワークが配置を指定するエントリーポイント、ルート、生成物は、指定された場所へ配置する。

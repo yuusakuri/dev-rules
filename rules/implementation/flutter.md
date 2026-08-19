@@ -31,8 +31,8 @@
 | `apps/<app-name>/lib/app/theme/` | `apps/myproject-client/lib/app/theme/app_theme.dart` | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
 | `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳リソースを配置する。 |
 | `apps/<app-name>/lib/l10n/generated/` | `apps/myproject-client/lib/l10n/generated/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。手動では編集しない。 |
-| `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/user_id.dart` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。使用する場合だけ配置する。 |
-| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/analytics_client.dart` | 業務ロジックを持たない技術基盤（Analytics SDK、Crash Reportingなど）の構築処理を配置する。使用する場合だけ配置する。`app/bootstrap.dart`から呼び出す。 |
+| `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/user_id.dart` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。 |
+| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/analytics_client.dart` | 業務ロジックを持たない技術基盤（Analytics SDK、Crash Reportingなど）の構築処理を配置する。`app/bootstrap.dart`から呼び出す。 |
 | `apps/<app-name>/lib/ui/ui.dart` | `apps/myproject-client/lib/ui/ui.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品だけを`export`する。 |
 | `apps/<app-name>/lib/ui/button/` | `apps/myproject-client/lib/ui/button/primary_button.dart` | ボタンとボタンに付随する表示を配置する。 |
 | `apps/<app-name>/lib/ui/form/` | `apps/myproject-client/lib/ui/form/email_field.dart` | 入力欄、選択欄、入力エラー表示を配置する。 |
@@ -53,7 +53,7 @@
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_request.dart` | `apps/myproject-client/lib/features/auth/repositories/sign_in_request.dart` | 外部へ送るデータ形式とFeature内の型からの変換を定義する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_response.dart` | `apps/myproject-client/lib/features/auth/repositories/auth_session_response.dart` | 外部から受け取るデータ形式とFeature内の型への変換を定義する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_record.dart` | `apps/myproject-client/lib/features/auth/repositories/auth_session_record.dart` | データベースや端末ストレージへ保存する形式とFeature内の型との変換を定義する。 |
-| `apps/<app-name>/lib/features/<feature>/gateways/` | `apps/myproject-client/lib/features/payment/gateways/stripe_payment_gateway.dart` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPIなど）と通信する契約と接続先別の実装を配置する。使用する場合だけ配置する。 |
+| `apps/<app-name>/lib/features/<feature>/gateways/` | `apps/myproject-client/lib/features/payment/gateways/stripe_payment_gateway.dart` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPIなど）と通信する契約と接続先別の実装を配置する。 |
 | `apps/<app-name>/test/ui/` | `apps/myproject-client/test/ui/button/primary_button_test.dart` | `lib/ui/`に配置したUI部品のWidgetテストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<feature>_test.dart` | `apps/myproject-client/test/features/auth/auth_test.dart` | Featureが所有する型の値、状態、識別子、制約を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<responsibility>/` | `apps/myproject-client/test/features/auth/sign_in/` | Feature内の責務に対応する単体テストを配置する。 |

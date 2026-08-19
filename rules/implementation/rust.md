@@ -17,9 +17,9 @@
 | `apps/<app-name>/src/` | アプリケーションのソースルート。 |
 | `apps/<app-name>/src/app.rs` | 起動、ライフサイクル、依存関係の生成と接続（Composition Root）を定義するモジュール。 |
 | `apps/<app-name>/src/app/` | `app`の内部モジュールを配置する。 |
-| `apps/<app-name>/src/core.rs` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を公開するモジュール。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/core.rs` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を公開するモジュール。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。 |
 | `apps/<app-name>/src/core/` | `core`の内部モジュールを配置する。 |
-| `apps/<app-name>/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。 |
 | `apps/<app-name>/src/infra/` | `infra`の内部モジュールを配置する。 |
 | `apps/<app-name>/src/features.rs` | Featureモジュールを宣言する。 |
 | `apps/<app-name>/src/features/<feature>.rs` | Featureのルートモジュール。Feature外へ公開する型と関数を定義する。 |
@@ -29,11 +29,11 @@
 | `apps/<app-name>/src/features/<feature>/presentation/screens/` | 画面単位の内部モジュールを配置する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/widgets.rs` | Feature内で再利用するUI部品のモジュールを宣言する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/widgets/` | 同じFeatureの表示で再利用するUI部品の内部モジュールを配置する。 |
-| `apps/<app-name>/src/features/<feature>/handlers.rs` | FeatureがUIを介さずに外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を所有するモジュール。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/features/<feature>/handlers.rs` | FeatureがUIを介さずに外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/handlers/` | Handlerの内部モジュールを配置する。 |
 | `apps/<app-name>/src/features/<feature>/repositories.rs` | Featureが所有するデータを永続化ストレージへ保存、取得する契約と実装を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/repositories/` | Repositoryの内部モジュールを配置する。 |
-| `apps/<app-name>/src/features/<feature>/gateways.rs` | 永続化以外の外部システム、外部サービスと通信する契約と実装を所有するモジュール。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/features/<feature>/gateways.rs` | 永続化以外の外部システム、外部サービスと通信する契約と実装を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/gateways/` | Gatewayの内部モジュールを配置する。 |
 | `apps/<app-name>/src/ui.rs` | 業務上の判断を持たないUIの公開境界。UIを持つ実行単位だけで使用する。 |
 | `apps/<app-name>/src/ui/` | UIの内部モジュールを配置する。 |

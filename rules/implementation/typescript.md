@@ -16,8 +16,8 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 | ---- | ---- |
 | `apps/<app-name>/src/` | TypeScriptアプリケーションのソースルート。 |
 | `apps/<app-name>/src/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。 |
-| `apps/<app-name>/src/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。使用する場合だけ配置する。 |
-| `apps/<app-name>/src/infra/` | 業務ロジックを持たない技術基盤（DBコネクション、ロガーなど）の構築処理を配置する。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。 |
+| `apps/<app-name>/src/infra/` | 業務ロジックを持たない技術基盤（DBコネクション、ロガーなど）の構築処理を配置する。 |
 | `apps/<app-name>/src/features/<feature>/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | Feature外へ公開する型、関数、Componentだけをexportする。 |
 | `apps/<app-name>/src/features/<feature>/presentation/screens/` | ルーティングの遷移先となるScreen Componentを配置する。UIを持つアプリケーションで使用する。 |
@@ -25,7 +25,7 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 | `apps/<app-name>/src/features/<feature>/presentation/state/` | Signal、Store、Contextと表示状態の操作を配置する。 |
 | `apps/<app-name>/src/features/<feature>/handlers/` | UIを介さず外部からの要求を受け取る境界（HTTPルートハンドラー、RPC、メッセージキューの購読など）を配置する。UIを持たないバックエンドで使用する。 |
 | `apps/<app-name>/src/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、外部データ形式との変換を配置する。 |
-| `apps/<app-name>/src/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービスと通信する契約、接続先別の実装を配置する。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービスと通信する契約、接続先別の実装を配置する。 |
 | `apps/<app-name>/src/ui/` | 複数のFeatureで使用する、業務上の判断を持たないComponentとデザイン定義を配置する。UIを持つアプリケーションで使用する。 |
 | `apps/<app-name>/src/localization/` | 表示言語、翻訳リソース、地域別の書式化を配置する。 |
 | `apps/<app-name>/src/features/<feature>/<path>/<file>.test.ts` | ロジックの単体テストを実装ファイルと同じフォルダへ配置する。 |
