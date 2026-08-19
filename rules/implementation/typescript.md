@@ -18,7 +18,7 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 | ---- | ---- |
 | `apps/<app-name>/src/` | TypeScriptアプリケーションのソースルート。 |
 | `apps/<app-name>/src/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。 |
-| `apps/<app-name>/src/core/` | 2つ以上のFeatureが実際に共有するドメイン型とエラー型（Shared Kernel）を配置する。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。使用する場合だけ配置する。 |
 | `apps/<app-name>/src/infra/` | 業務ロジックを持たない技術基盤（DBコネクション、ロガーなど）の構築処理を配置する。使用する場合だけ配置する。 |
 | `apps/<app-name>/src/features/<feature>/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | Feature外へ公開する型、関数、Componentだけをexportする。 |

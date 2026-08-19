@@ -19,7 +19,7 @@
 | `apps/<app-name>/src/` | アプリケーションのソースルート。 |
 | `apps/<app-name>/src/app.rs` | 起動、ライフサイクル、依存関係の生成と接続（Composition Root）を定義するモジュール。 |
 | `apps/<app-name>/src/app/` | `app`の内部モジュールを配置する。 |
-| `apps/<app-name>/src/core.rs` | 2つ以上のFeatureが実際に共有するドメイン型とエラー型（Shared Kernel）を公開するモジュール。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/core.rs` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を公開するモジュール。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。使用する場合だけ配置する。 |
 | `apps/<app-name>/src/core/` | `core`の内部モジュールを配置する。 |
 | `apps/<app-name>/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。使用する場合だけ配置する。 |
 | `apps/<app-name>/src/infra/` | `infra`の内部モジュールを配置する。 |

@@ -33,7 +33,7 @@
 | `apps/<app-name>/lib/app/theme/` | `apps/myproject-client/lib/app/theme/app_theme.dart` | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
 | `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳リソースを配置する。 |
 | `apps/<app-name>/lib/l10n/generated/` | `apps/myproject-client/lib/l10n/generated/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。手動では編集しない。 |
-| `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/user_id.dart` | 2つ以上のFeatureが実際に共有するドメイン型とエラー型（Shared Kernel）を配置する。将来使うかもしれないという理由では配置せず、実際に2つ以上のFeatureが必要とした時点で移動する。使用する場合だけ配置する。 |
+| `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/user_id.dart` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。使用する場合だけ配置する。 |
 | `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/analytics_client.dart` | 業務ロジックを持たない技術基盤（Analytics SDK、Crash Reportingなど）の構築処理を配置する。使用する場合だけ配置する。`app/bootstrap.dart`から呼び出す。 |
 | `apps/<app-name>/lib/ui/ui.dart` | `apps/myproject-client/lib/ui/ui.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品だけを`export`する。 |
 | `apps/<app-name>/lib/ui/button/` | `apps/myproject-client/lib/ui/button/primary_button.dart` | ボタンとボタンに付随する表示を配置する。 |
