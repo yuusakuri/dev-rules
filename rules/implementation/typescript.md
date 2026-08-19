@@ -37,7 +37,7 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 | `apps/<app-name>/tests/e2e/<flow>.test.ts` | E2Eテスト。 |
 | `packages/<name>/` | 複数の実行単位から共有するTypeScriptパッケージ。 |
 
-`presentation/`と`handlers/`は、UIを持つフロントエンド（React、Vueなど）か、UIを持たないバックエンド（Node.jsサーバーなど）かで使い分ける。同じTypeScriptでも、アプリケーションの種類によってどちらを使うかが決まる。詳細はアプリケーション設計規則の[presentationとhandlersの使い分け](../core/application-architecture.md#presentationとhandlersの使い分け)に従う。`repositories/`と`gateways/`の使い分けも、同規則の[repositoriesとgatewaysの使い分け](../core/application-architecture.md#repositoriesとgatewaysの使い分け)に従う。
+`presentation/`と`handlers/`は、UIを持つフロントエンド（React、Vueなど）か、UIを持たないバックエンド（Node.jsサーバーなど）かで使い分ける。同じTypeScriptでも、アプリケーションの種類によってどちらを使うかが決まる。
 
 ---
 

@@ -49,7 +49,7 @@
 | `apps/<app-name>/benches/` | ベンチマークが必要な場合だけ使用する。 |
 | `crates/<name>/` | 複数の実行単位から共有するRust crate。 |
 
-`presentation`と`handlers`はどちらか一方、または両方を状況に応じて使用する。UIを描画する境界には`presentation`、HTTPサーバーやRPCサーバーなどUIを介さず外部からの要求を受け取る境界には`handlers`を使う。使い分けはアプリケーション設計規則の[presentationとhandlersの使い分け](../core/application-architecture.md#presentationとhandlersの使い分け)に従う。`repositories`と`gateways`の使い分けも同様に、同規則の[repositoriesとgatewaysの使い分け](../core/application-architecture.md#repositoriesとgatewaysの使い分け)に従う。
+`presentation`と`handlers`はどちらか一方、または両方を状況に応じて使用する。UIを描画する境界には`presentation`、HTTPサーバーやRPCサーバーなどUIを介さず外部からの要求を受け取る境界には`handlers`を使う。
 
 ---
 
