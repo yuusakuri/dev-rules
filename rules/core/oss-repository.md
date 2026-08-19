@@ -57,7 +57,7 @@ GitHubで公開する場合に、コミュニティ運営を補助する特別�
 | `docs/reference/` | 参照（理論） | API、設定項目、CLIオプションなど、正確さと網羅性を優先した事実の一覧。 |
 | `docs/explanation/` | 理解（理論） | 設計の背景、仕様の理由、代替案との比較など、深い理解のための説明。 |
 | `docs/adr/` | 意思決定の経緯 | 重要な設計判断の記録（Architecture Decision Records）。決定と理由をセットで残す。 |
-| `docs/specifications/` | 契約の定義 | API仕様書、UI仕様書など、実装が従うべき正式な契約を記述する文書。個別の記法は[API仕様書作成ルール](../specifications/api.md)、[UI仕様書作成規約](../specifications/ui.md)で定める。 |
+| `docs/specifications/` | 契約の定義 | API、UI、通信プロトコル、ハードウェアインターフェース、要求、安全要求など、実装が従うべき正式な契約を記述する文書。共通の記法は[仕様書共通規則](../specifications/common.md)で定め、専用規則がある領域はそれも適用する（[API仕様書作成ルール](../specifications/api.md)、[UI仕様書作成規約](../specifications/ui.md)）。 |
 
 すべてのプロジェクトが6分類すべてを必要とするわけではない。ドキュメントが少ない段階では`docs/`直下に置き、種類ごとの分割が必要になった時点でディレクトリを作る。
 
