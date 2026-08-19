@@ -8,6 +8,7 @@
 | --- | --- | --- | --- |
 | 共通 | [共通設計原則](core/architecture.md) | ソースコードの設計、実装、レビューを行う。 | なし |
 | 共通 | [アプリケーション設計規則](core/application-architecture.md) | アプリケーション、CLI、リポジトリ構成、データアクセス、セキュリティ、テストを変更する。 | 共通設計原則 |
+| 共通 | [OSSリポジトリ規則](core/oss-repository.md) | OSSとして公開するリポジトリのルート構成、コミュニティ運営ファイル、ドキュメント構成を変更する。 | なし |
 | 実装 | [TypeScript](implementation/typescript.md) | TypeScriptの手書きソースコード、テスト、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Rust](implementation/rust.md) | Rustのソースコード、テスト、crate構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションのソースコード、テスト、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
@@ -28,6 +29,7 @@
 | API仕様書だけを作成 | API仕様書 |
 | WebのUI仕様書だけを作成 | Web UI → UI仕様書 |
 | UI仕様書に基づいてWeb UIを実装 | 共通設計原則 → アプリケーション設計規則 → 該当する実装規則 → Web UI → UI仕様書 |
+| OSSとして新規公開する準備 | OSSリポジトリ規則 |
 
 ## 適用手順
 
