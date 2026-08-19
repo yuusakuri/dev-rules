@@ -72,6 +72,12 @@ ModuleBuilder、PSScriptAnalyzer、Pesterは開発時とCIで使用するモジ�
 Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope CurrentUser
 ```
 
+### 1.4 C#アセンブリのビルド環境
+
+C#アセンブリを含むモジュールでは、ビルド時に .NET SDK を使用する。利用する .NET SDK のバージョンは `global.json` などリポジトリ内の設定で固定し、ローカル開発と CI で同じ SDK を使用する。
+
+実行環境では C# をコンパイルせず、ビルド済み DLL を配布するため、モジュール利用者に .NET SDK を要求しない。
+
 ---
 
 ## 2. リポジトリ構成
@@ -88,15 +94,34 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | `tests/unit/` | 単体テスト。 |
 | `tests/integration/` | OS や外部コンポーネントとの統合テスト。 |
 | `tests/contract/` | ビルド済みマニフェストと公開関数の Help の契約テスト。 |
-| `.gitattributes` | PowerShellソースファイルの改行コードをLFへ統一するGit属性。 |
+| `.gitattributes` | ソースファイルの改行コードをLFへ統一し、DLLをバイナリとして扱うGit属性。 |
 | `required-modules.psd1` | ModuleBuilder、PSScriptAnalyzer、Pesterのバージョンと取得先。 |
 | `PSScriptFormatterSettings.psd1` | `Invoke-Formatter` の設定。 |
 | `PSScriptAnalyzerSettings.psd1` | `Invoke-ScriptAnalyzer` の設定。 |
 | `.github/workflows/ci.yml` | GitHub Actions を使用する場合の CI ワークフロー。 |
 | `run.ps1` | 開発・検証処理をサブコマンド単位で実行するスクリプト。 |
 | `output/<ModuleName>/` | `.psm1` `.psd1`などの配布用成果物。実行に必要なファイルのみを配置する。 |
+| `src/<ModuleName>.<Component>/` | モジュールが実行時に使用するC#プロジェクト。C#アセンブリを使用する場合だけ配置する。 |
+| `src/<ModuleName>.<Component>/<ModuleName>.<Component>.csproj` | C#プロジェクト。 |
+| `src/<ModuleName>.<Component>/*.cs` | C#ソースコード。 |
+| `output/<ModuleName>/lib/` | モジュールとともに配布するDLLと、その実行時依存ファイル。 |
+| `output/dotnet/` | `dotnet build`の中間成果物。 |
+| `tests/<ModuleName>.TestSupport/` | テスト専用C#プロジェクト。必要な場合だけ配置する。 |
+| `output/TestSupport/` | テスト専用DLLのビルド成果物。配布モジュールには含めない。 |
 
 公開関数と内部関数は1関数1ファイルとし、ファイル名を関数名と一致させる。
+
+C#アセンブリを使用する場合は、実行時DLLの名前にモジュール名を含め、他のモジュールやプロセス内のアセンブリと衝突しにくい名前にする。ネイティブAPIとの相互運用を担当する場合は`<ModuleName>.Native.dll`のような名前を使用する。
+
+`bin/`と`obj/`はビルド時の一時成果物として`.gitignore`へ追加し、Gitの管理対象から除外する。
+
+`.gitattributes`には、C#関連ファイルの改行コードとDLLのバイナリ属性を追加する。
+
+```gitattributes
+*.cs text eol=lf
+*.csproj text eol=lf
+*.dll binary
+```
 
 ---
 
@@ -118,6 +143,8 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 *.ps1xml text eol=lf
 ```
 
+C#プロジェクトのソースファイル（`.cs`、`.csproj`）は、この章の対象拡張子に含まれない。エンコーディングと改行コードの規則は12.5.1で扱う。
+
 ---
 
 ## 4. モジュールマニフェスト
@@ -136,6 +163,7 @@ Install-PSResource -RequiredResourceFile './required-modules.psd1' -Scope Curren
 | `FunctionsToExport` | ソースでは `@()` とし、ビルド時にModuleBuilder が `Public/*.ps1` から明示的な関数名を反映する。 |
 | `TypesToProcess` | `.types.ps1xml` を使用する場合だけ指定する。 |
 | `FormatsToProcess` | `.format.ps1xml` を使用する場合だけ指定する。 |
+| `RequiredAssemblies` | C#アセンブリを使用する場合に、モジュールルートからの相対パスで指定する。 |
 
 ASCII-only UTF-8でマニフェストを作成するには、以下を実行する。`New-ModuleManifest` は実行時のUIカルチャーに応じたコメントをファイルへ書き込むため、一時的に `CurrentUICulture` を `en-US` に切り替えてASCII-only で生成する。`<ModuleName>` は作成するモジュールの名前に変更する。
 
@@ -150,6 +178,16 @@ New-ModuleManifest -Path $manifestPath
 $content = [System.IO.File]::ReadAllText($manifestPath)
 [System.IO.File]::WriteAllText($manifestPath, $content, [System.Text.UTF8Encoding]::new($false))
 ```
+
+C#アセンブリを使用する場合は、モジュールの読み込み時から必要となる DLL を `RequiredAssemblies` へ指定する。
+
+```powershell
+RequiredAssemblies = @(
+    'lib/<ModuleName>.<Component>.dll'
+)
+```
+
+`RequiredAssemblies` へ指定した DLL は `RootModule` の読み込みより前に利用可能になるため、PowerShell コードから同じ DLL を `Add-Type -Path` で重ねて読み込まない。DLL が別の DLL へ実行時依存する場合は、その依存ファイルも配布成果物へ含め、モジュールを新しい PowerShell プロセスで読み込んだ場合にも依存関係を解決できる構成にする。
 
 ---
 
@@ -192,6 +230,19 @@ foreach ($outputFile in $outputFiles) {
     [System.IO.File]::WriteAllText($outputFile.FullName, $content, $utf8NoBom)
 }
 ```
+
+### 5.1 C#アセンブリのビルド
+
+C#アセンブリを使用する場合も、PowerShell モジュールと DLL を同じ `run.ps1 build` から生成する。ModuleBuilder によるビルドに続けて、次の順序で処理する。
+
+1. `dotnet build` で C# プロジェクトを Release 構成としてビルドする。
+2. `dotnet build` の終了コードが0であることを確認する。
+3. 期待する DLL が生成されたことを確認する。
+4. 実行時に必要な DLL だけを `output/<ModuleName>/lib/` へ配置する。
+
+C# のビルド出力をそのまま配布ディレクトリとして使用せず、中間出力から必要な実行時ファイルだけをモジュールの配布構成へ配置する。`bin/`、`obj/`、`.cs`、`.csproj` など、モジュールの実行に必要ない開発用ファイルは配布成果物へ含めない。
+
+C# プロジェクトのビルドに必要な `dotnet` コマンドが存在しない場合は、ビルドを終了エラーにする。
 
 ---
 
@@ -580,31 +631,36 @@ $OutputEncoding = $utf8
 $output = & example.exe $arguments
 ```
 
-### 12.5 埋め込みC#によるネイティブAPI呼び出し
+### 12.5 C#アセンブリによるWindows API呼び出し
 
-PowerShellや.NET Frameworkが必要なWindows APIを公開していない場合は、`Add-Type -TypeDefinition` でC#を埋め込む。型はモジュール固有の名前空間に配置する。プロセス内での二重コンパイルを避けるため、`Add-Type` の実行前に対象の型が存在するかを確認し、存在しない場合だけコンパイルする。
+PowerShell や .NET Framework が必要な Windows API を直接公開していない場合は、P/Invoke を C# プロジェクトへ実装し、ビルド済み DLL を PowerShell モジュールから使用する。保守対象となる C# コードは `.ps1` 内の `Add-Type -TypeDefinition` へ埋め込まず、`.csproj` に属する `.cs` ファイルとして管理する。
 
-```powershell
-if (-not ('MyModule.NativeMethods' -as [type])) {
-    $typeDefinition = @'
-using System;
-using System.Runtime.InteropServices;
+#### 12.5.1 C#プロジェクト
 
-namespace MyModule
-{
-    public static class NativeMethods
-    {
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool CloseHandle(IntPtr handle);
-    }
-}
-'@
+C#プロジェクトには少なくとも次の設定を行う。
 
-    Add-Type -TypeDefinition $typeDefinition
-}
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>...</TargetFramework>
+    <AssemblyName>...</AssemblyName>
+    <RootNamespace>...</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>
 ```
 
-`StructLayout`、`DllImport`、引数と戻り値の型を明示し、戻り値のステータスを適切な終了エラーへ変換する。戻り値だけでは失敗の理由が分からないWindows APIを呼び出す場合は、`DllImport` に `SetLastError = true` を指定し、戻り値の判定直後に `[System.Runtime.InteropServices.Marshal]::GetLastWin32Error()` でエラーコードを取得する。呼び出しからエラーコード取得までの間に他のコードを実行すると、意図しないエラーコードを取得するため、両者の間に処理を挟まない。
+C#ソースと `.csproj` は UTF-8（BOMなし）かつ LF で管理する。
+
+`TargetFramework` は、モジュールが対象とする Windows PowerShell 5.1 が読み込めるフレームワークに合わせて決定する。読み込めるアセンブリの範囲は .NET Framework のバージョンに依存するため、値を「Windows PowerShell 5.1」という名称だけから固定しない。
+
+#### 12.5.2 Windows API呼び出し
+
+P/Invoke の型はモジュール固有の名前空間へ配置する。`StructLayout`、`DllImport`、引数型、戻り値型を明示し、戻り値のステータスを適切な終了エラーへ変換する。
+
+Windows API が `GetLastError` による詳細エラーを提供する場合は `DllImport` に `SetLastError = true` を指定し、API呼び出しの結果を判定した直後に `Marshal.GetLastWin32Error()` でエラーコードを取得する。呼び出しからエラーコード取得までの間に他のコードを実行すると、意図しないエラーコードを取得するため、両者の間に処理を挟まない。
 
 ```powershell
 if (-not [MyModule.NativeMethods]::CloseHandle($Handle)) {
@@ -620,9 +676,13 @@ if (-not [MyModule.NativeMethods]::CloseHandle($Handle)) {
 }
 ```
 
-ハンドルとアンマネージドメモリは `try/finally` で解放し、秘密値を含むメモリはゼロクリアしてから解放する。
+ハンドルとアンマネージドメモリは `try/finally` で解放し、秘密値を含むメモリはゼロクリアしてから解放する。PowerShell 側は C# アセンブリが公開する型を呼び出し、メモリ確保、ポインター操作、構造体変換などの低レベル処理は可能な限り C# 側へ閉じ込める。
 
-状態変更関数では `ShouldProcess()` の承認後にC#のコンパイルとWindows API呼び出しを行う。Unit Testでは `Add-Type` を `Mock` し、`-WhatIf` を指定した呼び出しで `Add-Type` が呼び出されていないことを確認する。C#のコンパイルとWindows API呼び出しが実際に成功することは、Integration Testで検証する。
+状態変更関数では `ShouldProcess()` の承認後に Windows API 呼び出しを行う。Unit Test では呼び出し境界を `Mock` し、`-WhatIf` を指定した呼び出しで Windows API が呼び出されていないことを確認する。Windows API 呼び出しが実際に成功することは、Integration Test で検証する。
+
+#### 12.5.3 テスト専用C#アセンブリ
+
+テストで .NET 型による Test Double や補助処理が必要な場合は、製品コードとは別の C# プロジェクトとして管理する。テスト専用 DLL は `output/TestSupport/` など配布モジュール外へ生成し、`output/<ModuleName>/` には配置しない。
 
 ---
 
@@ -953,9 +1013,22 @@ Contract Test では、ビルド済みマニフェストと公開関数の Help 
 | マニフェスト | ビルド済みの `output/<ModuleName>/<ModuleName>.psd1` に対して `Test-ModuleManifest` を実行し、成功することを確認する。 |
 | Help | すべての公開関数に必要な Help が存在する。 |
 
+C#アセンブリを配布するモジュールでは、次もあわせて検証する。
+
+| 項目 | 検証 |
+| --- | --- |
+| DLL配置 | `RequiredAssemblies` が参照するDLLが配布モジュール内に存在する。 |
+| モジュール読込 | ビルド済みマニフェストをインポートできる。 |
+| 型の読込 | モジュールのインポート後に、DLLが公開する代表的な型を解決できる。 |
+| DLLの読込元 | 読み込まれたアセンブリの実体が配布モジュール内のDLLである。 |
+| 実行時依存関係 | DLLが必要とする依存アセンブリを解決できる。 |
+| テスト成果物 | テスト専用DLLが配布モジュールへ混入していない。 |
+
 ## 21. CI
 
 GitHub Actionsを使用する場合は、Windowsランナーで `powershell.exe -ExecutionPolicy Bypass -File .\run.ps1 ci` を実行する。
+
+C#プロジェクトを含む場合は、`run.ps1 ci` の前に Windows ランナーへ .NET SDK を導入し、`global.json` などで固定したバージョンをローカル開発と共通で使用する。CI 本体へ個別のビルド手順を重複して記述しない。
 
 `run.ps1` は処理をサブコマンド単位で実行できるようにする。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。
 
@@ -1022,6 +1095,9 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 1. 環境<br>17. 自動フォーマット<br>19. 静的解析<br>21. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) |
 | 1. 環境<br>20. テスト<br>21. CI | [Quick Start \| Pester](https://pester.dev/docs/v5/quick-start) |
 | 1. 環境<br>2. リポジトリ構成<br>5. ビルド | [ModuleBuilder](https://github.com/PoshCode/ModuleBuilder) |
+| 1. 環境<br>2. リポジトリ構成<br>5. ビルド<br>12. 外部呼び出し | [.NET SDK overview - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/sdk) |
+| 2. リポジトリ構成<br>12. 外部呼び出し | [MSBuild project file schema reference - Visual Studio (Windows) \| Microsoft Learn](https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-project-file-schema-reference?view=vs-2022) |
+| 21. CI | [setup-dotnet - GitHub Actions](https://github.com/actions/setup-dotnet) |
 | 3. ソースファイル<br>12. 外部呼び出し<br>13. ファイル | [about_Character_Encoding - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1) |
 | 13. ファイル | [Import-PowerShellDataFile (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/import-powershelldatafile?view=powershell-5.1) |
 | 4. モジュールマニフェスト<br>22. PowerShell Gallery | [about_Module_Manifests - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests?view=powershell-5.1) |
