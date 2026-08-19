@@ -13,6 +13,10 @@
   - [1. フォルダ構成](#1-フォルダ構成)
     - [リポジトリ構成](#リポジトリ構成)
     - [ソース構成](#ソース構成)
+    - [presentationとhandlersの使い分け](#presentationとhandlersの使い分け)
+    - [repositoriesとgatewaysの使い分け](#repositoriesとgatewaysの使い分け)
+    - [coreとinfraの節度](#coreとinfraの節度)
+    - [依存方向](#依存方向)
   - [2. データアクセス](#2-データアクセス)
     - [クエリ回数](#クエリ回数)
     - [読み取りと書き込み](#読み取りと書き込み)
@@ -30,6 +34,8 @@
 ## 1. フォルダ構成
 
 フォルダは必要になった時点で作る。ソースコード、設定ファイル、生成物は、使用する言語、フレームワーク、ビルドツールの標準構成に従って配置する。表のパスはリポジトリルートを基準とする。
+
+複数の実行単位を1つのリポジトリで管理するモノレポでは、`apps/<app-name>/`、`packages/<name>/`のように実行単位ごとにディレクトリを分ける。実行単位が1つだけのリポジトリでは`apps/<app-name>/`によるラップを省略し、以降の表で`<source-root>`が指す位置をリポジトリ直下（言語の標準構成が指定する場合はその位置）に置き換える。
 
 ### リポジトリ構成
 
@@ -53,13 +59,52 @@
 
 | パス | 説明 |
 | ---- | ---- |
-| `<source-root>/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続を配置する。 |
-| `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、UI、外部I/Oを配置する。 |
-| `<source-root>/features/<feature>/presentation/` | FeatureのUIと表示状態の制御を配置する。UIを持つFeatureだけで使用する。 |
-| `<source-root>/features/<feature>/repositories/` | Featureが所有するデータ操作の契約、接続先別の実装、外部データ形式との変換を配置する。 |
+| `<source-root>/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。 |
+| `<source-root>/core/` | 2つ以上のFeatureが実際に共有し、共同で所有するドメイン型とエラー型（Shared Kernel）を配置する。使用する場合だけ配置する。 |
+| `<source-root>/infra/` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。使用する場合だけ配置する。 |
+| `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
+| `<source-root>/features/<feature>/presentation/` | Featureが利用者にUIを表示する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用する。 |
+| `<source-root>/features/<feature>/handlers/` | FeatureがUIを介さずに外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。使用する場合だけ配置する。 |
+| `<source-root>/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージへ保存、取得する契約と実装を配置する。 |
+| `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービスと通信する契約と実装を配置する。使用する場合だけ配置する。 |
 | `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 
 言語またはフレームワークが配置を指定するエントリーポイント、ルート、生成物は、指定された場所へ配置する。
+
+### presentationとhandlersの使い分け
+
+Featureが外部からの要求を受け取る境界は、利用者にUIを描画するかどうかで分ける。画面や表示状態を扱う境界は`presentation/`、UIを介さず構造化された入出力だけを扱う境界（Web API、RPC、メッセージキューの購読、CLIコマンドなど）は`handlers/`に配置する。
+
+使い分けは実装に使う言語やフレームワークでは決めない。同じ言語で書かれていても、UIを持つアプリケーションは`presentation/`、UIを持たないバックエンドサービスは`handlers/`を使う。1つの実行単位がUIと外部公開APIの両方を持つ場合は、対応するFeatureへ両方を配置してよい。
+
+### repositoriesとgatewaysの使い分け
+
+どちらもFeatureの外部接続を、契約（インターフェース）と接続先別の実装に分けて表現する点は共通する。使い分けは、対象がFeature自身のデータの永続化かどうかで判断する。
+
+| 種別 | 対象 | 例 |
+| ---- | ---- | -- |
+| `repositories/` | Featureが所有するデータの永続化。DB、ファイル、端末ストレージなど、集合としての保存、取得、検索が中心になる操作。 | `postgres_order_repository`、`local_session_repository` |
+| `gateways/` | 永続化以外の外部システム、外部サービスとの連携。決済、通知、他サービスのAPI呼び出し、デバイスとの通信など。 | `stripe_payment_gateway`、`device_hub_gateway` |
+
+`Adapter`は、契約を特定の技術で実装する構造そのものを指すパターン名であり、フォルダ名やモジュール名としては使用しない。実際に何と接続する実装かをファイル名で明示する。
+
+### coreとinfraの節度
+
+`core/`はドメインの共有部分（Shared Kernel）であり、技術基盤や汎用ユーティリティを置く場所ではない。2つ以上のFeatureが実際に同じ型を必要とした時点で移動し、将来使うかもしれないという理由では配置しない（YAGNI）。`core/`が肥大化する場合は、共有そのものを見直すか、Featureの境界の引き方を見直す。
+
+`infra/`は業務ロジックを持たない技術的な構築処理だけを置き、Featureの型や業務ルールに依存しない。Composition Rootに代わる依存関係の解決手段ではなく、`app/`のComposition Rootが呼び出す構築処理の置き場所として使う。
+
+### 依存方向
+
+| 依存元 | 依存先 |
+| ---- | ---- |
+| `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
+| `core/` | 標準ライブラリと外部パッケージのみ。Feature、`infra/`には依存しない |
+| `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
+| Feature内の`presentation/`、`handlers/` | 同じFeatureの処理、型、`core/`、`ui/`（`presentation/`のみ） |
+| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、`core/` |
+| `repositories/`、`gateways/`の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
+| `ui/` | フレームワークのみ。`core/`、Featureには依存しない |
 
 ---
 
@@ -127,6 +172,7 @@ Shell スクリプト以外の CLI に適用する。
 | 外部I/O | 外部I/Oをテスト用の実装へ差し替えられる。 |
 | データ形式 | 外部データの形式と業務ロジックの型が分かれている。 |
 | 依存関係 | 依存関係の生成と接続が起動処理へ集約されている。 |
+| ドメインの共有 | `core/`が2つ以上のFeatureが実際に必要とする型だけで構成されている。 |
 | 継続的インテグレーション | 静的解析、書式検証、テスト、脆弱性検査を実行する。 |
 | ブランチ保護 | 主要ブランチへの保護規則を設定している。 |
 | 機密情報 | `.env`と機密情報をバージョン管理の対象外にしている。 |

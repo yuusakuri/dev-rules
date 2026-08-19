@@ -17,14 +17,18 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 | パス | 説明 |
 | ---- | ---- |
 | `apps/<app-name>/src/` | TypeScriptアプリケーションのソースルート。 |
-| `apps/<app-name>/src/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続を配置する。 |
-| `apps/<app-name>/src/features/<feature>/` | Featureが所有する型、処理、表示、外部I/Oを配置する。 |
+| `apps/<app-name>/src/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。 |
+| `apps/<app-name>/src/core/` | 2つ以上のFeatureが実際に共有するドメイン型とエラー型（Shared Kernel）を配置する。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/infra/` | 業務ロジックを持たない技術基盤（DBコネクション、ロガーなど）の構築処理を配置する。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/features/<feature>/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | Feature外へ公開する型、関数、Componentだけをexportする。 |
-| `apps/<app-name>/src/features/<feature>/presentation/screens/` | ルーティングの遷移先となるScreen Componentを配置する。 |
+| `apps/<app-name>/src/features/<feature>/presentation/screens/` | ルーティングの遷移先となるScreen Componentを配置する。UIを持つアプリケーションで使用する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/components/` | 同じFeatureの表示で再利用するComponentを配置する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/state/` | Signal、Store、Contextと表示状態の操作を配置する。 |
-| `apps/<app-name>/src/features/<feature>/repositories/` | データ操作の契約、接続先別の実装、外部データ形式との変換を配置する。 |
-| `apps/<app-name>/src/ui/` | 複数のFeatureで使用する、業務上の判断を持たないComponentとデザイン定義を配置する。 |
+| `apps/<app-name>/src/features/<feature>/handlers/` | UIを介さず外部からの要求を受け取る境界（HTTPルートハンドラー、RPC、メッセージキューの購読など）を配置する。UIを持たないバックエンドで使用する。 |
+| `apps/<app-name>/src/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、外部データ形式との変換を配置する。 |
+| `apps/<app-name>/src/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービスと通信する契約、接続先別の実装を配置する。使用する場合だけ配置する。 |
+| `apps/<app-name>/src/ui/` | 複数のFeatureで使用する、業務上の判断を持たないComponentとデザイン定義を配置する。UIを持つアプリケーションで使用する。 |
 | `apps/<app-name>/src/localization/` | 表示言語、翻訳リソース、地域別の書式化を配置する。 |
 | `apps/<app-name>/src/features/<feature>/<path>/<file>.test.ts` | ロジックの単体テストを実装ファイルと同じフォルダへ配置する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/screens/<screen>.test.tsx` | Screen Componentの表示と操作を実装ファイルと同じフォルダで検証する。 |
@@ -32,6 +36,8 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 | `apps/<app-name>/tests/integration/<feature>.test.ts` | Feature間またはFeatureと外部I/Oとの結合を検証するテストを配置する。 |
 | `apps/<app-name>/tests/e2e/<flow>.test.ts` | E2Eテスト。 |
 | `packages/<name>/` | 複数の実行単位から共有するTypeScriptパッケージ。 |
+
+`presentation/`と`handlers/`は、UIを持つフロントエンド（React、Vueなど）か、UIを持たないバックエンド（Node.jsサーバーなど）かで使い分ける。同じTypeScriptでも、アプリケーションの種類によってどちらを使うかが決まる。詳細はアプリケーション設計規則の[presentationとhandlersの使い分け](../core/application-architecture.md#presentationとhandlersの使い分け)に従う。`repositories/`と`gateways/`の使い分けも、同規則の[repositoriesとgatewaysの使い分け](../core/application-architecture.md#repositoriesとgatewaysの使い分け)に従う。
 
 ---
 

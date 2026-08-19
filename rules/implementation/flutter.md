@@ -33,6 +33,7 @@
 | `apps/<app-name>/lib/app/theme/` | `apps/myproject-client/lib/app/theme/app_theme.dart` | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
 | `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳リソースを配置する。 |
 | `apps/<app-name>/lib/l10n/generated/` | `apps/myproject-client/lib/l10n/generated/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。手動では編集しない。 |
+| `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/user_id.dart` | 2つ以上のFeatureが実際に共有するドメイン型とエラー型（Shared Kernel）を配置する。使用する場合だけ配置する。アプリケーション設計規則の[coreとinfraの節度](../core/application-architecture.md#coreとinfraの節度)に従う。 |
 | `apps/<app-name>/lib/ui/ui.dart` | `apps/myproject-client/lib/ui/ui.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品だけを`export`する。 |
 | `apps/<app-name>/lib/ui/button/` | `apps/myproject-client/lib/ui/button/primary_button.dart` | ボタンとボタンに付随する表示を配置する。 |
 | `apps/<app-name>/lib/ui/form/` | `apps/myproject-client/lib/ui/form/email_field.dart` | 入力欄、選択欄、入力エラー表示を配置する。 |
@@ -47,16 +48,18 @@
 | `apps/<app-name>/lib/features/<feature>/presentation/screens/` | `apps/myproject-client/lib/features/auth/presentation/screens/sign_in_screen.dart` | ルーティングの遷移先となるScreenを配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/widgets/` | `apps/myproject-client/lib/features/auth/presentation/widgets/password_field.dart` | 同じFeatureの表示で再利用するWidgetを配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/bloc/` | `apps/myproject-client/lib/features/auth/presentation/bloc/sign_in_bloc.dart` | FeatureのEvent、State、BLoCを配置する。 |
-| `apps/<app-name>/lib/features/<feature>/repositories/` | `apps/myproject-client/lib/features/auth/repositories/auth_repository.dart` | Repositoryの契約、接続先別の実装、外部データ形式との変換を配置する。 |
+| `apps/<app-name>/lib/features/<feature>/repositories/` | `apps/myproject-client/lib/features/auth/repositories/auth_repository.dart` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、外部データ形式との変換を配置する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_repository.dart` | `apps/myproject-client/lib/features/auth/repositories/auth_repository.dart` | Featureが必要とするデータ操作をRepositoryの契約として定義する。 |
-| `apps/<app-name>/lib/features/<feature>/repositories/<connection>_<resource>_repository.dart` | `apps/myproject-client/lib/features/auth/repositories/http_auth_repository.dart` | HTTP、データベース、端末ストレージなど、接続先別のRepository実装を定義する。 |
+| `apps/<app-name>/lib/features/<feature>/repositories/<connection>_<resource>_repository.dart` | `apps/myproject-client/lib/features/auth/repositories/http_auth_repository.dart` | データベース、端末ストレージなど、接続先別のRepository実装を定義する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_request.dart` | `apps/myproject-client/lib/features/auth/repositories/sign_in_request.dart` | 外部へ送るデータ形式とFeature内の型からの変換を定義する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_response.dart` | `apps/myproject-client/lib/features/auth/repositories/auth_session_response.dart` | 外部から受け取るデータ形式とFeature内の型への変換を定義する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_record.dart` | `apps/myproject-client/lib/features/auth/repositories/auth_session_record.dart` | データベースや端末ストレージへ保存する形式とFeature内の型との変換を定義する。 |
+| `apps/<app-name>/lib/features/<feature>/gateways/` | `apps/myproject-client/lib/features/payment/gateways/stripe_payment_gateway.dart` | 永続化以外の外部システム、外部サービスと通信する契約と接続先別の実装を配置する。使用する場合だけ配置する。データの永続化との使い分けはアプリケーション設計規則の[repositoriesとgatewaysの使い分け](../core/application-architecture.md#repositoriesとgatewaysの使い分け)に従う。 |
 | `apps/<app-name>/test/ui/` | `apps/myproject-client/test/ui/button/primary_button_test.dart` | `lib/ui/`に配置したUI部品のWidgetテストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<feature>_test.dart` | `apps/myproject-client/test/features/auth/auth_test.dart` | Featureが所有する型の値、状態、識別子、制約を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<responsibility>/` | `apps/myproject-client/test/features/auth/sign_in/` | Feature内の責務に対応する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/repositories/` | `apps/myproject-client/test/features/auth/repositories/http_auth_repository_test.dart` | Repositoryの変換、キャッシュ、エラー処理を検証する単体テストを配置する。 |
+| `apps/<app-name>/test/features/<feature>/gateways/` | `apps/myproject-client/test/features/payment/gateways/stripe_payment_gateway_test.dart` | Gatewayの変換、エラー処理を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/bloc/<bloc>_test.dart` | `apps/myproject-client/test/features/auth/presentation/bloc/sign_in_bloc_test.dart` | Eventに対するStateの遷移を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/screens/<screen>_test.dart` | `apps/myproject-client/test/features/auth/presentation/screens/sign_in_screen_test.dart` | Screenの表示と操作を検証するWidgetテストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/widgets/<widget>_test.dart` | `apps/myproject-client/test/features/auth/presentation/widgets/password_field_test.dart` | Feature内で再利用するWidgetの表示と操作を検証するWidgetテストを配置する。 |
@@ -77,15 +80,16 @@ BLoCは対応するFeatureの`presentation/bloc/`へ配置する。一つのScre
 
 | 依存元 | 依存先 |
 | ---- | ---- |
-| `app/` | 各Featureの公開API、`ui/` |
-| Screen、Widget | 同じFeatureのBLoCと型、`ui/` |
-| BLoC | 同じFeatureの処理、Repository契約、型 |
-| Feature内の処理 | 同じFeatureのRepository契約、外部操作の契約、型 |
+| `app/` | 各Featureの公開API、`core/`、`ui/` |
+| `core/` | Dart標準ライブラリと外部パッケージのみ |
+| Screen、Widget | 同じFeatureのBLoCと型、`core/`、`ui/` |
+| BLoC | 同じFeatureの処理、Repository契約、Gateway契約、型 |
+| Feature内の処理 | 同じFeatureのRepository契約、Gateway契約、型、`core/` |
 | Repository実装 | Repository契約、同じFeatureの型、外部SDK、外部データ形式 |
-| 外部操作の実装 | 外部操作の契約、外部SDK |
-| `ui/` | Flutter SDK |
+| Gateway実装 | Gateway契約、同じFeatureの型、外部SDK |
+| `ui/` | Flutter SDKのみ |
 
-外部SDKのクライアント、Repository、外部操作の実装は`app/bootstrap.dart`で生成し、コンストラクタから明示的に渡す。
+外部SDKのクライアント、Repository、Gatewayの実装は`app/bootstrap.dart`で生成し、コンストラクタから明示的に渡す。Repositoryはデータの永続化、Gatewayは永続化以外の外部システムとの連携を担う。使い分けはアプリケーション設計規則の[repositoriesとgatewaysの使い分け](../core/application-architecture.md#repositoriesとgatewaysの使い分け)に従う。
 
 ---
 
