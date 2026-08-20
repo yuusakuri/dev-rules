@@ -4,19 +4,19 @@
 
 ## 規則一覧
 
-| 分類 | 文書 | 読む条件 | 先に読む文書 |
+| 分類 | 文書 | 概要 | 先に読む文書 |
 | --- | --- | --- | --- |
-| 共通 | [共通設計原則](core/architecture.md) | ソースコードの設計、実装、レビューを行う。 | なし |
-| 共通 | [アプリケーション設計規則](core/application-architecture.md) | アプリケーション、CLI、リポジトリ構成、データアクセス、セキュリティ、テストを変更する。 | 共通設計原則 |
-| 共通 | [リポジトリ規則](core/repository.md) | リポジトリのルート構成、コミュニティ運営ファイル、ドキュメント構成を変更する。 | なし |
-| 実装 | [TypeScript](implementation/typescript.md) | TypeScriptの手書きソースコード、テスト、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Rust](implementation/rust.md) | Rustのソースコード、テスト、crate構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションのソースコード、テスト、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module.md) | Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Bash](implementation/bash.md) | Bash 3.2以上を対象とするシェルスクリプト、または`source`して利用する関数ライブラリのソースコード、テスト、フォルダ構成を変更する。 | 共通設計原則 |
-| デザイン | [Web UI](design/web-ui.md) | Web UIのデザイン、コンポーネント、レイアウト、操作、アクセシビリティを変更する。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
-| 仕様書 | [仕様書共通規則](specifications/specification-writing.md) | 領域を問わず仕様書を新規作成または変更する。 | なし |
-| 仕様書 | [UI仕様書](specifications/ui.md) | UI仕様書を新規作成または変更する。 | 仕様書共通規則 |
+| 共通 | [共通設計原則](core/architecture.md) | ソースコードの設計、実装、レビューに関する原則。 | なし |
+| 共通 | [アプリケーション設計規則](core/application-architecture.md) | アプリケーション、CLI、リポジトリ構成、データアクセス、セキュリティ、テストに関する設計規則。 | 共通設計原則 |
+| 共通 | [リポジトリ規則](core/repository.md) | リポジトリのルート構成、コミュニティ運営ファイル、ドキュメント構成に関する規則。 | なし |
+| 実装 | [TypeScript](implementation/typescript.md) | TypeScriptの手書きソースコード、テスト、プロジェクト構成に関する言語固有の追加規則。 | 共通設計原則、アプリケーション設計規則 |
+| 実装 | [Rust](implementation/rust.md) | Rustのソースコード、テスト、crate構成に関するRust固有の規則。 | 共通設計原則、アプリケーション設計規則 |
+| 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションのソースコード、テスト、プロジェクト構成に関する言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |
+| 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module.md) | Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成に関する規則。 | 共通設計原則、アプリケーション設計規則 |
+| 実装 | [Bash](implementation/bash.md) | Bash 3.2以上でmacOSとLinuxの両方から共通利用するシェルスクリプト、または`source`して利用する関数ライブラリに関する言語固有の追加規則。 | 共通設計原則 |
+| デザイン | [Web UI](design/web-ui.md) | Web UIのデザイン、コンポーネント、レイアウト、操作、アクセシビリティに関するWebデザイン基盤。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
+| 仕様書 | [仕様書共通規則](specifications/specification-writing.md) | 仕様書全般に共通する規則。 | なし |
+| 仕様書 | [UI仕様書](specifications/ui.md) | UI仕様書の作成規則。 | 仕様書共通規則 |
 
 ## 適用手順
 
