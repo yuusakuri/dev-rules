@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/architecture.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
+本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
 ---
 

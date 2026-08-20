@@ -4,7 +4,7 @@
 
 ## 作業開始時
 
-1. [`rules/README.md`](rules/README.md) を読む。
+1. [`guidelines/README.md`](guidelines/README.md) を読む。
 2. 作業内容、対象技術、成果物に一致する規則を選ぶ。
 3. 選んだ規則と、利用側プロジェクトの指示・仕様を合わせてから作業する。
 
@@ -31,6 +31,6 @@ TypeScript、Web UIの4文書が適用される。
 
 ## このリポジトリ自体を変更する場合
 
-- 規則の追加、削除、移動時は [`rules/README.md`](rules/README.md) の一覧と適用例を同時に更新する。
+- 規則の追加、削除、移動時は [`guidelines/README.md`](guidelines/README.md) の一覧と適用例を同時に更新する。
 - AIの入口や導入方法が変わる場合は、このファイルとルートの [`README.md`](README.md) を同時に更新する。
 - 規則本文には、具体的で検証可能な条件とアクションを記載する。
