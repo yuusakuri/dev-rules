@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-本書は、Dartで実装するFlutterアプリケーションのソースコード、テスト、フォルダ構成に関する言語、フレームワーク固有規則を定義する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)を前提とする。
+本書は、Dartで実装するFlutterアプリケーションの言語、フレームワーク固有規則を定義する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)を前提とする。
 
 ---
 
