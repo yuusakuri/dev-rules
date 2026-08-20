@@ -13,6 +13,7 @@
 | 実装 | [Rust](implementation/rust.md) | Rust固有の規則。 | 共通設計原則 |
 | 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションの言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module.md) | Windows PowerShell 5.1向けモジュールの開発に関する規則。 | 共通設計原則 |
+| 実装 | [通信プロトコル実装規約](implementation/communication-protocol.md) | ネットワーク通信、シリアル通信、独自の通信プロトコルまたはバイナリ形式の実装に関する規則。 | 共通設計原則。アプリケーションの一部として実装する場合はアプリケーション設計規則、該当する実装規則も読む |
 | デザイン | [Web UI](design/web-ui.md) | 特定のフレームワーク、ライブラリ、言語に依存しないWebデザイン基盤。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
 | 仕様書 | [仕様書共通規則](specifications/specification.md) | 仕様書全般に共通する規則。 | なし |
 | 仕様書 | [UI仕様書](specifications/ui-specification.md) | UI仕様書の作成規則。 | 仕様書共通規則 |
