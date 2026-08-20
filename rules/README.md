@@ -13,7 +13,7 @@
 | 実装 | [Rust](implementation/rust.md) | Rustのソースコード、テスト、crate構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションのソースコード、テスト、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module.md) | Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Bash](implementation/bash.md) | Bash 3.2以上を対象とするシェルスクリプト、または`source`して利用する関数ライブラリのソースコード、テスト、プロジェクト構成を変更する。 | 共通設計原則、アプリケーション設計規則 |
+| 実装 | [Bash](implementation/bash.md) | Bash 3.2以上を対象とするシェルスクリプト、または`source`して利用する関数ライブラリのソースコード、テスト、フォルダ構成を変更する。 | 共通設計原則 |
 | デザイン | [Web UI](design/web-ui.md) | Web UIのデザイン、コンポーネント、レイアウト、操作、アクセシビリティを変更する。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
 | 仕様書 | [仕様書共通規則](specifications/specification-writing.md) | 領域を問わず仕様書を新規作成または変更する。 | なし |
 | 仕様書 | [UI仕様書](specifications/ui.md) | UI仕様書を新規作成または変更する。 | 仕様書共通規則 |
