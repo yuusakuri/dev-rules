@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-本書は、Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する場合に適用する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)を前提とする。
+本書は、Windows PowerShell 5.1向けモジュールの開発に関する規則を定義する。本書は、[共通設計原則](../core/architecture.md)を前提とする。
 
 ---
 
