@@ -1,6 +1,6 @@
 # Windows PowerShell モジュール開発規約
 
-本書は、Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する場合に適用する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)を前提とする。
+本書は、Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する場合に適用する。本書は、[共通設計原則](../core/architecture.md)を前提とする。モジュールはアプリケーションではないため、アプリケーション設計規則は前提としない。
 
 ## 1. 環境
 

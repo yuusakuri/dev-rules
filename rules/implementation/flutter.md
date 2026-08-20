@@ -1,4 +1,4 @@
-# Flutter固有規則
+# Flutter固有規約
 
 ## 1. 概要
 
@@ -46,7 +46,7 @@
 | `apps/<app-name>/lib/features/<feature>/<responsibility>/` | `apps/myproject-client/lib/features/auth/sign_in/` | Feature内の一つの責務に属する型と処理を配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/screens/` | `apps/myproject-client/lib/features/auth/presentation/screens/sign_in_screen.dart` | ルーティングの遷移先となるScreenを配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/widgets/` | `apps/myproject-client/lib/features/auth/presentation/widgets/password_field.dart` | 同じFeatureの表示で再利用するWidgetを配置する。 |
-| `apps/<app-name>/lib/features/<feature>/presentation/bloc/` | `apps/myproject-client/lib/features/auth/presentation/bloc/sign_in_bloc.dart` | FeatureのEvent、State、BLoCを配置する。 |
+| `apps/<app-name>/lib/features/<feature>/presentation/state/` | `apps/myproject-client/lib/features/auth/presentation/state/sign_in_bloc.dart` | Featureの状態管理コードを配置する。採用する状態管理ライブラリ（BLoC、Provider、Riverpodなど）に対応する型（BLoCならEvent、State、BLoC）を配置する。一つのScreenだけが使用する状態はそのScreenで生成し、複数のScreenが使用する状態はその状態を所有する最も近い共通の親で生成する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/` | `apps/myproject-client/lib/features/auth/repositories/auth_repository.dart` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、外部データ形式との変換を配置する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_repository.dart` | `apps/myproject-client/lib/features/auth/repositories/auth_repository.dart` | Featureが必要とするデータ操作をRepositoryの契約として定義する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<connection>_<resource>_repository.dart` | `apps/myproject-client/lib/features/auth/repositories/http_auth_repository.dart` | データベース、端末ストレージなど、接続先別のRepository実装を定義する。 |
@@ -59,7 +59,7 @@
 | `apps/<app-name>/test/features/<feature>/<responsibility>/` | `apps/myproject-client/test/features/auth/sign_in/` | Feature内の責務に対応する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/repositories/` | `apps/myproject-client/test/features/auth/repositories/http_auth_repository_test.dart` | Repositoryの変換、キャッシュ、エラー処理を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/gateways/` | `apps/myproject-client/test/features/payment/gateways/stripe_payment_gateway_test.dart` | Gatewayの変換、エラー処理を検証する単体テストを配置する。 |
-| `apps/<app-name>/test/features/<feature>/presentation/bloc/<bloc>_test.dart` | `apps/myproject-client/test/features/auth/presentation/bloc/sign_in_bloc_test.dart` | Eventに対するStateの遷移を検証する単体テストを配置する。 |
+| `apps/<app-name>/test/features/<feature>/presentation/state/<state>_test.dart` | `apps/myproject-client/test/features/auth/presentation/state/sign_in_bloc_test.dart` | 状態管理コードの状態遷移を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/screens/<screen>_test.dart` | `apps/myproject-client/test/features/auth/presentation/screens/sign_in_screen_test.dart` | Screenの表示と操作を検証するWidgetテストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/widgets/<widget>_test.dart` | `apps/myproject-client/test/features/auth/presentation/widgets/password_field_test.dart` | Feature内で再利用するWidgetの表示と操作を検証するWidgetテストを配置する。 |
 | `apps/<app-name>/integration_test/<feature>_test.dart` | `apps/myproject-client/integration_test/auth_test.dart` | Featureと実際の外部I/Oとの接続を検証する結合テストを配置する。 |
@@ -67,13 +67,7 @@
 
 ---
 
-## 3. BLoC
-
-BLoCは対応するFeatureの`presentation/bloc/`へ配置する。一つのScreenだけが使用するBLoCはそのScreenで生成し、複数のScreenが使用するBLoCはその状態を所有する最も近い共通の親で生成する。
-
----
-
-## 4. 依存方向
+## 3. 依存方向
 
 依存方向を次のように固定する。
 
@@ -82,8 +76,8 @@ BLoCは対応するFeatureの`presentation/bloc/`へ配置する。一つのScre
 | `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
 | `core/` | Dart標準ライブラリと外部パッケージのみ |
 | `infra/` | 技術基盤の外部SDK、パッケージのみ |
-| Screen、Widget | 同じFeatureのBLoCと型、`core/`、`ui/` |
-| BLoC | 同じFeatureの処理、Repository契約、Gateway契約、型 |
+| Screen、Widget | 同じFeatureの状態管理コードと型、`core/`、`ui/` |
+| 状態管理コード | 同じFeatureの処理、Repository契約、Gateway契約、型 |
 | Feature内の処理 | 同じFeatureのRepository契約、Gateway契約、型、`core/` |
 | Repository実装 | Repository契約、同じFeatureの型、外部SDK、外部データ形式 |
 | Gateway実装 | Gateway契約、同じFeatureの型、外部SDK |
@@ -93,11 +87,11 @@ BLoCは対応するFeatureの`presentation/bloc/`へ配置する。一つのScre
 
 ---
 
-## 5. 検証
+## 4. 検証
 
 | 目的 | 検証対象 | ツール |
 | ---- | ---- | ---- |
 | コードの書式を統一し、機械的な差分を防ぐ。 | アプリケーション内の全Dartソースコード。 | `dart format -o none --set-exit-if-changed .` |
 | 型エラー、静的解析違反、lint違反を検出する。 | アプリケーション内のDartソースコードと解析設定。 | `flutter analyze` |
-| ロジック、Repository、BLoC、Widgetの振る舞いの破壊を検出する。 | `test/`に配置した単体テストとWidgetテスト。 | `flutter test` |
+| ロジック、Repository、状態管理コード、Widgetの振る舞いの破壊を検出する。 | `test/`に配置した単体テストとWidgetテスト。 | `flutter test` |
 | Feature、外部I/O、実行環境を結合した主要フローの破壊を検出する。 | `integration_test/`に配置した結合テストとE2Eテスト。 | `flutter test integration_test` |
