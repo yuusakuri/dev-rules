@@ -13,7 +13,7 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 表のパスはリポジトリルートを基準とする。
 
 | パス | 説明 |
-| ---- | ---- |
+| --- | --- |
 | `apps/<app-name>/src/` | TypeScriptアプリケーションのソースルート。 |
 | `apps/<app-name>/src/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。 |
 | `apps/<app-name>/src/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。 |
@@ -47,7 +47,7 @@ TypeScriptソースコードは[Google TypeScript Style Guide](https://google.gi
 ## 4. 検証
 
 | 目的 | 検証対象 | ツール |
-|---|---|---|
+| --- | --- | --- |
 | 制御構造を単純に保ち、変更時の不具合を防ぐ。 | 関数の長さ、ネストの深さ、循環的複雑度、引数の数、処理文の数。 | ESLintコアルール |
 | 型安全性とロジックの可読性を維持する。 | 危険な型操作、未処理Promise、複雑な条件式、追跡しにくいロジック。 | typescript-eslint strict-type-checked、SonarJS |
 | 不要なコードと依存関係の残存を防ぐ。 | 未使用export、未使用ファイル、未使用依存パッケージ、孤立したエントリーポイント。 | Knip |
