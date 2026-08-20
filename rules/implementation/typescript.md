@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-本書は、TypeScriptのソースコード、テスト、フォルダ構成を変更する場合に適用する言語固有の追加規則を定義する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
+本書は、TypeScriptのソースコード、テスト、フォルダ構成に関する言語固有の追加規則を定義する。本書は、[共通設計原則](../core/architecture.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
 ---
 
