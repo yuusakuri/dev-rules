@@ -14,8 +14,8 @@
 | 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションの言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module.md) | Windows PowerShell 5.1向けモジュールの開発に関する規則。 | 共通設計原則 |
 | デザイン | [Web UI](design/web-ui.md) | 特定のフレームワーク、ライブラリ、言語に依存しないWebデザイン基盤。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
-| 仕様書 | [仕様書共通規則](specifications/specification-writing.md) | 仕様書全般に共通する規則。 | なし |
-| 仕様書 | [UI仕様書](specifications/ui.md) | UI仕様書の作成規則。 | 仕様書共通規則 |
+| 仕様書 | [仕様書共通規則](specifications/specification.md) | 仕様書全般に共通する規則。 | なし |
+| 仕様書 | [UI仕様書](specifications/ui-specification.md) | UI仕様書の作成規則。 | 仕様書共通規則 |
 
 ## 適用手順
 
