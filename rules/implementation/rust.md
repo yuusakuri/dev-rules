@@ -13,7 +13,7 @@
 表のパスはリポジトリルートを基準とする。
 
 | パス | 説明 |
-| ---- | ---- |
+| --- | --- |
 | `apps/<app-name>/src/` | アプリケーションのソースルート。 |
 | `apps/<app-name>/src/app.rs` | 起動、ライフサイクル、依存関係の生成と接続（Composition Root）を定義するモジュール。 |
 | `apps/<app-name>/src/app/` | `app`の内部モジュールを配置する。 |
@@ -72,7 +72,7 @@ struct NotificationDispatcher {
 ## 4. 検証
 
 | 目的 | 検証対象 | ツール |
-|---|---|---|
+| --- | --- | --- |
 | コードの書式を統一し、機械的な差分を防ぐ。 | 全crateのRustソースコード。 | `cargo fmt --all -- --check` |
 | コンパイル可能でも不具合や保守性低下につながる記述を検出する。 | 全target、全featureのソースコードとテストコード。 | `cargo clippy --all-targets --all-features` |
 | 変更による振る舞いの破壊を検出する。 | 全target、全featureの単体テスト、結合テスト、E2Eテスト。 | `cargo test --all-targets --all-features` |
