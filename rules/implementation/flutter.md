@@ -11,7 +11,7 @@
 表のパスはリポジトリルートを基準とする。フォルダは配置するファイルが生じた時点で作る。
 
 | パス | 例 | 説明 |
-| ---- | -- | ---- |
+| --- | --- | --- |
 | `apps/<app-name>/pubspec.yaml` | `apps/myproject-client/pubspec.yaml` | パッケージ、アセット、フォント、Flutterの設定を定義する。 |
 | `apps/<app-name>/analysis_options.yaml` | `apps/myproject-client/analysis_options.yaml` | Dart Analyzerとlintの設定を定義する。 |
 | `apps/<app-name>/l10n.yaml` | `apps/myproject-client/l10n.yaml` | 多言語対応コードの生成元、生成先、基準言語を定義する。 |
@@ -72,7 +72,7 @@
 依存方向を次のように固定する。
 
 | 依存元 | 依存先 |
-| ---- | ---- |
+| --- | --- |
 | `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
 | `core/` | Dart標準ライブラリと外部パッケージのみ |
 | `infra/` | 技術基盤の外部SDK、パッケージのみ |
@@ -90,7 +90,7 @@
 ## 4. 検証
 
 | 目的 | 検証対象 | ツール |
-| ---- | ---- | ---- |
+| --- | --- | --- |
 | コードの書式を統一し、機械的な差分を防ぐ。 | アプリケーション内の全Dartソースコード。 | `dart format -o none --set-exit-if-changed .` |
 | 型エラー、静的解析違反、lint違反を検出する。 | アプリケーション内のDartソースコードと解析設定。 | `flutter analyze` |
 | ロジック、Repository、状態管理コード、Widgetの振る舞いの破壊を検出する。 | `test/`に配置した単体テストとWidgetテスト。 | `flutter test` |
