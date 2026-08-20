@@ -6,17 +6,17 @@
 
 | 分類 | 文書 | 概要 | 先に読む文書 |
 | --- | --- | --- | --- |
-| 共通 | [共通設計原則](core/architecture.md) | ソースコードの設計、実装、レビューに関する原則。 | なし |
-| 共通 | [アプリケーション設計規則](core/application-architecture.md) | アプリケーション、CLI、リポジトリ構成、データアクセス、セキュリティ、テストに関する設計規則。 | 共通設計原則 |
-| 共通 | [リポジトリ規則](core/repository.md) | リポジトリのルート構成、コミュニティ運営ファイル、ドキュメント構成に関する規則。 | なし |
-| 実装 | [TypeScript](implementation/typescript.md) | TypeScriptの手書きソースコード、テスト、プロジェクト構成に関する言語固有の追加規則。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Rust](implementation/rust.md) | Rustのソースコード、テスト、crate構成に関するRust固有の規則。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションのソースコード、テスト、プロジェクト構成に関する言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module.md) | Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成に関する規則。 | 共通設計原則、アプリケーション設計規則 |
-| デザイン | [Web UI](design/web-ui.md) | Web UIのデザイン、コンポーネント、レイアウト、操作、アクセシビリティに関するWebデザイン基盤。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
-| 仕様書 | [仕様書共通規則](specifications/specification-writing.md) | 仕様書全般に共通する規則。 | なし |
+| 共通 | [共通設計原則](core/architecture.md) | ソフトウェア開発に共通する設計原則。 | なし |
+| 共通 | [アプリケーション設計規則](core/application-architecture.md) | アプリケーションの設計規則。 | 共通設計原則 |
+| 共通 | [リポジトリ規則](core/repository.md) | リポジトリに共通するファイル、ディレクトリの役割。 | なし |
+| 実装 | [TypeScript](implementation/typescript.md) | TypeScript固有の追加規則。 | 共通設計原則 |
+| 実装 | [Rust](implementation/rust.md) | Rust固有の規則。 | 共通設計原則 |
+| 実装 | [Flutter](implementation/flutter.md) | Flutterアプリケーションの言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |
+| 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module.md) | Windows PowerShell 5.1向けモジュールの開発に関する規則。 | 共通設計原則 |
+| デザイン | [Web UI](design/web-ui.md) | 特定のフレームワーク、ライブラリ、言語に依存しないWebデザイン基盤。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
+| 仕様書 | [仕様書共通規則](specifications/specification.md) | 仕様書全般に共通する規則。 | なし |
 | 仕様書 | [API仕様書](specifications/api-specification.md) | API仕様書の作成規則。 | 仕様書共通規則 |
-| 仕様書 | [UI仕様書](specifications/ui.md) | UI仕様書の作成規則。 | 仕様書共通規則 |
+| 仕様書 | [UI仕様書](specifications/ui-specification.md) | UI仕様書の作成規則。 | 仕様書共通規則 |
 
 ## 適用手順
 

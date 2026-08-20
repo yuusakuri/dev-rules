@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-本書は、API仕様書の作成規則である。本書は、[仕様書共通規則](specification-writing.md)を前提とする。
+本書は、API仕様書の作成規則である。本書は、[仕様書共通規則](specification.md)を前提とする。
 
 API First原則に基づき、実装より先にAPIの契約を確定させる。REST APIでは、契約をOpenAPI（3.x以降）で記述し、実装、テスト、クライアントコード生成、ドキュメント生成の単一の情報源とする。gRPCのProtocol Buffers、GraphQLのSchema Definition Languageのように、採用するプロトコルが専用のインターフェース定義言語を持つ場合はそれを契約とし、OpenAPIを無理に適用しない。
 

@@ -1,8 +1,12 @@
 # Windows PowerShell モジュール開発規約
 
-本書は、Windows PowerShell 5.1向けモジュールのソースコード、テスト、ビルド、配布、プロジェクト構成を変更する場合に適用する。本書は、[共通設計原則](../core/architecture.md)、[アプリケーション設計規則](../core/application-architecture.md)を前提とする。
+## 1. 概要
 
-## 1. 環境
+本書は、Windows PowerShell 5.1向けモジュールの開発に関する規則を定義する。本書は、[共通設計原則](../core/architecture.md)を前提とする。
+
+---
+
+## 2. 環境
 
 | 項目 | 規則 |
 | --- | --- |
@@ -80,7 +84,7 @@ C#アセンブリを含むモジュールでは、ビルド時に .NET SDK を�
 
 ---
 
-## 2. リポジトリ構成
+## 3. リポジトリ構成
 
 | パス | 用途 |
 | --- | --- |
@@ -125,7 +129,7 @@ C#アセンブリを使用する場合は、実行時DLLの名前にモジュー
 
 ---
 
-## 3. ソースファイル
+## 4. ソースファイル
 
 | 項目 | 規則 |
 | --- | --- |
@@ -147,7 +151,7 @@ C#プロジェクトのソースファイル（`.cs`、`.csproj`）は、この�
 
 ---
 
-## 4. モジュールマニフェスト
+## 5. モジュールマニフェスト
 
 モジュールマニフェストには主に以下の内容を記載する。
 
@@ -191,7 +195,7 @@ RequiredAssemblies = @(
 
 ---
 
-## 5. ビルド
+## 6. ビルド
 
 ビルド前に既存の `output/<ModuleName>/` を削除し、以前の成果物が残らない状態で生成する。
 
@@ -246,7 +250,7 @@ C# プロジェクトのビルドに必要な `dotnet` コマンドが存在し�
 
 ---
 
-## 6. 命名
+## 7. 命名
 
 | 項目 | 規則 | 例 |
 | --- | --- | --- |
@@ -260,7 +264,7 @@ C# プロジェクトのビルドに必要な `dotnet` コマンドが存在し�
 
 ---
 
-## 7. 関数
+## 8. 関数
 
 ### 7.1 関数種別
 
@@ -378,7 +382,7 @@ Contract Testでは追加した同名関数が優先されること、元のCmdl
 
 ---
 
-## 8. パイプライン
+## 9. パイプライン
 
 ### 8.1 パイプライン入力
 
@@ -458,7 +462,7 @@ function Measure-MyModuleValue {
 
 ---
 
-## 9. 出力
+## 10. 出力
 
 ### 9.1 データ出力
 
@@ -501,7 +505,7 @@ $json = $value | ConvertTo-Json -Depth 10
 
 ---
 
-## 10. エラー処理
+## 11. エラー処理
 
 ### 10.1 エラーの種類
 
@@ -534,7 +538,7 @@ foreach ($pathItem in $Path) {
 
 ---
 
-## 11. 状態変更
+## 12. 状態変更
 
 ### 11.1 実行確認
 
@@ -585,7 +589,7 @@ function Set-MyModuleMonitorInternal {
 
 ---
 
-## 12. 外部呼び出し
+## 13. 外部呼び出し
 
 ### 12.1 実行
 
@@ -686,7 +690,7 @@ if (-not [MyModule.NativeMethods]::CloseHandle($Handle)) {
 
 ---
 
-## 13. ファイル
+## 14. ファイル
 
 ### 13.1 パス
 
@@ -724,7 +728,7 @@ Windows PowerShell 5.1 の `-Encoding UTF8` は UTF-8（BOMあり）であり、
 
 ---
 
-## 14. 通信
+## 15. 通信
 
 ### 14.1 Web 要求
 
@@ -798,7 +802,7 @@ foreach ($path in $paths) {
 
 ---
 
-## 15. コードスタイル
+## 16. コードスタイル
 
 ### 15.1 変数スコープ
 
@@ -860,7 +864,7 @@ Get-Content @parameters
 
 ---
 
-## 16. ヘルプ
+## 17. ヘルプ
 
 公開関数にはコメントベースのヘルプを記述する。
 
@@ -899,7 +903,7 @@ MyModule.Monitor
 
 ---
 
-## 17. 自動フォーマット
+## 18. 自動フォーマット
 
 コードフォーマットには `Invoke-Formatter` を使用し、リポジトリ直下の `PSScriptFormatterSettings.psd1` を使用する。
 
@@ -950,7 +954,7 @@ MyModule.Monitor
 }
 ```
 
-## 18. 構文チェック
+## 19. 構文チェック
 
 PowerShellコードの構文チェックには `System.Management.Automation.Language.Parser` を使用し、各メソッドの解析エラー件数が0件であることを確認する。
 
@@ -959,7 +963,7 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 | ファイル | `[System.Management.Automation.Language.Parser]::ParseFile()` |
 | 文字列 | `[System.Management.Automation.Language.Parser]::ParseInput()` |
 
-## 19. 静的解析
+## 20. 静的解析
 
 静的解析には PSScriptAnalyzer の `Invoke-ScriptAnalyzer` を使用し、リポジトリ直下の `PSScriptAnalyzerSettings.psd1` を使用する。既定ルールを使用し、重大度が `Error` または `Warning` の指摘を検査する。
 
@@ -988,7 +992,7 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 | 未使用 | 未使用変数など PSScriptAnalyzer で検出可能なものを検査する。 |
 | BOM | ソースは UTF-8（BOMなし）かつ ASCII-only とするため、`PSUseBOMForUnicodeEncodedFile` は除外する。 |
 
-## 20. テスト
+## 21. テスト
 
 テストには Pester を使用する。Unit Test、Integration Test、Contract Test は、ビルド済みの `output/<ModuleName>/<ModuleName>.psd1` をインポートして実施する。
 
@@ -1024,7 +1028,7 @@ C#アセンブリを配布するモジュールでは、次もあわせて検証
 | 実行時依存関係 | DLLが必要とする依存アセンブリを解決できる。 |
 | テスト成果物 | テスト専用DLLが配布モジュールへ混入していない。 |
 
-## 21. CI
+## 22. CI
 
 GitHub Actionsを使用する場合は、Windowsランナーで `powershell.exe -ExecutionPolicy Bypass -File .\run.ps1 ci` を実行する。
 
@@ -1055,7 +1059,7 @@ C#プロジェクトを含む場合は、`run.ps1 ci` の前に Windows ラン�
 
 ---
 
-## 22. PowerShell Gallery
+## 23. PowerShell Gallery
 
 PowerShell Galleryは、モジュールを検索、取得、公開するリポジトリとして使用する。各操作には `Microsoft.PowerShell.PSResourceGet` を使用する。
 
@@ -1091,49 +1095,49 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 
 | 本書の章 | 参考資料 |
 | --- | --- |
-| 1. 環境<br>4. モジュールマニフェスト | [about_PowerShell_Editions - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_editions?view=powershell-5.1) |
-| 1. 環境<br>17. 自動フォーマット<br>19. 静的解析<br>21. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) |
-| 1. 環境<br>20. テスト<br>21. CI | [Quick Start \| Pester](https://pester.dev/docs/v5/quick-start) |
-| 1. 環境<br>2. リポジトリ構成<br>5. ビルド | [ModuleBuilder](https://github.com/PoshCode/ModuleBuilder) |
-| 1. 環境<br>2. リポジトリ構成<br>5. ビルド<br>12. 外部呼び出し | [.NET SDK overview - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/sdk) |
-| 2. リポジトリ構成<br>12. 外部呼び出し | [MSBuild project file schema reference - Visual Studio (Windows) \| Microsoft Learn](https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-project-file-schema-reference?view=vs-2022) |
-| 21. CI | [setup-dotnet - GitHub Actions](https://github.com/actions/setup-dotnet) |
-| 3. ソースファイル<br>12. 外部呼び出し<br>13. ファイル | [about_Character_Encoding - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1) |
-| 13. ファイル | [Import-PowerShellDataFile (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/import-powershelldatafile?view=powershell-5.1) |
-| 4. モジュールマニフェスト<br>22. PowerShell Gallery | [about_Module_Manifests - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests?view=powershell-5.1) |
-| 4. モジュールマニフェスト | [New-ModuleManifest (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest?view=powershell-5.1) |
-| 6. 命名 | [Get-Verb (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/get-verb?view=powershell-5.1) |
-| 6. 命名 | [Strongly Encouraged Development Guidelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/strongly-encouraged-development-guidelines?view=powershell-5.1) |
-| 7. 関数<br>8. パイプライン | [about_Functions_Advanced_Parameters - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-5.1) |
-| 7. 関数 | [about_Functions_Advanced - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced?view=powershell-5.1) |
-| 7. 関数 | [about_Functions_OutputTypeAttribute - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute?view=powershell-5.1) |
-| 7. 関数<br>9. 出力 | [Everything you wanted to know about PSCustomObject - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-pscustomobject?view=powershell-5.1) |
-| 7. 関数 | [ProxyCommand.Create Method (System.Management.Automation) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.proxycommand.create?view=powershellsdk-7.4.0) |
-| 8. パイプライン<br>9. 出力 | [about_Pipelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-5.1) |
-| 9. 出力<br>10. エラー処理 | [about_Output_Streams - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_output_streams?view=powershell-5.1) |
-| 9. 出力 | [about_Return - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_return?view=powershell-5.1) |
-| 9. 出力 | [about_Format.ps1xml - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_format.ps1xml?view=powershell-5.1) |
-| 10. エラー処理 | [about_Error_Handling - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_error_handling?view=powershell-5.1) |
-| 11. 状態変更 | [Everything you wanted to know about ShouldProcess - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-shouldprocess?view=powershell-5.1) |
-| 12. 外部呼び出し | [about_Automatic_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1) |
-| 12. 外部呼び出し | [about_Preference_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1) |
-| 12. 外部呼び出し | [Add-Type (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/add-type?view=powershell-5.1) |
-| 13. ファイル | [about_Path_Syntax - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_path_syntax?view=powershell-5.1) |
-| 14. 通信 | [Invoke-RestMethod (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/Microsoft.PowerShell.Utility/invoke-restmethod?view=powershell-5.1) |
-| 14. 通信 | [Invoke-WebRequest (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-5.1) |
-| 14. 通信 | [HttpClient Class (System.Net.Http) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=netframework-4.8.1) |
-| 14. 通信 | [HttpCompletionOption Enum (System.Net.Http) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpcompletionoption?view=netframework-4.8.1) |
-| 14. 通信 | [Transport Layer Security (TLS) best practices with .NET Framework \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls) |
-| 14. 通信 | [AngleSharp](https://github.com/AngleSharp/AngleSharp) |
-| 15. コードスタイル | [about_Scopes - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scopes?view=powershell-5.1) |
-| 15. コードスタイル | [about_Splatting - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_splatting?view=powershell-5.1) |
-| 15. コードスタイル | [about_Comparison_Operators - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comparison_operators?view=powershell-5.1) |
-| 16. ヘルプ | [about_Comment_Based_Help - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1) |
-| 17. 自動フォーマット | [Invoke-Formatter (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-formatter?view=ps-modules) |
-| 18. 構文チェック | [Parser Class (System.Management.Automation.Language) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.parser?view=powershellsdk-7.4.0) |
-| 19. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) |
-| 4. モジュールマニフェスト<br>19. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) |
-| 20. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) |
-| 21. CI | [Workflow syntax for GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) |
-| 1. 環境 | [Install a package manager for PowerShell - PowerShell \| Microsoft Learn](https://learn.microsoft.com/powershell/gallery/powershellget/update-powershell-51) |
-| 1. 環境<br>22. PowerShell Gallery | [Microsoft.PowerShell.PSResourceGet Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/?view=powershellget-3.x) |
+| 2. 環境<br>5. モジュールマニフェスト | [about_PowerShell_Editions - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_editions?view=powershell-5.1) |
+| 2. 環境<br>18. 自動フォーマット<br>20. 静的解析<br>22. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) |
+| 2. 環境<br>21. テスト<br>22. CI | [Quick Start \| Pester](https://pester.dev/docs/v5/quick-start) |
+| 2. 環境<br>3. リポジトリ構成<br>6. ビルド | [ModuleBuilder](https://github.com/PoshCode/ModuleBuilder) |
+| 2. 環境<br>3. リポジトリ構成<br>6. ビルド<br>13. 外部呼び出し | [.NET SDK overview - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/sdk) |
+| 3. リポジトリ構成<br>13. 外部呼び出し | [MSBuild project file schema reference - Visual Studio (Windows) \| Microsoft Learn](https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-project-file-schema-reference?view=vs-2022) |
+| 22. CI | [setup-dotnet - GitHub Actions](https://github.com/actions/setup-dotnet) |
+| 4. ソースファイル<br>13. 外部呼び出し<br>14. ファイル | [about_Character_Encoding - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1) |
+| 14. ファイル | [Import-PowerShellDataFile (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/import-powershelldatafile?view=powershell-5.1) |
+| 5. モジュールマニフェスト<br>23. PowerShell Gallery | [about_Module_Manifests - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests?view=powershell-5.1) |
+| 5. モジュールマニフェスト | [New-ModuleManifest (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest?view=powershell-5.1) |
+| 7. 命名 | [Get-Verb (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/get-verb?view=powershell-5.1) |
+| 7. 命名 | [Strongly Encouraged Development Guidelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/strongly-encouraged-development-guidelines?view=powershell-5.1) |
+| 8. 関数<br>9. パイプライン | [about_Functions_Advanced_Parameters - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-5.1) |
+| 8. 関数 | [about_Functions_Advanced - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced?view=powershell-5.1) |
+| 8. 関数 | [about_Functions_OutputTypeAttribute - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute?view=powershell-5.1) |
+| 8. 関数<br>10. 出力 | [Everything you wanted to know about PSCustomObject - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-pscustomobject?view=powershell-5.1) |
+| 8. 関数 | [ProxyCommand.Create Method (System.Management.Automation) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.proxycommand.create?view=powershellsdk-7.4.0) |
+| 9. パイプライン<br>10. 出力 | [about_Pipelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-5.1) |
+| 10. 出力<br>11. エラー処理 | [about_Output_Streams - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_output_streams?view=powershell-5.1) |
+| 10. 出力 | [about_Return - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_return?view=powershell-5.1) |
+| 10. 出力 | [about_Format.ps1xml - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_format.ps1xml?view=powershell-5.1) |
+| 11. エラー処理 | [about_Error_Handling - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_error_handling?view=powershell-5.1) |
+| 12. 状態変更 | [Everything you wanted to know about ShouldProcess - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-shouldprocess?view=powershell-5.1) |
+| 13. 外部呼び出し | [about_Automatic_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1) |
+| 13. 外部呼び出し | [about_Preference_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1) |
+| 13. 外部呼び出し | [Add-Type (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/add-type?view=powershell-5.1) |
+| 14. ファイル | [about_Path_Syntax - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_path_syntax?view=powershell-5.1) |
+| 15. 通信 | [Invoke-RestMethod (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/Microsoft.PowerShell.Utility/invoke-restmethod?view=powershell-5.1) |
+| 15. 通信 | [Invoke-WebRequest (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-5.1) |
+| 15. 通信 | [HttpClient Class (System.Net.Http) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=netframework-4.8.1) |
+| 15. 通信 | [HttpCompletionOption Enum (System.Net.Http) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpcompletionoption?view=netframework-4.8.1) |
+| 15. 通信 | [Transport Layer Security (TLS) best practices with .NET Framework \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls) |
+| 15. 通信 | [AngleSharp](https://github.com/AngleSharp/AngleSharp) |
+| 16. コードスタイル | [about_Scopes - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scopes?view=powershell-5.1) |
+| 16. コードスタイル | [about_Splatting - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_splatting?view=powershell-5.1) |
+| 16. コードスタイル | [about_Comparison_Operators - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comparison_operators?view=powershell-5.1) |
+| 17. ヘルプ | [about_Comment_Based_Help - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1) |
+| 18. 自動フォーマット | [Invoke-Formatter (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-formatter?view=ps-modules) |
+| 19. 構文チェック | [Parser Class (System.Management.Automation.Language) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.parser?view=powershellsdk-7.4.0) |
+| 20. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) |
+| 5. モジュールマニフェスト<br>20. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) |
+| 21. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) |
+| 22. CI | [Workflow syntax for GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) |
+| 2. 環境 | [Install a package manager for PowerShell - PowerShell \| Microsoft Learn](https://learn.microsoft.com/powershell/gallery/powershellget/update-powershell-51) |
+| 2. 環境<br>23. PowerShell Gallery | [Microsoft.PowerShell.PSResourceGet Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/?view=powershellget-3.x) |
