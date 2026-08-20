@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-本書は、Windows PowerShell 5.1向けモジュールの開発に関する規則を定義する。本書は、[共通設計原則](../core/architecture.md)を前提とする。
+本書は、Windows PowerShell 5.1向けモジュールの開発に関する規則を定義する。本書は、[共通設計原則](../core/design-guidelines.md)を前提とする。
 
 ---
 

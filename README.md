@@ -4,7 +4,7 @@
 
 ## AIエージェントから使う
 
-AIエージェントは最初に [`AGENTS.md`](AGENTS.md) を読み、[`rules/README.md`](rules/README.md) の適用表から作業に必要な文書だけを選ぶ。複数の条件に該当する場合は、該当する文書をすべて併用する。
+AIエージェントは最初に [`AGENTS.md`](AGENTS.md) を読み、[`guidelines/README.md`](guidelines/README.md) の適用表から作業に必要な文書だけを選ぶ。複数の条件に該当する場合は、該当する文書をすべて併用する。
 
 このリポジトリをsubmoduleとして利用する場合、利用側リポジトリのルートにある `AGENTS.md` から明示的に入口を参照する。
 
@@ -21,7 +21,7 @@ AIエージェントは最初に [`AGENTS.md`](AGENTS.md) を読み、[`rules/RE
 .
 ├── AGENTS.md                 # AIエージェント向けの入口
 ├── README.md                 # 人向けの概要と導入方法
-└── rules/
+└── guidelines/
     ├── README.md             # 適用条件、読み順、優先順位
     ├── core/                 # 共通の設計規則
     ├── implementation/       # 技術固有の実装規則
@@ -29,7 +29,7 @@ AIエージェントは最初に [`AGENTS.md`](AGENTS.md) を読み、[`rules/RE
     └── specifications/       # 仕様書作成規則
 ```
 
-文書の一覧と適用条件は [`rules/README.md`](rules/README.md) を正とする。
+文書の一覧と適用条件は [`guidelines/README.md`](guidelines/README.md) を正とする。
 
 ## 利用方法
 
