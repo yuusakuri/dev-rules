@@ -9,6 +9,7 @@
 | 共通 | [共通設計原則](core/design-guidelines.md) | ソフトウェア開発に共通する設計原則。 | なし |
 | 共通 | [アプリケーション設計規則](core/application-design-guidelines.md) | アプリケーションの設計規則。 | 共通設計原則 |
 | 共通 | [リポジトリ規則](core/repository-guidelines.md) | リポジトリに共通するファイル、ディレクトリの役割。 | なし |
+| 共通 | [Git規則](core/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 実装 | [TypeScript](implementation/typescript-guidelines.md) | TypeScript固有の追加規則。 | 共通設計原則 |
 | 実装 | [Rust](implementation/rust-guidelines.md) | Rust固有の規則。 | 共通設計原則 |
 | 実装 | [Flutter](implementation/flutter-guidelines.md) | Flutterアプリケーションの言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |

@@ -20,7 +20,6 @@
 10. [ログ](#10-ログ)
 11. [パフォーマンス](#11-パフォーマンス)
 12. [ドキュメント規則](#12-ドキュメント規則)
-13. [開発フロー](#13-開発フロー)
 
 ---
 
@@ -347,37 +346,5 @@ A → B → A のような循環依存はモジュール間の境界が崩壊し
 ### 公開 API、モジュール
 
 モジュールが利用側へ公開する関数とモジュールにはドキュメントコメントを書く。内部実装を分割するために export している要素は対象に含めない。エラーケースと戻り値の意味を必ず記載する。
-
-### ADR（Architecture Decision Records）
-
-重要な設計決定は `docs/adr/` に記録する。例外を認める場合も ADR として記録し、理由と結果を残す。
-
----
-
-## 13. 開発フロー
-
-PR マージ前にフォーマットチェック、静的解析 / lint、全テスト実行、依存関係の脆弱性スキャンをすべて通過することを必須とする。lint の警告はエラー扱いにする。
-
-### ブランチ戦略：GitHub Flow
-
-`main` は常にデプロイ可能な状態を保つ。直接プッシュは禁止。PR は最低1名のレビュー承認が必須。Squash merge で履歴を線形に保つ。
-
-```
-main
-  └── feature/order-placement
-  └── fix/order-validation-bug
-  └── refactor/use-case-extraction
-```
-
-### コミットメッセージ：Conventional Commits
-
-```
-feat(order): add place order use case
-fix(auth): correct token expiration check
-refactor(order): extract validated value types
-test(order): add repository integration tests
-docs(readme): update setup instructions
-chore(deps): upgrade dependency version
-```
 
 ---
