@@ -17,9 +17,9 @@
 
 PR マージ前にフォーマットチェック、静的解析 / lint、全テスト実行、依存関係の脆弱性スキャンをすべて通過することを必須とする。lint の警告はエラー扱いにする。
 
-### ブランチ戦略：[GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow)
+### ブランチ戦略：GitHub Flow
 
-`main` は常にデプロイ可能な状態を保つ。直接プッシュは禁止。PR は最低1名のレビュー承認が必須。Squash merge で履歴を線形に保つ。
+本プロジェクトは [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow) を採用する。`main` は常にデプロイ可能な状態を保つ。直接プッシュは禁止。PR は最低1名のレビュー承認が必須。Squash merge で履歴を線形に保つ。
 
 ```
 main
@@ -28,13 +28,13 @@ main
   └── refactor/use-case-extraction
 ```
 
-### ブランチ名：[Conventional Branch](https://conventional-branch.github.io/)
+### ブランチ名：Conventional Branch
 
-ブランチ名は Conventional Branch に従う。ただし、AI Agent Source Prefixes は使用しない。
+ブランチ名は [Conventional Branch](https://conventional-branch.github.io/) に従う。ただし、AI Agent Source Prefixes は使用しない。
 
-### コミットメッセージ：[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+### コミットメッセージ：Conventional Commits
 
-タイトルは1行50文字以内とし、Conventional Commits の形式に従う。
+タイトルは1行50文字以内とし、[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) の形式に従う。
 
 ```
 feat(order): add place order use case
