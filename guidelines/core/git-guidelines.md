@@ -1,21 +1,15 @@
 # Git規則
 
-## 1. 概要
+## 目次
 
-本書は、Gitを使った開発フローの規則を定義する。
+1. [概要](#1-概要)
+2. [開発フロー](#2-開発フロー)
 
 ---
 
-## 目次
+## 1. 概要
 
-- [Git規則](#git規則)
-  - [目次](#目次)
-  - [1. 概要](#1-概要)
-  - [2. 開発フロー](#2-開発フロー)
-    - [ブランチ戦略：GitHub Flow](#ブランチ戦略github-flow)
-    - [ブランチ名：Conventional Branch](#ブランチ名conventional-branch)
-    - [コミットメッセージ：Conventional Commits](#コミットメッセージconventional-commits)
-    - [コミットのamend](#コミットのamend)
+本書は、Gitを使った開発フローの規則を定義する。
 
 ---
 
