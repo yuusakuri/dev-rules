@@ -11,7 +11,7 @@
 
 ## 1. 概要
 
-本書は、Dartで実装するFlutterアプリケーションの言語、フレームワーク固有規則を定義する。本書は、[共通設計原則](../core/design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)を前提とする。
+本書は、Dartで実装するFlutterアプリケーションの言語、フレームワーク固有規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)を前提とする。
 
 ---
 
