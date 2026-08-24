@@ -755,6 +755,24 @@ Windows PowerShell 5.1 の `-Encoding UTF8` は UTF-8（BOMあり）であり、
 
 `.psd1` は `Import-PowerShellDataFile` で読み込む。読み込んだ結果に対して、`Hashtable` など想定する型であること、必要なキーがすべて存在すること、各値が想定する形式であることを検証し、すべての検証が成功してから状態を変更する。
 
+### 13.4 アーカイブの展開
+
+ZIP アーカイブの展開には `Expand-Archive` を使用せず、`[System.IO.Compression.ZipFile]` を使用する。
+
+| 問題 | 内容 |
+| --- | --- |
+| 処理速度 | 内部オーバーヘッドや進捗表示の影響で、ファイル数が多い ZIP や数百 MB ～ GB 単位の解凍に時間がかかる。 |
+| 日本語ファイル名の文字化け | 文字コード（Shift_JIS / UTF-8）を明示指定するパラメーターがないため、作成環境によっては解凍時にファイル名が化ける。 |
+
+`ExtractToDirectory()` には ZIP エントリ名の文字コードを引数として渡し、ZIP 作成時の実際の文字コードに合わせる。
+
+```powershell
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+$entryNameEncoding = [System.Text.Encoding]::GetEncoding(932) # Shift_JIS
+[System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestinationPath, $entryNameEncoding)
+```
+
 ---
 
 ## 15. 通信
