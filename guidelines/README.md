@@ -10,8 +10,8 @@
 | 共通 | [アプリケーション設計規則](core/application-design-guidelines.md) | アプリケーションの設計規則。 | 共通設計原則 |
 | 共通 | [リポジトリ規則](core/repository-guidelines.md) | リポジトリに共通するファイル、ディレクトリの役割。 | なし |
 | 共通 | [Git規則](core/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
-| 実装 | [TypeScript](implementation/typescript-guidelines.md) | TypeScript固有の追加規則。 | 共通設計原則 |
-| 実装 | [Rust](implementation/rust-guidelines.md) | Rust固有の規則。 | 共通設計原則 |
+| 実装 | [TypeScript](implementation/typescript-guidelines.md) | TypeScript固有の追加規則。 | 共通設計原則、アプリケーション設計規則 |
+| 実装 | [Rust](implementation/rust-guidelines.md) | Rust固有の規則。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Flutter](implementation/flutter-guidelines.md) | Flutterアプリケーションの言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュールの開発に関する規則。 | 共通設計原則 |
 | デザイン | [デザインシステム](ui/design-system.md) | UIを持つWebプロジェクトの視覚表現、レイアウト、状態、動きを変更する。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
