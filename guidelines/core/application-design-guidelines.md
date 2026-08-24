@@ -49,12 +49,21 @@
 | `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。例: `stripe_payment_gateway` |
 | `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 
+### `core/`と`infra/`の内部構成
+
+`core/`と`infra/`の直下に関連するファイルが複数生じた場合は、次の単位でサブフォルダへまとめる。関連するファイルが1つだけの場合はサブフォルダを作らず、直下へ配置する。
+
+| パス | 分け方 | 例 |
+| --- | --- | --- |
+| `<source-root>/core/<domain>/` | 複数のFeatureが共有する一つの業務概念でまとめる。言語上の種類による`types/`、`models/`、`errors/`や、役割が不明確な`utils/`は作らない。 | `core/identity/user_id`、`core/commerce/money` |
+| `<source-root>/infra/<resource>/` | 構築する外部資源、製品、通信方式ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 | `infra/postgres/connection_pool`、`infra/sentry/client` |
+
 ### 依存方向
 
 | 依存元 | 依存先 |
 | --- | --- |
 | `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
-| `core/` | 標準ライブラリと外部パッケージのみ。Feature、`infra/`には依存しない |
+| `core/` | 標準ライブラリと業務型の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
 | `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
 | Feature内の`presentation/`、`handlers/` | 同じFeatureの処理、型、`core/`、`ui/`（`presentation/`のみ） |
 | Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、`core/` |
@@ -72,6 +81,10 @@
 ### 読み取りと書き込み
 
 読み取りと書き込みで必要なデータ構造、性能、処理量、整合性が異なる場合は、CQRSを採用する。書き込み側は業務上の制約と整合性を扱い、読み取り側は呼び出し元が必要とする形式と応答性能を扱うことで、それぞれを独立して最適化できる。
+
+### トランザクションは一連の業務処理を単位にする
+
+複数の永続化操作をまとめて成功または失敗させる場合は、一連の業務処理を一つのトランザクションとして扱う。各Repositoryで個別に確定せず、業務処理を調整する側で開始、確定、取消しを管理する。ORMやデータアクセスライブラリが同等の機能を持つ場合はその機能を使用し、Unit of Workという独自の型を重ねて定義しない。
 
 ---
 
