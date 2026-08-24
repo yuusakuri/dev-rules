@@ -761,16 +761,13 @@ ZIP アーカイブの展開には `Expand-Archive` を使用せず、`[System.I
 
 | 問題 | 内容 |
 | --- | --- |
-| 処理速度 | 内部オーバーヘッドや進捗表示の影響で、ファイル数が多い ZIP や数百 MB ～ GB 単位の解凍に時間がかかる。 |
-| 日本語ファイル名の文字化け | 文字コード（Shift_JIS / UTF-8）を明示指定するパラメーターがないため、作成環境によっては解凍時にファイル名が化ける。 |
-
-`ExtractToDirectory()` には ZIP エントリ名の文字コードを引数として渡し、ZIP 作成時の実際の文字コードに合わせる。
+| 処理速度 | 内部オーバーヘッドや進捗表示の影響で、ファイルサイズの大きい ZIP の解凍に時間がかかる。 |
+| 非ASCIIファイル名の文字化け | 文字コードを指定するパラメーターがないため、解凍すると非ASCIIファイル名が文字化けする可能性がある。 |
 
 ```powershell
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-$entryNameEncoding = [System.Text.Encoding]::GetEncoding(932) # Shift_JIS
-[System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestinationPath, $entryNameEncoding)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestinationPath)
 ```
 
 ---
