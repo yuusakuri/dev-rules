@@ -40,7 +40,7 @@
 | パス | 説明 |
 | --- | --- |
 | `<source-root>/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。フレームワークによる制限や規則がある場合は`bootstrap/`へ配置する。 |
-| `<source-root>/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。肥大化する場合はFeatureの境界を見直す。 |
+| `<source-root>/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。肥大化する場合はFeatureの境界を見直す。 |
 | `<source-root>/infra/` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。Featureの型や業務ルールに依存せず、`app/`のComposition Rootが呼び出す。 |
 | `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
@@ -48,6 +48,12 @@
 | `<source-root>/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。例: `postgres_order_repository` |
 | `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。例: `stripe_payment_gateway` |
 | `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
+
+### `app/`の内部構成
+
+`app/`で複数のFeatureや実行経路の依存関係を構成する場合は、Feature、HTTPサーバー、バックグラウンド処理など、独立して構築できる単位ごとのモジュールへ分割する。各モジュールは必要な共有資源を引数で受け取り、構築済みの公開境界を返す。起動処理は共有資源の生成と各モジュールの接続だけを行う。
+
+フレームワークへ一つの状態型を登録する場合は、その型を`app/`に配置する。状態型には実行単位で共有する外部資源、設定、構築済みのFeature境界だけを保持し、Featureの業務処理へ状態型全体を渡さない。
 
 ### `core/`と`infra/`の内部構成
 
