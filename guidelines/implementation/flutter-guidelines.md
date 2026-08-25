@@ -83,7 +83,7 @@
 | 依存元 | 依存先 |
 | --- | --- |
 | `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
-| `core/` | Dart標準ライブラリと外部パッケージのみ |
+| `core/` | Dart標準ライブラリと業務型の表現に必要な外部パッケージのみ。Flutter SDK、Feature、`infra/`、外部システムのSDKには依存しない |
 | `infra/` | 技術基盤の外部SDK、パッケージのみ |
 | Screen、Widget | 同じFeatureの状態管理コードと型、`core/`、`ui/` |
 | 状態管理コード | 同じFeatureの処理、Repository契約、Gateway契約、型 |

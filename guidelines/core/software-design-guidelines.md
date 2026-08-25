@@ -6,7 +6,7 @@
 2. [責務の分離](#2-責務の分離)
 3. [依存関係の管理](#3-依存関係の管理)
 4. [複雑性の制御](#4-複雑性の制御)
-5. [モジュール、クラス設計](#5-モジュールクラス設計)
+5. [型とカプセル化](#5-型とカプセル化)
 6. [設計パターン](#6-設計パターン)
 7. [命名](#7-命名)
 8. [エラーハンドリング](#8-エラーハンドリング)
@@ -65,7 +65,7 @@ Type、Interface、Class、Functionなどのプログラミング言語上の構
 
 ### 具体ではなく抽象に依存する（Dependency Inversion）
 
-上位モジュールは下位モジュールの具体的な実装に依存せず、どちらも抽象（インターフェース）に依存する。具体を直接呼ぶと、実装を変えるたびに呼び出し元も書き換えることになる。間に抽象を置けば、実装を差し替えても呼び出し元はそのままでよく、テストではモックへ置き換えられる。
+上位モジュールを外部技術などの下位モジュールから分離する必要がある場合は、上位モジュールが必要とする契約を定義し、両者をその契約に依存させる。依存の向きを利用側の要求へ向けることで、具体的な実装の変更が上位の業務処理へ波及しない。
 
 ### 差し替えても壊れないようにする（Liskov Substitution）
 
@@ -75,27 +75,37 @@ Type、Interface、Class、Functionなどのプログラミング言語上の構
 
 モジュールは、新しい振る舞いの追加に対して開き、既存コードの変更に対して閉じた状態を目指す。機能追加のたびに既存コードへ手を入れると、動いていた処理まで巻き込む。インターフェースとDependency Inversionを組み合わせれば、実装を追加するだけで機能を広げられる。
 
+### 依存関係を明示的に受け渡す（Dependency Injection）
+
+処理が必要とする依存関係は、コンストラクター、関数の引数、生成時に設定するフィールドなど、呼び出し側から渡せる形で宣言する。必須の依存関係を省略可能な項目として扱わず、生成時または呼び出し時に不足を検出できる型とAPIにする。
+
+処理の内部から、グローバル変数、静的アクセサー、DIコンテナー、Service Locatorを使って依存関係を検索しない。取得場所が隠れると、処理の理解と単体テストが難しくなる。
+
+DIコンテナーを使用する場合も、業務処理を担う型や関数は、通常のコンストラクターまたは関数呼び出しで生成、実行できる状態を保つ。
+
+### 依存関係の構成を業務処理から分離する
+
+依存関係の実装、設定、生成、結線、ライフサイクルは、Composition Rootとしてアプリケーションの起動または構成を担当する範囲で決定する。業務処理は渡された依存関係を使うだけとし、その場で外部サービスやインフラストラクチャーの実装を生成しない。
+
+結線には、通常のコード、DIコンテナー、自動登録のいずれも使用できる。方式にかかわらず、最終的な依存関係を追跡でき、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出できるようにする。
+
+終了処理が必要な依存関係は、それを生成または所有する構成側でライフサイクルを管理する。初期化は依存される側から依存する側の順に行い、終了はその逆順に行う。順序を誤ると、まだ初期化されていない依存関係や、解放済みのリソースへのアクセスが起きる。
+
+### 必要な場合だけ依存先を抽象化する
+
+実装の交換、外部技術との分離、複数実装の切り替えが必要な場合は、利用側が必要とする契約を定義する。契約には、提供側の全機能ではなく、利用側が使う操作だけを含める。
+
+純粋な計算、値変換、内部データ構造、交換する必要のない実装には、将来必要になる可能性やテスト用のモックだけを理由に抽象を追加しない。抽象がなければ、実装と処理の流れをそのまま追える。
+
 ### 実行環境に依存する処理を差し替え可能にする
 
 外部I/O、永続化、時刻、ID生成、乱数など、実行のたびに結果が変わり得るものは、呼び出し元から差し替えられる形で抽象化する。直接埋め込むと、テストに外部サービスやDBが必要になる。抽象化すれば、時刻やIDをテスト用の固定値へ置き換えて検証できる。
-
-### 依存関係を明示的に渡す（Dependency Injection）
-
-依存する機能やオブジェクトは、関数の引数または型のフィールドとして外部から明示的に渡す。グローバル状態やサービスロケータなど依存を隠す仕組みは、何を使っているかを読んでも分からなくし、テストでの差し替えも難しくするため避ける。
-
-依存関係の生成と接続は、Composition Rootとして各アプリケーションの起動処理へ集約し、業務処理から切り離す。構成と実装の選択が一か所に集まっていれば、全体の組み立てをそこだけで把握でき、テスト用の実装への差し替えも同じ場所で済む。
-
-構築は、Composition Rootでの直接的な生成と受け渡しによる手動DIを基本とする。依存グラフが大きくなり、手動の構築コード自体が保守の負担になる場合は、DIフレームワークの採用を検討する。
 
 ### 循環依存を避ける
 
 A → B → A のような循環依存は、モジュール間の境界が崩れている状態を示す。一方を変更すればもう一方も変更が必要になり、単独でのビルドやテストもできない。
 
 両者が必要とする共通部分は、双方から依存される下位モジュールとして切り出す。
-
-### 初期化と終了の順序を守る
-
-初期化処理は依存される側から依存する側の順に行い、終了処理はその逆順で行う。順序を誤ると、まだ初期化されていないモジュールや、解放済みリソースへのアクセスが起きる。
 
 ### 設定値をロジックに直接埋め込まない
 
@@ -131,9 +141,19 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ロジック層の関数は、同じ入力なら常に同じ結果を返す処理だけを行う。副作用を持つ処理は、Infrastructure層、ハンドラー、エントリポイントなど、あらかじめ決めた境界にのみ書く。ロジック層のテストに実際のI/Oは要らず、外の世界に触れている箇所も探さずに分かる。
 
+### リファクタリングは振る舞いを保った小さな変更に分ける
+
+既存コードの内部構造を整理する場合は、外部から観測できる振る舞いを変えない小さな変更に分け、各変更後に関連するテストを実行する。機能変更を伴う場合も、構造の整理と振る舞いの変更を個別に確認できる単位へ分ける。
+
+### ネストを深くしない
+
+関数本体を1段目として、インデントが3段を超える場合は、早期returnまたは関数抽出を検討する。
+
+深いネストは、1つの関数が複数の判断を抱え込んでいる兆候なので、インデントを浅くする小手先の変更ではなく、責務の分け方を見直す。
+
 ---
 
-## 5. モジュール、クラス設計
+## 5. 型とカプセル化
 
 ### 内部構造を外部へ公開しない
 
@@ -158,12 +178,6 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 継承は、インターフェースの実装、つまり振る舞いの契約を表す目的でのみ使う。実装の再利用を目的とした継承は行わず、委譲を使う。
 
 実装継承では、子クラスが親クラスの内部実装に依存するため、親の内部を変えると子が壊れる。委譲が依存するのは相手の公開インターフェースだけで、相手の内部が変わっても影響を受けない。相手をインターフェース経由で差し替えられるため、テストも容易になる。
-
-### ネストを深くしない
-
-関数本体を1段目として、インデントが3段を超える場合は、早期returnまたは関数抽出を検討する。
-
-深いネストは、1つの関数が複数の判断を抱え込んでいる兆候なので、インデントを浅くする小手先の変更ではなく、責務の分け方を見直す。
 
 ---
 
@@ -191,9 +205,19 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 操作を遅延実行、キューイング、再試行、記録、取り消しする必要がある場合は、Commandパターンを使う。操作の種類と入力をCommandとして表し、操作を要求する側と実行する側を分ける。実行の順序や方法を、要求するコードに触れずに変更できる。
 
-### 外部モジュールや非互換インターフェースへの依存を隠す（Adapter）
+### 既存の非互換インターフェースを接続する（Adapter）
 
-外部ライブラリやモジュールのAPIをそのまま内部コードへ露出させると、差し替えるときに影響が全体へ広がる。Adapterパターンでラッパーを挟み、内部コードが外部の具体的なAPIを知らずに済む構造にする。
+利用側と提供側にすでに存在するインターフェースが互換でない場合は、Adapterパターンで一方の操作とデータを他方の形式へ変換する。変換以外の業務上の判断はAdapterに持たせない。
+
+### 永続化処理をRepositoryへ分離する
+
+業務ロジックをDB、ファイル、端末ストレージなどの保存方式から分離する場合は、Repositoryパターンを使う。Repositoryは利用側に必要な取得、保存、削除などの操作だけを公開し、SQL、ORMのQuery型、DB接続、カーソル、ファイル形式など保存方式に固有の型と処理を実装内へ閉じ込める。
+
+検索条件は用途ごとの取得操作または読み取り専用クエリとして定義する。既存のORMやデータアクセスAPIと同じ粒度の汎用CRUDを包むだけのRepositoryは設けない。
+
+### 外部システムをGatewayで分離する
+
+決済、通知、他サービスのAPI、外部ライブラリ、デバイスなど、永続化以外の外部システムや外部資源を利用する場合は、Gatewayパターンを使う。Gatewayは利用側の目的に沿った操作だけを公開し、外部APIの呼び出し、外部形式との変換、外部SDKの型とエラーを実装内へ閉じ込める。引数、戻り値、エラーは利用側が扱う型で定義し、業務上の判断は利用側で行う。
 
 ### 既存モジュールに手を加えずに機能を追加する（Decorator）
 
@@ -261,6 +285,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore` | 名詞 | データ |
 | `Registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry` | 名詞 | データ |
 | `Repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する抽象に使用する。インターフェースとして定義し、実装を差し替えられる構造にする。 | `OrderRepository`、`PostgresOrderRepository` | 名詞 | データ |
+| `Gateway` | 永続化以外の外部システムや外部資源を、利用側の目的に沿った操作で扱う抽象に使用する。具体的な接続先を実装の名前に含める。 | `PaymentGateway`、`StripePaymentGateway` | 名詞 | 通信 |
 | `Pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool` | 名詞 | リソース |
 | `Cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache` | 名詞 | データ |
 | `Buffer` | バイト列や要素を一時的に蓄積する型に使用する。 | `ReceiveBuffer` | 名詞 | データ |
@@ -429,23 +454,26 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ## 12. 参考資料
 
-| 本書の章 | 参考資料 |
-| --- | --- |
-| 5. モジュール、クラス設計 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) |
-| 5. モジュール、クラス設計 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) |
-| 5. モジュール、クラス設計 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) |
-| 5. モジュール、クラス設計 | [Type safety - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/type-safety.html) |
-| 8. エラーハンドリング | [Error Handling - The Rust Programming Language](https://doc.rust-lang.org/book/ch09-00-error-handling.html) |
-| 8. エラーハンドリング | [Interoperability - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/interoperability.html) |
-| 9. 並行処理 | [Fearless Concurrency - The Rust Programming Language](https://doc.rust-lang.org/book/ch16-00-concurrency.html) |
-| 9. 並行処理 | [Shared State \| Tokio](https://tokio.rs/tokio/tutorial/shared-state) |
-| 10. ログ | [tracing - Rust](https://docs.rs/tracing/latest/tracing/) |
-| 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) |
-| 11. コードコメント | [How to write documentation - The rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html) |
-| 11. コードコメント | [RFC 1574: More API documentation conventions](https://rust-lang.github.io/rfcs/1574-more-api-documentation-conventions.html) |
-| 11. コードコメント | [Documentation - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html) |
-| 11. コードコメント | [Go Doc Comments](https://go.dev/doc/comment) |
-| 11. コードコメント | [PEP 257 - Docstring Conventions](https://peps.python.org/pep-0257/) |
-| 11. コードコメント | [TSDoc](https://tsdoc.org/) |
-| 11. コードコメント | [Shell Style Guide \| styleguide](https://google.github.io/styleguide/shellguide.html) |
-| 11. コードコメント | [Google C++ Style Guide: TODO Comments](https://google.github.io/styleguide/cppguide.html#TODO_Comments) |
+| 本書の章 | 参考資料 | 説明 |
+| --- | --- | --- |
+| 3. 依存関係の管理 | [Inversion of Control Containers and the Dependency Injection pattern](https://martinfowler.com/articles/injection.html) | 依存性注入とService Locatorを比較し、構成と利用の分離を説明する。 |
+| 3. 依存関係の管理 | [Dependency injection guidelines - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines) | 明示的な依存性注入、Service Locatorの回避、依存関係のライフサイクルを説明する。 |
+| 3. 依存関係の管理 | [Dependency Injection :: Spring Framework](https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html) | コンストラクター注入とコンテナーによる依存関係の構成を説明する。 |
+| 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
+| 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
+| 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |
+| 5. 型とカプセル化 | [Type safety - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/type-safety.html) | 型で不正な使用を防ぐAPI設計の指針を示す。 |
+| 8. エラーハンドリング | [Error Handling - The Rust Programming Language](https://doc.rust-lang.org/book/ch09-00-error-handling.html) | 回復できる失敗と回復できない誤りの扱いを分けて説明する。 |
+| 8. エラーハンドリング | [Interoperability - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/interoperability.html) | エラー型が持つべき情報と、原因を保持する構造を示す。 |
+| 9. 並行処理 | [Fearless Concurrency - The Rust Programming Language](https://doc.rust-lang.org/book/ch16-00-concurrency.html) | メッセージパッシングと共有状態の使い分けを説明する。 |
+| 9. 並行処理 | [Shared State \| Tokio](https://tokio.rs/tokio/tutorial/shared-state) | 共有状態のロックの持ち方と、保持したまま待機しない理由を説明する。 |
+| 10. ログ | [tracing - Rust](https://docs.rs/tracing/latest/tracing/) | 処理の文脈を構造化して記録する方法を示す。 |
+| 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) | ログの重大度と構造化項目の標準を定義する。 |
+| 11. コードコメント | [How to write documentation - The rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html) | ドキュメントコメントの書き方と節の使い方を説明する。 |
+| 11. コードコメント | [RFC 1574: More API documentation conventions](https://rust-lang.github.io/rfcs/1574-more-api-documentation-conventions.html) | 要約行の文体と、節の名称、順序を定義する。 |
+| 11. コードコメント | [Documentation - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html) | 例、失敗条件、リンクなど公開APIの文書化項目を示す。 |
+| 11. コードコメント | [Go Doc Comments](https://go.dev/doc/comment) | Goのドキュメントコメントの構成と文体を定義する。 |
+| 11. コードコメント | [PEP 257 - Docstring Conventions](https://peps.python.org/pep-0257/) | Pythonのdocstringの形式と要約行の規約を定義する。 |
+| 11. コードコメント | [TSDoc](https://tsdoc.org/) | TypeScriptのドキュメントコメントのタグと構文を定義する。 |
+| 11. コードコメント | [Shell Style Guide \| styleguide](https://google.github.io/styleguide/shellguide.html) | シェル関数のコメント位置と記載項目を示す。 |
+| 11. コードコメント | [Google C++ Style Guide: TODO Comments](https://google.github.io/styleguide/cppguide.html#TODO_Comments) | TODOコメントに残す情報の形式を示す。 |
