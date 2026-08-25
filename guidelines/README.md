@@ -13,7 +13,7 @@
 | 実装 | [TypeScript](implementation/typescript-guidelines.md) | TypeScript固有の追加規則。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Rust](implementation/rust-guidelines.md) | Rust固有の規則。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Flutter](implementation/flutter-guidelines.md) | Flutterアプリケーションの言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュールの開発に関する規則。 | 共通設計原則 |
+| 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュールの開発に関する規則。 | 共通設計原則、リポジトリ規則 |
 | デザイン | [デザインシステム](ui/design-system.md) | UIを持つWebプロジェクトの視覚表現、レイアウト、状態、動きを変更する。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
 | デザイン | [Web UI](ui/web-ui-guidelines.md) | 特定のフレームワーク、ライブラリ、言語に依存しないWebデザイン基盤。 | デザインシステム。実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
 | 仕様書 | [仕様書共通規則](specifications/specification-guidelines.md) | 仕様書全般に共通する規則。 | なし |
