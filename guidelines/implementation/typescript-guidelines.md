@@ -65,7 +65,7 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 | --- | --- | --- |
 | コードの書式を統一し、機械的な差分を防ぐ。 | TypeScript、JavaScript、JSONなど、自動フォーマットの対象としたファイル。 | `prettier . --check` |
 | コンパイラーが検出する型エラーを防ぐ。 | TypeScriptのソースコード、テストコード、型定義。 | `tsc --noEmit` |
-| 制御構造を単純に保ち、変更時の不具合を防ぐ。 | 3段階以上のネスト。 | ESLintの`max-depth`ルールで2段階までを許可し、違反を`error`にする。 |
+| 制御構造を単純に保ち、変更時の不具合を防ぐ。 | 関数本体を1段目として、インデントが3段を超えるネスト。 | ESLintの`max-depth`ルールで3段階までを許可し、違反を`error`にする。 |
 | 型安全性とロジックの可読性を維持する。 | 危険な型操作、未処理Promise、複雑な条件式、追跡しにくいロジック。 | typescript-eslint strict-type-checked、SonarJS |
 | モジュール間の循環依存を防ぐ。 | TypeScriptとJavaScriptのimport。 | eslint-plugin-importの`import/no-cycle`ルールを`error`として設定する。 |
 | 不要なコードと依存関係の残存を防ぐ。 | 未使用export、未使用ファイル、未使用依存パッケージ、孤立したエントリーポイント。 | Knip |
