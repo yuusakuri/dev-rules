@@ -13,16 +13,15 @@
 9. [並行処理](#9-並行処理)
 10. [ログ](#10-ログ)
 11. [ドキュメント規則](#11-ドキュメント規則)
+12. [参考資料](#12-参考資料)
 
 ---
 
 ## 1. 概要
 
-本書は、言語やフレームワークに依存しないソフトウェア設計原則を定義する。他人が読んでも意図が分かり、変更しても壊れる範囲が予測できるコードを保つことを目的とする。
+本書は、言語やフレームワークに依存しないソフトウェア設計原則を定義する。
 
-各規則は「何をするか」と「なぜそうするか」を併記する。理由が当てはまらない場面では、規則の字面ではなく理由に沿って判断する。
-
-使用する言語、フレームワークが定める規則、慣習、制約と本書が競合する場合は、そちらを優先する。本書の原則を適用する場合も、その言語、フレームワークの標準的な書き方へ落とし込む。
+本書の原則は、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
 ---
 
@@ -100,9 +99,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ### 設定値をロジックに直接埋め込まない
 
-タイムアウト値、リトライ回数、アドレスなど、実行環境や運用によって変わる値をコードへ直接書かない。設定ファイル、環境変数、設定オブジェクト経由で取得する。コードと設定を分けておけば、同じビルド成果物を設定の差し替えだけで各環境へ展開でき、環境ごとに分岐したコードを持たずに済む。
-
-参考: [The Twelve-Factor App: Config](https://12factor.net/config)
+タイムアウト値、リトライ回数、アドレスなど、実行環境や運用によって変わる値をコードへ直接書かない。
 
 ---
 
@@ -142,15 +139,21 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 利用側が子要素の配置や内部状態を直接操作しなければ使えない設計を避ける。内部構造が外から見えていると事実上の仕様になり、内部を変えるだけで利用側が壊れる。コンポーネント自身に内部構造を管理させ、外へは操作の意味だけを見せる。
 
-### 不正な値と状態を作れない型にする
+### データと、そのデータを扱う操作を同じ型に置く
 
-入力値の制約や取り得る状態は、コメントや実行時チェックに頼らず型で表現し、無効な値や不正な状態遷移をコンパイル時または生成時に防ぐ。
+ある型のデータを取り出して外側で判断、加工する処理が繰り返し現れる場合、その判断はデータを持つ型の操作として定義する。データだけを持つ型と、それを外から操作する処理に分かれていると、同じ判断が呼び出し側ごとに書かれ、規則が変わったときの直し漏れが起きる。
 
-検証は値を受け取る境界で行い、検証を通過した事実を専用の型として持たせる。生の文字列や数値のまま持ち回ると、利用する箇所ごとに同じ検証が必要になり、検証漏れが実行時まで表面化しない。
+### 意味を持つ値は専用の型で表す
 
-要素の追加、削除、並び順、重複、件数などに業務上の制約がある集合も同様に、生のコレクション型のまま持たせず、許可された操作だけを公開する専用の型にする。
+金額、識別子、期間など、業務上の意味を持つ値は、生の文字列や数値のままにせず専用の型で表す。生成時に制約を検証し、生成後は不変とし、等価性は保持する値で判断する。
 
-参考: [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)、[Rust API Guidelines: Type safety](https://rust-lang.github.io/api-guidelines/type-safety.html)
+生の型のままでは、利用する箇所ごとに同じ検証が必要になり、利用者IDと注文IDの取り違えのような誤りも防げない。
+
+### 不正な状態を作れないようにする
+
+取り得る状態と遷移は、コメントや実行時チェックに頼らず型で表現し、無効な状態や不正な遷移をコンパイル時または生成時に防ぐ。
+
+要素の追加、削除、並び順、重複、件数などに業務上の制約がある集合も、生のコレクション型のまま持たせず、許可された操作だけを公開する専用の型にする。
 
 ### 継承より委譲を選ぶ
 
@@ -323,8 +326,6 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 エラーは、ログに記録する文脈が揃う境界まで伝播させる。発生場所では、誰のどの処理で起きたのかが分からない。ログの記録方法は[10章](#10-ログ)に従う。
 
-参考: [Error Handling（The Rust Programming Language）](https://doc.rust-lang.org/book/ch09-00-error-handling.html)、[Rust API Guidelines: Interoperability](https://rust-lang.github.io/api-guidelines/interoperability.html)
-
 ---
 
 ## 9. 並行処理
@@ -351,8 +352,6 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 すべての外部I/Oとブロッキング操作にタイムアウトを設定する。応答が返らない相手を無期限に待つと、原因の分からない停止になる。
 
-参考: [Fearless Concurrency（The Rust Programming Language）](https://doc.rust-lang.org/book/ch16-00-concurrency.html)、[Shared State（Tokio Tutorial）](https://tokio.rs/tokio/tutorial/shared-state)
-
 ---
 
 ## 10. ログ
@@ -377,8 +376,6 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | WARN | 処理は継続できるが、想定外で確認が必要な事象 |
 | ERROR | 処理が失敗し、対処が必要な事象 |
 
-参考: [tracing](https://docs.rs/tracing/latest/tracing/)、[OpenTelemetry Logs Data Model](https://opentelemetry.io/docs/specs/otel/logs/data-model/)
-
 ---
 
 ## 11. ドキュメント規則
@@ -394,3 +391,20 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 モジュールが利用側へ公開する関数とモジュールには、ドキュメントコメントを書く。内部実装を分割するためにexportしている要素は含めない。
 
 どのような場合に失敗するか（エラーケース）と、戻り値が何を表すかは必ず記載する。利用側がこれらを実装から推測すると、実装の詳細に依存したコードが生まれる。
+
+---
+
+## 12. 参考資料
+
+| 本書の章 | 参考資料 |
+| --- | --- |
+| 5. モジュール、クラス設計 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) |
+| 5. モジュール、クラス設計 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) |
+| 5. モジュール、クラス設計 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) |
+| 5. モジュール、クラス設計 | [Type safety - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/type-safety.html) |
+| 8. エラーハンドリング | [Error Handling - The Rust Programming Language](https://doc.rust-lang.org/book/ch09-00-error-handling.html) |
+| 8. エラーハンドリング | [Interoperability - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/interoperability.html) |
+| 9. 並行処理 | [Fearless Concurrency - The Rust Programming Language](https://doc.rust-lang.org/book/ch16-00-concurrency.html) |
+| 9. 並行処理 | [Shared State \| Tokio](https://tokio.rs/tokio/tutorial/shared-state) |
+| 10. ログ | [tracing - Rust](https://docs.rs/tracing/latest/tracing/) |
+| 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) |
