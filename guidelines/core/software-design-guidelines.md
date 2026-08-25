@@ -378,13 +378,52 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ## 11. コードコメント
 
-- WHYを書く。WHATはコードを読めば分かる
+### 記述の基準
+
+- コメントは最小限にする。コードを読めば分かることではなく、そう書いた理由を書く
+- 装飾的なコメントブロック（`# ===== Title =====` など）でコードのセクションを区切らない
+- 処理のまとまりに見出しコメントが必要だと判断した場合は、コメントを書かず、そのまとまりを適切な名前の関数やクラスへ抽出する
 - コメントアウトしたコードは残さない。復元はバージョン管理の履歴に任せる
 - 暫定的な固定値には `TODO:` を付け、その値の意味と、変更が必要になる理由を書く
+- コメントは英語で書き、語彙は平易なもの（英検3級程度）にとどめる
 
 ### ドキュメントコメント
 
 モジュールが利用側へ公開する関数とモジュールには、ドキュメントコメントを書く。内部実装を分割するためにexportしている要素は含めない。
+
+節の構成はrustdocに従い、`///` などの記法は言語の標準へ置き換える。
+
+````
+/// <description>
+///
+/// # Arguments
+///
+/// * <arg> - <A brief description of the argument>
+///
+/// # Examples
+///
+/// ```
+/// <Example code>
+/// ```
+///
+/// <output description>
+///
+/// ```text
+/// <Example output>
+/// ```
+````
+
+- 先頭の1文は、対象が何をするかの要約にする。三人称単数現在で書く。例: `Returns the number of active sessions.`
+- 例が1つの場合も、節名は複数形の `# Examples` にする
+- 失敗、パニック、安全性の条件を書く場合は、`# Examples`、`# Panics`、`# Errors`、`# Safety` の順に並べる
+- コードは ``` のコードブロックまたは `` で囲む
+- 出力例は可能な限り記載する。短い場合は\<output description\>に `` で囲んで含め、長い場合は `text` のコードブロックで示す
+- \<output description\>は、「Output:」のような記号付きの見出しにせず、「below」「following」などを使い、主語と動詞のある文で書く
+
+### Bash
+
+- ドキュメントコメントは関数の直前に書く
+- 引数の説明には、`$1` などの位置パラメータより、アルファベットで始まる変数名を優先する
 
 ---
 
@@ -402,3 +441,11 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | 9. 並行処理 | [Shared State \| Tokio](https://tokio.rs/tokio/tutorial/shared-state) |
 | 10. ログ | [tracing - Rust](https://docs.rs/tracing/latest/tracing/) |
 | 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) |
+| 11. コードコメント | [How to write documentation - The rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html) |
+| 11. コードコメント | [RFC 1574: More API documentation conventions](https://rust-lang.github.io/rfcs/1574-more-api-documentation-conventions.html) |
+| 11. コードコメント | [Documentation - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html) |
+| 11. コードコメント | [Go Doc Comments](https://go.dev/doc/comment) |
+| 11. コードコメント | [PEP 257 - Docstring Conventions](https://peps.python.org/pep-0257/) |
+| 11. コードコメント | [TSDoc](https://tsdoc.org/) |
+| 11. コードコメント | [Shell Style Guide \| styleguide](https://google.github.io/styleguide/shellguide.html) |
+| 11. コードコメント | [Google C++ Style Guide: TODO Comments](https://google.github.io/styleguide/cppguide.html#TODO_Comments) |
