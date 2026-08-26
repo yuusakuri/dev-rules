@@ -4,14 +4,18 @@
 
 1. [概要](#1-概要)
 2. [フォルダ構成](#2-フォルダ構成)
-3. [型](#3-型)
-4. [検証](#4-検証)
+3. [検証](#3-検証)
+4. [参考資料](#4-参考資料)
 
 ---
 
 ## 1. 概要
 
-本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
+本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)を前提とする。
+
+TypeScriptの`strict`と、型情報を使用するlintを有効にする。公開する関数、コンポーネント、コールバックの引数と戻り値の型を明示する。
+
+記述方法は、「参考資料」のGoogle TypeScript Style Guideに従う。
 
 ---
 
@@ -43,14 +47,7 @@
 
 ---
 
-## 3. 型
-
-- TypeScriptの`strict`と、型情報を使用するlintを有効にする。
-- 公開する関数、コンポーネント、コールバックの引数と戻り値の型を明示する。
-
----
-
-## 4. 検証
+## 3. 検証
 
 ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 
@@ -67,3 +64,14 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 | 変更による振る舞いの破壊と未検証箇所を検出する。 | 単体テスト、結合テストと、行、分岐、関数、文のカバレッジ。 | `vitest run --coverage` |
 | 利用者の主要な操作と、停止時の影響が大きい処理経路の破壊を検出する。 | `tests/e2e/`に配置したE2Eテスト。 | `package.json`の`test:e2e`スクリプト |
 | 依存関係に含まれる既知の脆弱性を検出する。 | リポジトリ内のすべてのJavaScript向けロックファイル。 | `osv-scanner scan source -r .` |
+
+---
+
+## 4. 参考資料
+
+| 本書の章 | 参考資料 | 説明 |
+| --- | --- | --- |
+| 1. 概要、3. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
+| 1. 概要 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
+| 1. 概要、3. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
+| 3. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を確認する。 |

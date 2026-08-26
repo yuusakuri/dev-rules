@@ -6,6 +6,7 @@
 2. [フォルダ構成](#2-フォルダ構成)
 3. [Repository、Gatewayの実装](#3-repositorygatewayの実装)
 4. [検証](#4-検証)
+5. [参考資料](#5-参考資料)
 
 ---
 
@@ -13,7 +14,7 @@
 
 本書は、Rust固有の規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)を前提とする。
 
-[The Rust Style Guide](https://doc.rust-lang.org/style-guide/)と[Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html)に従う。
+記述方法は、「参考資料」のThe Rust Style GuideとRust API Guidelinesに従う。
 
 ---
 
@@ -79,8 +80,21 @@ struct NotificationDispatcher {
 
 ## 4. 検証
 
+テストは「フォルダ構成」に従って配置する。実行コマンドは、各プロジェクトで定義する。
+
 | 目的 | 検証対象 | ツール |
 | --- | --- | --- |
 | コードの書式を統一し、機械的な差分を防ぐ。 | 全crateのRustソースコード。 | `cargo fmt --all -- --check` |
 | コンパイル可能でも不具合や保守性低下につながる記述を検出し、警告を残さない。 | 全workspace、全target、全featureのソースコードとテストコード。 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | 依存関係に含まれる既知の脆弱性を検出する。 | リポジトリ内のすべての`Cargo.lock`。 | `osv-scanner scan source -r .` |
+
+---
+
+## 5. 参考資料
+
+| 本書の章 | 参考資料 | 説明 |
+| --- | --- | --- |
+| 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
+| 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
+| 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的なファイルとフォルダの配置を確認する。 |
+| 4. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの実行方法とlintの設定を確認する。 |

@@ -25,7 +25,7 @@
 21. [テスト](#21-テスト)
 22. [CI](#22-ci)
 23. [PowerShell Gallery](#23-powershell-gallery)
-24. [参考資料](#参考資料)
+24. [参考資料](#24-参考資料)
 
 ---
 
@@ -1182,7 +1182,7 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 
 ---
 
-## 参考資料
+## 24. 参考資料
 
 | 本書の章 | 参考資料 |
 | --- | --- |

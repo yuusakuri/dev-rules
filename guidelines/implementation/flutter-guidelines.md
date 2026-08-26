@@ -6,6 +6,7 @@
 2. [フォルダ構成](#2-フォルダ構成)
 3. [依存方向](#3-依存方向)
 4. [検証](#4-検証)
+5. [参考資料](#5-参考資料)
 
 ---
 
@@ -17,7 +18,7 @@
 
 ## 2. フォルダ構成
 
-本書において、表示状態の管理にはBLoCを使用する前提で記載する。Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定める配置へ置き換える。方式が配置を定めない場合は、Flutterのアーキテクチャガイドに合わせて`view_models/`を使用する。
+本書において、表示状態の管理にはBLoCを使用する前提で記載する。Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定める配置へ置き換える。方式が配置を定めない場合は、「参考資料」のFlutterアーキテクチャガイドに合わせて`view_models/`を使用する。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
@@ -74,24 +75,13 @@
 
 ## 3. 依存方向
 
-依存方向を次のように固定する。
+依存方向はアプリケーション設計規則に従う。Flutter固有の依存関係を次に示す。
 
 | 依存元 | 依存先 |
 | --- | --- |
-| `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
-| `core/` | Dart標準ライブラリと業務型の表現に必要な外部パッケージのみ。Flutter SDK、Feature、`infra/`、外部システムのSDKには依存しない |
-| `infra/` | 技術基盤の外部SDK、パッケージのみ |
-| Screen、Widget | 同じFeatureのBLoCと型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のWidget、`core/`、`ui/` |
-| BLoC | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
-| Handler | 同じFeatureの処理と型、`core/` |
-| Feature内の処理 | 同じFeatureのRepository契約、Gateway契約、型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
-| Repository実装 | Repository契約、同じFeatureの型、外部SDK、外部データ形式 |
-| Gateway実装 | Gateway契約、同じFeatureの型、外部SDK、外部データ形式 |
+| Screen、Widget | 同じFeatureのBLoCと型、`ui/` |
+| BLoC | 同じFeatureの処理と型 |
 | `ui/` | Flutter SDKのみ |
-
-別Featureの要素は、依存先の`<feature>.dart`から`export`されたものだけを参照し、依存先の`presentation/`、`repositories/`、`gateways/`などの内部ファイルを直接importしない。別FeatureのWidgetを利用する側は、公開された引数とコールバックだけを使い、依存先のBLoCや内部状態を直接操作しない。
-
-UIを持つアプリケーションでは、Featureから別Featureのルートをimportしない。Screen、Widget、BLoCは遷移が必要になったことをコールバックまたはEventで通知し、`app/router/`が遷移先を決定する。
 
 外部SDKのクライアント、Repository、Gatewayの実装は`app/bootstrap/`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、RepositoryとGatewayはFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
 
@@ -108,3 +98,14 @@ UIを持つアプリケーションでは、Featureから別Featureのルート�
 | ロジック、Repository、BLoC、Widgetの振る舞いの破壊を検出する。 | `test/`に配置した単体テストとWidgetテスト。 | `flutter test` |
 | Feature、外部I/O、実行環境を結合した主要フローの破壊を検出する。 | `integration_test/`に配置した結合テストとE2Eテスト。 | `flutter test integration_test` |
 | 依存関係に含まれる既知の脆弱性を検出する。 | リポジトリ内のすべての`pubspec.lock`。 | `osv-scanner scan source -r .` |
+
+---
+
+## 5. 参考資料
+
+| 本書の章 | 参考資料 | 説明 |
+| --- | --- | --- |
+| 2. フォルダ構成 | [Flutterアーキテクチャガイド](https://docs.flutter.dev/app-architecture/guide) | Flutterが示すUI層とデータ層の責務、ViewModelの配置を確認する。 |
+| 2. フォルダ構成 | [Internationalizing Flutter apps](https://docs.flutter.dev/ui/internationalization) | 翻訳リソースと多言語対応コードの設定方法を確認する。 |
+| 4. 検証 | [Testing Flutter apps](https://docs.flutter.dev/testing/overview) | 単体テスト、Widgetテスト、結合テストの役割を確認する。 |
+| 4. 検証 | [Check app functionality with an integration test](https://docs.flutter.dev/testing/integration-tests) | `integration_test`による主要フローの検証方法を確認する。 |
