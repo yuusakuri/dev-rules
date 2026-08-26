@@ -13,8 +13,6 @@
 
 本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
-共通設計原則で`snake_case`により示された複合語の識別子は、TypeScriptの`lowerCamelCase`へ読み替える。ファイル名は`snake_case`にする。
-
 ---
 
 ## 2. フォルダ構成
@@ -23,8 +21,7 @@
 | --- | --- | --- |
 | `apps/<app-name>/src/` | `apps/myproject-web/src/` | TypeScriptアプリケーションのソースルート。 |
 | `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、実行経路との接続を配置する。 |
-| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/auth.ts` | 依存関係を生成して接続するComposition Rootを配置する。 |
-| `apps/<app-name>/src/bootstrap/` | `apps/myproject-web/src/bootstrap/auth.ts` | フレームワークにより`app/`に制限や規則がある場合だけ、`app/bootstrap/`の代わりにこのフォルダへComposition Rootを配置する。 |
+| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/auth.ts` | 依存関係を生成して接続するComposition Rootを配置する。フレームワークにより`app/`に制限や規則がある場合は、`apps/<app-name>/src/bootstrap/`へ配置する。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-web/src/infra/sentry/client.ts` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置し、Composition Rootから呼び出す。 |
 | `apps/<app-name>/src/features/<feature>/` | `apps/myproject-web/src/features/auth/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Feature外へ公開する型、関数、Component、Handler、RepositoryとGatewayの契約、各実装の生成関数だけをexportする。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のComponentだけを参照する。 |

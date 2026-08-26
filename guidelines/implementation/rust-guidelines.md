@@ -83,5 +83,4 @@ struct NotificationDispatcher {
 | --- | --- | --- |
 | コードの書式を統一し、機械的な差分を防ぐ。 | 全crateのRustソースコード。 | `cargo fmt --all -- --check` |
 | コンパイル可能でも不具合や保守性低下につながる記述を検出し、警告を残さない。 | 全workspace、全target、全featureのソースコードとテストコード。 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
-| 変更による振る舞いの破壊を検出する。 | 全workspace、全target、全featureの単体テスト、結合テスト、E2Eテスト、ドキュメントテスト。 | `cargo test --workspace --all-targets --all-features`、`cargo test --workspace --doc --all-features` |
 | 依存関係に含まれる既知の脆弱性を検出する。 | リポジトリ内のすべての`Cargo.lock`。 | `osv-scanner scan source -r .` |
