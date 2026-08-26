@@ -35,7 +35,7 @@
 
 アプリケーションのソースは、Feature単位でまとめるFeature First構成とする。Featureは、一つの利用者目的または業務能力を表す。
 
-Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。共有されることだけを理由に`core/`を作らない。
+Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
 
 各種ファイルとディレクトリは実際に必要な場合のみ作る。
 
@@ -43,6 +43,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | --- | --- | --- |
 | `<source-root>/app/` | 起動、ルーティング、実行経路との接続を配置する。 | `app/router` |
 | `<source-root>/app/bootstrap/` | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。複数のFeatureや実行経路を構成する場合は、独立して構築できる単位ごとに分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 | `app/bootstrap/auth`、`app/bootstrap/http_server` |
+| `<source-root>/core/` | 複数のFeatureが共有する基盤を配置する。 | `core/errors/` |
 | `<source-root>/infra/` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置し、Composition Rootから呼び出す。 | `infra/logger` |
 | `<source-root>/infra/<resource>/` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 | `infra/postgres/connection_pool`、`infra/sentry/client` |
 | `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 | `features/auth` |
@@ -58,11 +59,12 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 | 依存元 | 依存先 |
 | --- | --- |
-| `app/`、例外時の`bootstrap/` | 各Featureの公開API、`infra/`、`ui/` |
+| `app/`、例外時の`bootstrap/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
+| `core/` | 標準ライブラリと基盤の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
 | `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
-| Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`ui/` |
-| Feature内の`handlers/` | 同じFeatureの処理と型 |
-| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、別Featureが公開する業務型、処理とその呼び出し契約 |
+| Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`core/`、`ui/` |
+| Feature内の`handlers/` | 同じFeatureの処理と型、`core/` |
+| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
 | `repositories/`、`gateways/`の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
 | `ui/` | フレームワークのみに依存し、Featureには依存しない |
 
