@@ -27,9 +27,10 @@
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `apps/<app-name>/src/` | `apps/myproject-cli/src/` | アプリケーションのソースルート。 |
-| `apps/<app-name>/src/app.rs` | `apps/myproject-cli/src/app.rs` | 起動、ライフサイクル、依存関係の生成と接続（Composition Root）を定義するモジュール。 |
-| `apps/<app-name>/src/app/` | `apps/myproject-api/src/app/auth.rs` | Featureまたは実行経路ごとのComposition Root内部モジュールを配置する。 |
-| `apps/<app-name>/src/app/state.rs` | `apps/myproject-api/src/app/state.rs` | Webフレームワークへ登録する共有状態を一つの型へ束ねる場合だけ使用する。 |
+| `apps/<app-name>/src/app.rs` | `apps/myproject-cli/src/app.rs` | 起動、ライフサイクル、実行経路との接続を公開するルートモジュール。 |
+| `apps/<app-name>/src/app/` | `apps/myproject-cli/src/app/lifecycle.rs` | 起動、ライフサイクル、実行経路との接続を担う内部モジュールを配置する。 |
+| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-cli/src/app/bootstrap/mod.rs`、`apps/myproject-cli/src/app/bootstrap/auth.rs` | 依存関係を生成して接続するComposition Rootを配置する。このフォルダは必ず作る。 |
+| `apps/<app-name>/src/app/state.rs` | `apps/myproject-api/src/app/state.rs` | Webフレームワークへ登録する共有状態を一つの型へまとめる場合だけ使用する。 |
 | `apps/<app-name>/src/core.rs` | `apps/myproject-cli/src/core.rs` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を公開するモジュール。 |
 | `apps/<app-name>/src/core/` | `apps/myproject-cli/src/core/identity.rs`、`apps/myproject-cli/src/core/identity/user_id.rs` | 業務概念ごとのサブモジュールを宣言し、その内部モジュールを配置する。 |
 | `apps/<app-name>/src/infra.rs` | `apps/myproject-cli/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。 |
@@ -71,20 +72,23 @@ UIを持つアプリケーションでは、Featureから別Featureのルート�
 
 ### 構成単位への分割
 
-`app.rs`が複数のFeatureや実行経路を直接構成し、依存関係を追跡しにくくなる場合は、`app/<feature>.rs`、`app/http.rs`、`app/jobs.rs`などへ生成処理を分ける。`app.rs`は共有資源を生成して各モジュールを接続し、`main.rs`はプロセスの開始に必要な値を受け取って`app`を呼び出す。
+`app/bootstrap/mod.rs`が複数のFeatureや実行経路を直接構成し、依存関係を追跡しにくくなる場合は、`app/bootstrap/<feature>.rs`、`app/bootstrap/http.rs`、`app/bootstrap/jobs.rs`などへ生成処理を分ける。`app/bootstrap/mod.rs`は共有資源を生成して各モジュールを接続する。`app.rs`は起動、ライフサイクル、実行経路との接続を公開し、`main.rs`はプロセスの開始に必要な値を受け取って`app`を呼び出す。
 
 ```text
 src/
 ├── app.rs
 ├── app/
-│   ├── auth.rs
-│   ├── dashboard.rs
+│   ├── bootstrap/
+│   │   ├── auth.rs
+│   │   ├── dashboard.rs
+│   │   └── mod.rs
+│   ├── lifecycle.rs
 │   └── state.rs
 └── main.rs
 ```
 
 ```rust
-// app/dashboard.rs
+// app/bootstrap/dashboard.rs
 pub(super) fn build_dashboard(database: DatabasePool) -> DashboardHandler {
     let repository = PostgresDashboardRepository::new(database);
     let service = DashboardService::new(repository);
@@ -97,7 +101,7 @@ pub(super) fn build_dashboard(database: DatabasePool) -> DashboardHandler {
 
 ### Webアプリケーションの共有状態
 
-AxumやActix Webで複数のHandlerが使う外部資源を一つの状態型へ束ねる場合は、`app/state.rs`に`AppState`を定義し、Composition Rootで生成してフレームワークへ登録する。`AppState`には共有する外部資源のハンドル、設定、構築済みのFeature状態だけを保持し、任意の型を検索する`resolve`のような機能を持たせない。
+AxumやActix Webで複数のHandlerが使う外部資源を一つの状態型へまとめる場合は、`app/state.rs`に`AppState`を定義し、Composition Rootで生成してフレームワークへ登録する。`AppState`には共有する外部資源のハンドル、設定、構築済みのFeature状態だけを保持し、任意の型を検索する`resolve`のような機能を持たせない。
 
 ```rust
 // app/state.rs
@@ -107,7 +111,7 @@ pub struct AppState {
     pub(super) config: Arc<AppConfig>,
 }
 
-// app/dashboard.rs
+// app/bootstrap/dashboard.rs
 pub(super) fn build_dashboard(state: &AppState) -> DashboardHandler {
     let repository = PostgresDashboardRepository::new(state.database.clone());
     let service = DashboardService::new(repository);
@@ -124,7 +128,7 @@ AxumのHandlerが一部の状態しか使わない場合は、Feature固有の�
 
 ## 4. Repository、Gatewayの実装
 
-Repository、Gatewayの契約はtraitとして定義する。実行単位ごとに使用する実装は`app.rs`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
+Repository、Gatewayの契約はtraitとして定義する。実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
 
 契約を受け取る側は、ジェネリクスとトレイト境界（型パラメータまたは`impl Trait`）で受け取り、静的ディスパッチで解決することを基本とする。
 

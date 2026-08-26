@@ -21,7 +21,7 @@
 
 表のパスはリポジトリルートを基準とする。
 
-言語またはフレームワークによる配置の制限や規則がある場合は、この表よりそちらを優先する。フォルダは必要になった時点で作る。
+言語またはフレームワークによる配置の制限や規則がある場合は、この表よりそちらを優先する。
 
 ### モノレポ構成
 
@@ -37,28 +37,30 @@
 
 アプリケーションのソースはFeature Firstで構成する。Featureは、`auth`、`search`、`checkout`のように、一つの利用者目的または業務能力を表す。
 
-| パス | 説明 |
-| --- | --- |
-| `<source-root>/app/` | 起動、ルーティング、ライフサイクルなど、実行単位全体の構成を配置する。複数のFeatureや実行経路を構成する場合は、Feature、HTTPサーバー、バックグラウンド処理など、独立して構築できる単位ごとのモジュールへ分割する。各モジュールは必要な共有資源を引数で受け取り、構築済みの公開境界を返す。フレームワークへ一つの状態型を登録する場合は、その型もここへ配置し、実行単位で共有する外部資源、設定、構築済みのFeature境界だけを保持させる。 |
-| `<source-root>/app/bootstrap/` | 依存関係の生成と接続（Composition Root）を配置する。起動処理は共有資源の生成と各構成単位の接続だけを行い、業務ロジックを持たない。 |
-| `<source-root>/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。肥大化する場合はFeatureの境界を見直す。 |
-| `<source-root>/core/<domain>/` | 複数のFeatureが共有する一つの業務概念でまとめる。`core/`直下に関連するファイルが複数生じた場合に作る。言語上の種類による`types/`、`models/`、`errors/`や、役割が不明確な`utils/`は作らない。例: `core/identity/user_id`、`core/commerce/money` |
-| `<source-root>/infra/` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。Featureの型や業務ルールに依存せず、Composition Rootから呼び出す。 |
-| `<source-root>/infra/<resource>/` | 構築する外部資源、製品、通信方式ごとにまとめる。`infra/`直下に関連するファイルが複数生じた場合に作る。Feature固有のRepositoryやGatewayの実装は置かない。例: `infra/postgres/connection_pool`、`infra/sentry/client` |
-| `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
-| `<source-root>/features/<feature>/presentation/` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
-| `<source-root>/features/<feature>/handlers/` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
-| `<source-root>/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。例: `postgres_order_repository` |
-| `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。例: `stripe_payment_gateway` |
-| `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
-| `<source-root>/localization/` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
-| `<source-root>/locale_format/` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
+Composition Rootには原則として`<source-root>/app/bootstrap/`を使用する。それ以外のフォルダは、配置するファイルが生じた時点で作る。
+
+| パス | 説明 | 例 |
+| --- | --- | --- |
+| `<source-root>/app/` | 起動、ルーティング、ライフサイクル、実行経路との接続を配置する。 | `app/router`、`app/lifecycle` |
+| `<source-root>/app/bootstrap/` | 依存関係の実装、設定、生成、接続、ライフサイクルを決めるComposition Rootを配置する。複数のFeatureや実行経路を構成する場合は、独立して構築できる単位ごとに分ける。各単位は必要な共有資源を受け取り、構築済みの公開境界を返す。フレームワークによる制限や規則がある場合は`bootstrap/`へ配置する。 | `app/bootstrap/auth`、`app/bootstrap/http_server` |
+| `<source-root>/app/<shared-state>` | フレームワークへ一つの状態型を登録する場合だけ使用する。実行単位で共有する外部資源、設定、構築済みのFeature境界だけを保持し、Featureの業務処理へ状態型全体を渡さない。 | `app/app_state` |
+| `<source-root>/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。関連するファイルが一つだけの場合は直下へ配置する。肥大化する場合はFeatureの境界を見直す。 | `core/user_id` |
+| `<source-root>/infra/` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置し、Composition Rootから呼び出す。 | `infra/logger` |
+| `<source-root>/infra/<resource>/` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 | `infra/postgres/connection_pool`、`infra/sentry/client` |
+| `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 | `features/auth` |
+| `<source-root>/features/<feature>/presentation/` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 | `features/auth/presentation` |
+| `<source-root>/features/<feature>/handlers/` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 | `features/auth/handlers` |
+| `<source-root>/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。 | `features/order/repositories/postgres_order_repository` |
+| `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。 | `features/payment/gateways/stripe_payment_gateway` |
+| `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 | `ui/primary_button` |
+| `<source-root>/localization/` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 | `localization/ja` |
+| `<source-root>/locale_format/` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 | `locale_format/number_format` |
 
 ### 依存方向
 
 | 依存元 | 依存先 |
 | --- | --- |
-| `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
+| `app/`、例外時の`bootstrap/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
 | `core/` | 標準ライブラリと業務型の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
 | `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
 | Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`core/`、`ui/` |

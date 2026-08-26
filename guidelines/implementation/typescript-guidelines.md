@@ -26,9 +26,11 @@
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `apps/<app-name>/src/` | `apps/myproject-web/src/` | TypeScriptアプリケーションのソースルート。 |
-| `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。 |
+| `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、ライフサイクル、実行経路との接続を配置する。 |
+| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/auth.ts` | 依存関係を生成して接続するComposition Rootを配置し、通常はこのフォルダを必ず作る。 |
+| `apps/<app-name>/src/bootstrap/` | `apps/myproject-web/src/bootstrap/auth.ts` | フレームワークの制約でComposition Rootを`app/`内に配置できない場合だけ、`app/bootstrap/`の代わりにこのフォルダを作る。 |
 | `apps/<app-name>/src/core/` | `apps/myproject-web/src/core/identity/user_id.ts` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。 |
-| `apps/<app-name>/src/infra/` | `apps/myproject-web/src/infra/sentry/client.ts` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。 |
+| `apps/<app-name>/src/infra/` | `apps/myproject-web/src/infra/sentry/client.ts` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置し、Composition Rootから呼び出す。 |
 | `apps/<app-name>/src/features/<feature>/` | `apps/myproject-web/src/features/auth/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Feature外へ公開する型、関数、Component、Handler、RepositoryとGatewayの契約、各実装の生成関数だけをexportする。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のComponentだけを参照する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/screens/` | `apps/myproject-web/src/features/auth/presentation/screens/sign_in_screen.tsx` | ルーティングの遷移先となるScreen Componentを配置する。UIを持つアプリケーションで使用する。 |
@@ -70,7 +72,7 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 | --- | --- | --- |
 | コードの書式を統一し、機械的な差分を防ぐ。 | TypeScript、JavaScript、JSONなど、自動フォーマットの対象としたファイル。 | `prettier . --check` |
 | コンパイラーが検出する型エラーを防ぐ。 | TypeScriptのソースコード、テストコード、型定義。 | `tsc --noEmit` |
-| 制御構造を単純に保ち、変更時の不具合を防ぐ。 | 関数本体を1段目として、インデントが3段を超えるネスト。 | ESLintの`max-depth`ルールで3段階までを許可し、違反を`error`にする。 |
+| 制御構造を単純に保ち、変更時の不具合を防ぐ。 | コードブロックが3段を超えてネストしている箇所。 | ESLintの`max-depth`ルールで3段までを許可し、違反を`error`にする。 |
 | 型安全性とロジックの可読性を維持する。 | 危険な型操作、未処理Promise、複雑な条件式、追跡しにくいロジック。 | typescript-eslint strict-type-checked、SonarJS |
 | モジュール間の循環依存を防ぐ。 | TypeScriptとJavaScriptのimport。 | eslint-plugin-importの`import/no-cycle`ルールを`error`として設定する。 |
 | 不要なコードと依存関係の残存を防ぐ。 | 未使用export、未使用ファイル、未使用依存パッケージ、孤立したエントリーポイント。 | Knip |

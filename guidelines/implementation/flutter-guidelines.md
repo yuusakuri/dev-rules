@@ -17,13 +17,11 @@
 
 ## 2. フォルダ構成
 
-表のパスはリポジトリルートを基準とする。フォルダは配置するファイルが生じた時点で作る。
+表のパスはリポジトリルートを基準とする。
 
 表は複数の実行単位を持つモノレポの構成を示す。実行単位が1つだけの場合は、各パスから`apps/<app-name>/`を取り除き、`pubspec.yaml`、`lib/`、`test/`などをリポジトリ直下へ配置する。
 
-表示状態の管理にはBLoCを使用する。
-
-Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定める配置へ置き換える。方式が配置を定めない場合は、Flutterのアーキテクチャガイドに合わせて`view_models/`を使用する。
+本書において、表示状態の管理にはBLoCを使用する前提で記載する。Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定める配置へ置き換える。方式が配置を定めない場合は、Flutterのアーキテクチャガイドに合わせて`view_models/`を使用する。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
@@ -39,16 +37,16 @@ Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定
 | `apps/<app-name>/macos/` | `apps/myproject-client/macos/Runner/Info.plist` | macOS固有の設定とネイティブコードを配置する。macOSへ配信する場合に使用する。 |
 | `apps/<app-name>/linux/` | `apps/myproject-client/linux/runner/main.cc` | Linux固有の設定とネイティブコードを配置する。Linuxへ配信する場合に使用する。 |
 | `apps/<app-name>/windows/` | `apps/myproject-client/windows/runner/main.cpp` | Windows固有の設定とネイティブコードを配置する。Windowsへ配信する場合に使用する。 |
-| `apps/<app-name>/lib/main.dart` | `apps/myproject-client/lib/main.dart` | エントリーポイント。初期化処理を呼び出し、`runApp`を実行する。 |
+| `apps/<app-name>/lib/main.dart` | `apps/myproject-client/lib/main.dart` | エントリーポイント。`app/bootstrap/`の初期化処理を呼び出し、`runApp`を実行する。 |
 | `apps/<app-name>/lib/app/app.dart` | `apps/myproject-client/lib/app/app.dart` | `MaterialApp`、アプリケーション全体で共有する`RepositoryProvider`と`BlocProvider`、ルーター、テーマ、多言語対応を接続する。 |
-| `apps/<app-name>/lib/app/bootstrap.dart` | `apps/myproject-client/lib/app/bootstrap.dart` | 外部SDKのクライアントと各FeatureのRepository、Gatewayの実装を生成し、アプリケーションへ渡す。 |
+| `apps/<app-name>/lib/app/bootstrap/` | `apps/myproject-client/lib/app/bootstrap/app_bootstrap.dart` | 外部SDKのクライアントと各FeatureのRepository、Gatewayの実装を生成し、アプリケーションへ渡すComposition Rootを配置する。このフォルダは必ず作る。 |
 | `apps/<app-name>/lib/app/router/` | `apps/myproject-client/lib/app/router/app_router.dart` | ルーティングと、ルートまたは共通の親が所有するBLoCの生成、接続を定義する。各Featureの公開APIだけを参照する。 |
 | `apps/<app-name>/lib/app/theme/` | `apps/myproject-client/lib/app/theme/app_theme.dart` | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
 | `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳データだけを配置する。生成コードは置かない。文言へ埋め込む数値、日付の書式は、プレースホルダーの`format`で指定する。 |
 | `apps/<app-name>/lib/generated/l10n/` | `apps/myproject-client/lib/generated/l10n/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。`l10n.yaml`の`output-dir`で出力先を`lib/l10n/`の外へ指定する。手動では編集しない。 |
 | `apps/<app-name>/lib/locale_format/` | `apps/myproject-client/lib/locale_format/currency_format.dart` | 文言の外側で使う数値、日付、通貨などの書式処理を`intl`パッケージで定義する。 |
 | `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/identity/user_id.dart` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。 |
-| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/sentry/client.dart` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。呼び出すのはComposition Root（`app/bootstrap.dart`）と、そこから呼ばれる構成単位、テストに限る。Featureの業務処理からは呼び出さない。 |
+| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/sentry/client.dart` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。呼び出すのはComposition Root（`app/bootstrap/`）と、そこから呼ばれる構成単位、テストに限る。Featureの業務処理からは呼び出さない。 |
 | `apps/<app-name>/lib/ui/ui.dart` | `apps/myproject-client/lib/ui/ui.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品だけを`export`する。 |
 | `apps/<app-name>/lib/ui/button/` | `apps/myproject-client/lib/ui/button/primary_button.dart` | ボタンとボタンに付随する表示を配置する。 |
 | `apps/<app-name>/lib/ui/form/` | `apps/myproject-client/lib/ui/form/email_field.dart` | 入力欄、選択欄、入力エラー表示を配置する。 |
@@ -107,7 +105,7 @@ Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定
 
 UIを持つアプリケーションでは、Featureから別Featureのルートをimportしない。Screen、Widget、BLoCは遷移が必要になったことをコールバックまたはEventで通知し、`app/router/`が遷移先を決定する。
 
-外部SDKのクライアント、Repository、Gatewayの実装は`app/bootstrap.dart`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、RepositoryとGatewayはFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
+外部SDKのクライアント、Repository、Gatewayの実装は`app/bootstrap/`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、RepositoryとGatewayはFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
 
 ---
 
