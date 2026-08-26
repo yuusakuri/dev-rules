@@ -38,7 +38,8 @@
 | `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-web/src/features/cart/repositories/indexed_db_cart_repository.ts` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、保存形式との変換を配置する。 |
 | `apps/<app-name>/src/features/<feature>/gateways/` | `apps/myproject-web/src/features/payment/gateways/stripe_payment_gateway.ts` | 永続化以外の外部システム、外部サービスと通信する契約、接続先別の実装、外部データ形式との変換を配置する。 |
 | `apps/<app-name>/src/ui/` | `apps/myproject-web/src/ui/primary_button.tsx` | 複数のFeatureで使用する、業務上の判断を持たないComponentとデザイン定義を配置する。UIを持つアプリケーションで使用する。 |
-| `apps/<app-name>/src/localization/` | `apps/myproject-web/src/localization/ja.json` | 表示言語、翻訳リソース、地域別の書式化を配置する。 |
+| `apps/<app-name>/src/localization/` | `apps/myproject-web/src/localization/ja.json` | 表示言語の選択と翻訳データを配置する。 |
+| `apps/<app-name>/src/locale_format/` | `apps/myproject-web/src/locale_format/number_format.ts` | `Intl`による数値、日付、通貨などの書式処理を配置する。翻訳データとは分けて配置する。 |
 | `apps/<app-name>/src/features/<feature>/<path>/<file>.test.ts` | `apps/myproject-web/src/features/auth/sign_in_validator.test.ts` | ロジックの単体テストを実装ファイルと同じフォルダへ配置する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/screens/<screen>.test.tsx` | `apps/myproject-web/src/features/auth/presentation/screens/sign_in_screen.test.tsx` | Screen Componentの表示と操作を実装ファイルと同じフォルダで検証する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/components/<component>.test.tsx` | `apps/myproject-web/src/features/auth/presentation/components/password_field.test.tsx` | Componentテストを実装ファイルと同じフォルダへ配置する。 |

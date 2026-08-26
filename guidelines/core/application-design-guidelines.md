@@ -48,6 +48,8 @@
 | `<source-root>/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。例: `postgres_order_repository` |
 | `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。例: `stripe_payment_gateway` |
 | `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
+| `<source-root>/localization/` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
+| `<source-root>/locale_format/` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。複数のFeatureで使用する場合だけ使用する。 |
 
 ### `app/`の内部構成
 
@@ -63,6 +65,14 @@
 | --- | --- | --- |
 | `<source-root>/core/<domain>/` | 複数のFeatureが共有する一つの業務概念でまとめる。言語上の種類による`types/`、`models/`、`errors/`や、役割が不明確な`utils/`は作らない。 | `core/identity/user_id`、`core/commerce/money` |
 | `<source-root>/infra/<resource>/` | 構築する外部資源、製品、通信方式ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 | `infra/postgres/connection_pool`、`infra/sentry/client` |
+
+### 多言語対応の配置
+
+翻訳データと、ロケールによって表記が変わる値の書式処理は、別の場所へ配置する。翻訳データは翻訳者や翻訳管理ツールが更新し、コード生成の入力にもなる。書式処理は標準ライブラリの書式化APIを呼ぶコードであり、変更の理由も更新の担当も異なる。
+
+翻訳データの配置と形式は、言語、フレームワークが標準を定める場合はそれに従う。翻訳データのディレクトリには翻訳ファイルだけを置き、コード生成の出力先は生成物用のディレクトリへ分ける。
+
+Featureの中だけで使う書式処理は、そのFeatureへ配置する。
 
 ### Feature間の依存
 
