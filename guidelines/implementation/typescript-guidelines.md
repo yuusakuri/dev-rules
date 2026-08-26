@@ -41,10 +41,6 @@
 | `apps/<app-name>/tests/e2e/<flow>.test.ts` | `apps/myproject-web/tests/e2e/sign_in.test.ts` | E2Eテスト。 |
 | `packages/<name>/` | `packages/design-tokens/` | 複数の実行単位から共有するTypeScriptパッケージ。 |
 
-別Featureの要素は、依存先の`index.ts`からexportされたものだけを参照し、依存先の内部ファイルを直接importしない。別FeatureのComponentを利用する側は、公開されたPropsとコールバックだけを使い、依存先のSignal、Store、Contextなどの内部状態を直接操作しない。
-
-UIを持つアプリケーションでは、Featureから別Featureのルートをimportしない。ScreenとComponentは遷移が必要になったことをコールバックまたはEventで通知し、`app/`のルーターが遷移先を決定する。
-
 ---
 
 ## 3. 型
