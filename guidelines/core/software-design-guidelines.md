@@ -383,21 +383,57 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ログは、誰の、どのリクエストによる処理かが分かる境界（ハンドラー、エントリーポイントなど最外郭の処理）で1回だけ出力する。エラーの発生源では文脈が欠けるため出力せず、上位へ伝播させる。伝播のたびに出力すると、同じ失敗が何行にも分かれて記録される。
 
-### 出力する内容
+### 構造化して出力する
 
-- ログは簡潔に、必要最小限にする
-- リクエストID、利用者、操作対象など、後から追跡するための文脈を構造化した項目として出力する。メッセージの文章へ埋め込まない
-- 機密情報（鍵、パスワード、個人情報）を出力しない
-- デバッグ目的の一時ログをリリースコードに残さない
+ログはJSONなど機械処理できる形式で出力し、値をメッセージの文章へ埋め込まない。1件のログには1つの出来事だけを記録する。
+
+記録するのは観測した事実に限る。原因の推測や対処の提案は書かない。
+
+```json
+{ "timestamp": "2026-08-26T12:34:56.789Z", "level": "INFO", "event": "user.created", "service": "account-api", "user.id": "12345" }
+```
+
+### 記録する項目
+
+| 区分 | 項目 |
+| --- | --- |
+| 必須 | タイムゾーンを含む時刻、レベル、イベント名、実行単位の名前、実行環境 |
+| 追跡 | トレースID、リクエストID、セッションID、利用者ID、テナントID |
+| 結果 | 所要時間、件数、応答コードなど、処理の結果を表す値 |
+
+### イベント名
+
+イベント名は、出来事を表す固定の識別子にする。`user.created`、`payment.failed`のように、過去形または結果を表す語を使い、小文字とドット区切りで名前空間を付ける。IDや件数などの可変値を名前へ入れない。
+
+完了までに時間がかかる処理と外部システムの呼び出しは、開始、完了、失敗を別のイベントとして記録する。例: `import.started`、`import.completed`、`import.failed`
 
 ### ログレベル
 
-| レベル | 用途 |
-| --- | --- |
-| DEBUG | 開発時の調査に使う詳細。本番では既定で出力しない |
-| INFO | 正常に進んだ処理の節目 |
-| WARN | 処理は継続できるが、想定外で確認が必要な事象 |
-| ERROR | 処理が失敗し、対処が必要な事象 |
+| レベル | 用途 | 本番の既定 |
+| --- | --- | --- |
+| FATAL | 継続できず、実行を停止する異常 | 有効 |
+| ERROR | 処理が失敗し、対処が必要な事象 | 有効 |
+| WARN | 処理は継続できるが、確認が必要な事象。リトライ、上限への接近など | 有効 |
+| INFO | 業務上意味のある出来事。ログイン、注文の作成など | 有効 |
+| DEBUG | 調査に使う内部情報 | 無効 |
+| TRACE | 関数の入出力、問い合わせの開始と終了など、最も細かい追跡情報 | 無効 |
+
+DEBUGとTRACEは調査するときだけ有効化する。
+
+### 失敗の記録
+
+失敗のログには、エラーの種類、メッセージ、スタックトレースをそれぞれ別の項目として出力する。メッセージだけでは、発生箇所と種類による絞り込みができない。
+
+### 出力しない情報
+
+- パスワード、APIキー、シークレット、トークン、認証ヘッダー、秘密鍵は出力しない
+- 個人情報は識別子で代替する。やむを得ず含める場合はマスクする。例: `abcd****xyz`
+- 問い合わせ文、要求と応答の本文をそのまま出力しない。対象、件数、所要時間など、調査に必要な項目へ置き換える
+- 調査のために一時的に追加したログをリリースコードへ残さない
+
+### 監査ログ
+
+ログイン、権限の変更、設定の変更、データの更新と削除など、後から誰の操作かを説明する必要がある事象は、操作者、対象、変更前後の値とともに記録する。監査ログは業務上の記録であり、調査用のログと同じ扱いで無効化しない。
 
 ---
 
@@ -478,6 +514,9 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | 9. 並行処理 | [Shared State \| Tokio](https://tokio.rs/tokio/tutorial/shared-state) | 共有状態のロックの持ち方と、保持したまま待機しない理由を説明する。 |
 | 10. ログ | [tracing - Rust](https://docs.rs/tracing/latest/tracing/) | 処理の文脈を構造化して記録する方法を示す。 |
 | 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) | ログの重大度と構造化項目の標準を定義する。 |
+| 10. ログ | [Naming \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/general/naming/) | 属性名とイベント名の命名規則を定義する。 |
+| 10. ログ | [Exception attributes \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/attributes-registry/exception/) | 例外を記録する項目の名称と内容を定義する。 |
+| 10. ログ | [Logging Cheat Sheet \| OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) | 記録すべき事象と、出力してはならない情報を示す。 |
 | 11. コードコメント | [How to write documentation - The rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html) | ドキュメントコメントの書き方と節の使い方を説明する。 |
 | 11. コードコメント | [RFC 1574: More API documentation conventions](https://rust-lang.github.io/rfcs/1574-more-api-documentation-conventions.html) | 要約行の文体と、節の名称、順序を定義する。 |
 | 11. コードコメント | [Documentation - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html) | 例、失敗条件、リンクなど公開APIの文書化項目を示す。 |
