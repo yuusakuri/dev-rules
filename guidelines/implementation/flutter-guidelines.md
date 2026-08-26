@@ -23,7 +23,7 @@
 
 表示状態の管理にはBLoCを使用する。
 
-Provider、Riverpodなどを採用する場合は、`bloc/`を方式固有の配置へ置き換え、規則がなければ`state/`を使用する。
+Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定める配置へ置き換える。方式が配置を定めない場合は、Flutterのアーキテクチャガイドに合わせて`view_models/`を使用する。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ Provider、Riverpodなどを採用する場合は、`bloc/`を方式固有の配
 | `apps/<app-name>/lib/generated/l10n/` | `apps/myproject-client/lib/generated/l10n/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。`l10n.yaml`の`output-dir`で出力先を`lib/l10n/`の外へ指定する。手動では編集しない。 |
 | `apps/<app-name>/lib/locale_format/` | `apps/myproject-client/lib/locale_format/currency_format.dart` | 文言の外側で使う数値、日付、通貨などの書式処理を`intl`パッケージで定義する。 |
 | `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/identity/user_id.dart` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。 |
-| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/sentry/client.dart` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。`app/bootstrap.dart`から呼び出す。 |
+| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/sentry/client.dart` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。呼び出すのはComposition Root（`app/bootstrap.dart`）と、そこから呼ばれる構成単位、テストに限る。Featureの業務処理からは呼び出さない。 |
 | `apps/<app-name>/lib/ui/ui.dart` | `apps/myproject-client/lib/ui/ui.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品だけを`export`する。 |
 | `apps/<app-name>/lib/ui/button/` | `apps/myproject-client/lib/ui/button/primary_button.dart` | ボタンとボタンに付随する表示を配置する。 |
 | `apps/<app-name>/lib/ui/form/` | `apps/myproject-client/lib/ui/form/email_field.dart` | 入力欄、選択欄、入力エラー表示を配置する。 |

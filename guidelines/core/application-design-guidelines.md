@@ -39,9 +39,12 @@
 
 | パス | 説明 |
 | --- | --- |
-| `<source-root>/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。フレームワークによる制限や規則がある場合は`bootstrap/`へ配置する。 |
+| `<source-root>/app/` | 起動、ルーティング、ライフサイクルなど、実行単位全体の構成を配置する。複数のFeatureや実行経路を構成する場合は、Feature、HTTPサーバー、バックグラウンド処理など、独立して構築できる単位ごとのモジュールへ分割する。各モジュールは必要な共有資源を引数で受け取り、構築済みの公開境界を返す。フレームワークへ一つの状態型を登録する場合は、その型もここへ配置し、実行単位で共有する外部資源、設定、構築済みのFeature境界だけを保持させる。 |
+| `<source-root>/app/bootstrap/` | 依存関係の生成と接続（Composition Root）を配置する。起動処理は共有資源の生成と各構成単位の接続だけを行い、業務ロジックを持たない。 |
 | `<source-root>/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。肥大化する場合はFeatureの境界を見直す。 |
-| `<source-root>/infra/` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。Featureの型や業務ルールに依存せず、`app/`のComposition Rootが呼び出す。 |
+| `<source-root>/core/<domain>/` | 複数のFeatureが共有する一つの業務概念でまとめる。`core/`直下に関連するファイルが複数生じた場合に作る。言語上の種類による`types/`、`models/`、`errors/`や、役割が不明確な`utils/`は作らない。例: `core/identity/user_id`、`core/commerce/money` |
+| `<source-root>/infra/` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。Featureの型や業務ルールに依存せず、Composition Rootから呼び出す。 |
+| `<source-root>/infra/<resource>/` | 構築する外部資源、製品、通信方式ごとにまとめる。`infra/`直下に関連するファイルが複数生じた場合に作る。Feature固有のRepositoryやGatewayの実装は置かない。例: `infra/postgres/connection_pool`、`infra/sentry/client` |
 | `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
 | `<source-root>/features/<feature>/handlers/` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
@@ -49,42 +52,7 @@
 | `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。例: `stripe_payment_gateway` |
 | `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 | `<source-root>/localization/` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
-| `<source-root>/locale_format/` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。複数のFeatureで使用する場合だけ使用する。 |
-
-### `app/`の内部構成
-
-`app/`で複数のFeatureや実行経路の依存関係を構成する場合は、Feature、HTTPサーバー、バックグラウンド処理など、独立して構築できる単位ごとのモジュールへ分割する。各モジュールは必要な共有資源を引数で受け取り、構築済みの公開境界を返す。起動処理は共有資源の生成と各モジュールの接続だけを行う。
-
-フレームワークへ一つの状態型を登録する場合は、その型を`app/`に配置する。状態型には実行単位で共有する外部資源、設定、構築済みのFeature境界だけを保持し、Featureの業務処理へ状態型全体を渡さない。
-
-### `core/`と`infra/`の内部構成
-
-`core/`と`infra/`の直下に関連するファイルが複数生じた場合は、次の単位でサブフォルダへまとめる。関連するファイルが1つだけの場合はサブフォルダを作らず、直下へ配置する。
-
-| パス | 分け方 | 例 |
-| --- | --- | --- |
-| `<source-root>/core/<domain>/` | 複数のFeatureが共有する一つの業務概念でまとめる。言語上の種類による`types/`、`models/`、`errors/`や、役割が不明確な`utils/`は作らない。 | `core/identity/user_id`、`core/commerce/money` |
-| `<source-root>/infra/<resource>/` | 構築する外部資源、製品、通信方式ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 | `infra/postgres/connection_pool`、`infra/sentry/client` |
-
-### 多言語対応の配置
-
-翻訳データと、ロケールによって表記が変わる値の書式処理は、別の場所へ配置する。翻訳データは翻訳者や翻訳管理ツールが更新し、コード生成の入力にもなる。書式処理は標準ライブラリの書式化APIを呼ぶコードであり、変更の理由も更新の担当も異なる。
-
-翻訳データの配置と形式は、言語、フレームワークが標準を定める場合はそれに従う。翻訳データのディレクトリには翻訳ファイルだけを置き、コード生成の出力先は生成物用のディレクトリへ分ける。
-
-文言の中へ埋め込む数値、日付などの書式は、翻訳データ側に書式指定の仕組みがある場合はそれを使う。書式処理として配置する対象は、文言の外側で使う書式に限る。
-
-Featureの中だけで使う書式処理は、そのFeatureへ配置する。
-
-### Feature間の依存
-
-Feature外へ公開する要素は、業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`app/`が依存関係を接続するために使う実行境界、RepositoryとGatewayの契約、生成処理に限定する。Featureが別のFeatureの業務能力を利用する場合は、依存先Featureが公開する業務型、処理とその呼び出し契約だけに単方向で依存し、RepositoryとGatewayの契約や実装、外部データ形式、内部ファイルは参照しない。Feature間で利用することだけを理由に、機能固有の型や処理を`core/`へ移さない。
-
-Featureの表示に別Featureの機能固有UIを組み込む場合は、依存先Featureが再利用用として公開するUIコンポーネントだけを参照する。依存先の表示状態管理や内部のUI部品を直接操作せず、公開APIで定めた引数とコールバックを使う。業務上の判断を持たないUI部品はFeatureではなく`ui/`へ配置する。
-
-UIを持つアプリケーションでは、Featureから別Featureのルートを参照しない。Featureは遷移が必要になったことをコールバックなどで通知し、`app/`のルーターが遷移先を決定する。
-
-Feature間の依存は循環させない。双方向の依存や多数の相互依存が必要になった場合は、複数Featureを組み合わせる利用者目的を一つのFeatureに持たせるか、Featureの境界を見直す。`app/`は依存関係の接続だけを担当し、Featureをまたぐ業務上の判断を持たない。
+| `<source-root>/locale_format/` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
 
 ### 依存方向
 
