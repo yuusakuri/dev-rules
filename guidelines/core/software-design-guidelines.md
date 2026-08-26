@@ -418,46 +418,11 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ### ドキュメントコメントの対象
 
-モジュールが利用側へ公開する関数とモジュールには、ドキュメントコメントを書く。内部実装を分割するためにexportしている要素は含めない。
+利用側へ公開するAPIには、ドキュメントコメントを書く。内部実装を分割する都合で公開範囲を広げているだけの要素は、対象に含めない。
 
-### ドキュメントコメントの構成
+### 実行例を記載する
 
-節の構成はrustdocに従い、`///` などの記法は言語の標準へ置き換える。
-
-````
-/// <description>
-///
-/// # Arguments
-///
-/// * <arg> - <A brief description of the argument>
-///
-/// # Examples
-///
-/// ```
-/// <Example code>
-/// ```
-///
-/// <output description>
-///
-/// ```text
-/// <Example output>
-/// ```
-````
-
-- 先頭の1文は、対象が何をするかの要約にする。三人称単数現在で書く。例: `Returns the number of active sessions.`
-- 例が1つの場合も、節名は複数形の `# Examples` にする
-- 失敗、パニック、安全性の条件を書く場合は、`# Examples`、`# Panics`、`# Errors`、`# Safety` の順に並べる
-
-### コード例と出力例
-
-- コードは ``` のコードブロックまたは `` で囲む
-- 出力例は可能な限り記載する。短い場合は\<output description\>に `` で囲んで含め、長い場合は `text` のコードブロックで示す
-- \<output description\>は、「Output:」のような記号付きの見出しにせず、「below」「following」などを使い、主語と動詞のある文で書く
-
-### Bash
-
-- ドキュメントコメントは関数の直前に書く
-- 引数の説明には、`$1` などの位置パラメータより、アルファベットで始まる変数名を優先する
+公開APIのドキュメントコメントには、呼び出し方と実行結果の関係が分かる実行例を記載する。実行例の書式は、使用する言語またはドキュメント生成ツールの標準に従う。自動検証できる場合は、テストで実行例の正しさを確認する。
 
 ---
 
@@ -471,18 +436,4 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |
-| 5. 型とカプセル化 | [Type safety - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/type-safety.html) | 型で不正な使用を防ぐAPI設計の指針を示す。 |
-| 8. エラーハンドリング | [Error Handling - The Rust Programming Language](https://doc.rust-lang.org/book/ch09-00-error-handling.html) | 回復できる失敗と回復できない誤りの扱いを分けて説明する。 |
-| 8. エラーハンドリング | [Interoperability - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/interoperability.html) | エラー型が持つべき情報と、原因を保持する構造を示す。 |
-| 9. 並行処理 | [Fearless Concurrency - The Rust Programming Language](https://doc.rust-lang.org/book/ch16-00-concurrency.html) | メッセージパッシングと共有状態の使い分けを説明する。 |
-| 9. 並行処理 | [Shared State \| Tokio](https://tokio.rs/tokio/tutorial/shared-state) | 共有状態のロックの持ち方と、保持したまま待機しない理由を説明する。 |
-| 10. ログ | [tracing - Rust](https://docs.rs/tracing/latest/tracing/) | 処理の文脈を構造化して記録する方法を示す。 |
 | 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) | ログの重大度と構造化項目の標準を定義する。 |
-| 11. コードコメント | [How to write documentation - The rustdoc book](https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html) | ドキュメントコメントの書き方と節の使い方を説明する。 |
-| 11. コードコメント | [RFC 1574: More API documentation conventions](https://rust-lang.github.io/rfcs/1574-more-api-documentation-conventions.html) | 要約行の文体と、節の名称、順序を定義する。 |
-| 11. コードコメント | [Documentation - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/documentation.html) | 例、失敗条件、リンクなど公開APIの文書化項目を示す。 |
-| 11. コードコメント | [Go Doc Comments](https://go.dev/doc/comment) | Goのドキュメントコメントの構成と文体を定義する。 |
-| 11. コードコメント | [PEP 257 - Docstring Conventions](https://peps.python.org/pep-0257/) | Pythonのdocstringの形式と要約行の規約を定義する。 |
-| 11. コードコメント | [TSDoc](https://tsdoc.org/) | TypeScriptのドキュメントコメントのタグと構文を定義する。 |
-| 11. コードコメント | [Shell Style Guide \| styleguide](https://google.github.io/styleguide/shellguide.html) | シェル関数のコメント位置と記載項目を示す。 |
-| 11. コードコメント | [Google C++ Style Guide: TODO Comments](https://google.github.io/styleguide/cppguide.html#TODO_Comments) | TODOコメントに残す情報の形式を示す。 |
