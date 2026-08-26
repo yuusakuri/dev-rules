@@ -27,9 +27,9 @@ Provider、Riverpodなどを採用する場合は、`bloc/`を方式固有の配
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `apps/<app-name>/pubspec.yaml` | `apps/myproject-client/pubspec.yaml` | パッケージ、アセット、フォント、Flutterの設定を定義する。 |
+| `apps/<app-name>/pubspec.yaml` | `apps/myproject-client/pubspec.yaml` | パッケージ、アセット、フォント、Flutterの設定を定義する。生成した多言語対応コードを使用する場合は、`flutter`の`generate`に`true`を指定する。 |
 | `apps/<app-name>/analysis_options.yaml` | `apps/myproject-client/analysis_options.yaml` | Dart Analyzerとlintの設定を定義する。 |
-| `apps/<app-name>/l10n.yaml` | `apps/myproject-client/l10n.yaml` | 多言語対応コードの生成元、生成先、基準言語を定義する。生成先は`arb-dir`と別のディレクトリを指定する。 |
+| `apps/<app-name>/l10n.yaml` | `apps/myproject-client/l10n.yaml` | 多言語対応コードの`arb-dir`、`template-arb-file`、`output-localization-file`、`output-dir`を定義する。`output-dir`には`arb-dir`と別のディレクトリを指定する。`synthetic-package`を持つバージョンでは`false`を指定する。 |
 | `apps/<app-name>/assets/images/` | `apps/myproject-client/assets/images/placeholder.png` | 画像を配置する。 |
 | `apps/<app-name>/assets/icons/` | `apps/myproject-client/assets/icons/app_icon.svg` | アプリケーション内で使用するアイコンを配置する。 |
 | `apps/<app-name>/assets/fonts/` | `apps/myproject-client/assets/fonts/NotoSansJP-Regular.ttf` | アプリケーションに同梱するフォントを配置する。 |
@@ -44,9 +44,9 @@ Provider、Riverpodなどを採用する場合は、`bloc/`を方式固有の配
 | `apps/<app-name>/lib/app/bootstrap.dart` | `apps/myproject-client/lib/app/bootstrap.dart` | 外部SDKのクライアントと各FeatureのRepository、Gatewayの実装を生成し、アプリケーションへ渡す。 |
 | `apps/<app-name>/lib/app/router/` | `apps/myproject-client/lib/app/router/app_router.dart` | ルーティングと、ルートまたは共通の親が所有するBLoCの生成、接続を定義する。各Featureの公開APIだけを参照する。 |
 | `apps/<app-name>/lib/app/theme/` | `apps/myproject-client/lib/app/theme/app_theme.dart` | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
-| `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳データだけを配置する。生成コードと書式処理は置かない。 |
+| `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳データだけを配置する。生成コードは置かない。文言へ埋め込む数値、日付の書式は、プレースホルダーの`format`で指定する。 |
 | `apps/<app-name>/lib/generated/l10n/` | `apps/myproject-client/lib/generated/l10n/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。`l10n.yaml`の`output-dir`で出力先を`lib/l10n/`の外へ指定する。手動では編集しない。 |
-| `apps/<app-name>/lib/locale_format/` | `apps/myproject-client/lib/locale_format/currency_format.dart` | `intl`パッケージによる数値、日付、通貨などの書式処理を配置する。翻訳データとは分けて配置する。 |
+| `apps/<app-name>/lib/locale_format/` | `apps/myproject-client/lib/locale_format/currency_format.dart` | 文言の外側で使う数値、日付、通貨などの書式処理を`intl`パッケージで定義する。 |
 | `apps/<app-name>/lib/core/` | `apps/myproject-client/lib/core/identity/user_id.dart` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。 |
 | `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/sentry/client.dart` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。`app/bootstrap.dart`から呼び出す。 |
 | `apps/<app-name>/lib/ui/ui.dart` | `apps/myproject-client/lib/ui/ui.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品だけを`export`する。 |
