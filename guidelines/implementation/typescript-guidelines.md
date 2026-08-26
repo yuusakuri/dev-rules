@@ -19,17 +19,12 @@
 
 ## 2. フォルダ構成
 
-表のパスはリポジトリルートを基準とする。
-
-表は複数の実行単位を持つモノレポの構成を示す。実行単位が1つだけの場合は、各パスから`apps/<app-name>/`を取り除き、`package.json`、`src/`、`tests/`などをリポジトリ直下へ配置する。
-
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `apps/<app-name>/src/` | `apps/myproject-web/src/` | TypeScriptアプリケーションのソースルート。 |
-| `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、ライフサイクル、実行経路との接続を配置する。 |
-| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/auth.ts` | 依存関係を生成して接続するComposition Rootを配置し、通常はこのフォルダを必ず作る。 |
-| `apps/<app-name>/src/bootstrap/` | `apps/myproject-web/src/bootstrap/auth.ts` | フレームワークの制約でComposition Rootを`app/`内に配置できない場合だけ、`app/bootstrap/`の代わりにこのフォルダを作る。 |
-| `apps/<app-name>/src/core/` | `apps/myproject-web/src/core/identity/user_id.ts` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。 |
+| `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、実行経路との接続を配置する。 |
+| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/auth.ts` | 依存関係を生成して接続するComposition Rootを配置する。 |
+| `apps/<app-name>/src/bootstrap/` | `apps/myproject-web/src/bootstrap/auth.ts` | フレームワークにより`app/`に制限や規則がある場合だけ、`app/bootstrap/`の代わりにこのフォルダへComposition Rootを配置する。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-web/src/infra/sentry/client.ts` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置し、Composition Rootから呼び出す。 |
 | `apps/<app-name>/src/features/<feature>/` | `apps/myproject-web/src/features/auth/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Feature外へ公開する型、関数、Component、Handler、RepositoryとGatewayの契約、各実装の生成関数だけをexportする。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のComponentだけを参照する。 |
@@ -37,7 +32,7 @@
 | `apps/<app-name>/src/features/<feature>/presentation/components/` | `apps/myproject-web/src/features/auth/presentation/components/password_field.tsx` | Featureが所有する表示で再利用するComponentを配置する。別Featureでも再利用するComponentは、`index.ts`から明示的にexportする。 |
 | `apps/<app-name>/src/features/<feature>/presentation/state/` | `apps/myproject-web/src/features/auth/presentation/state/sign_in_store.ts` | Signal、Store、Contextと表示状態の操作を配置する。 |
 | `apps/<app-name>/src/features/<feature>/handlers/` | `apps/myproject-web/src/features/auth/handlers/sign_in_handler.ts` | UIを介さず外部からの要求を受け取る境界（HTTPルートハンドラー、RPC、メッセージキューの購読など）を配置する。業務ロジックは持たせず、Feature内の処理へ委譲する。 |
-| `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-web/src/features/cart/repositories/indexed_db_cart_repository.ts` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、保存形式との変換を配置する。 |
+| `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-web/src/features/checkout/repositories/indexed_db_cart_repository.ts` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、保存形式との変換を配置する。 |
 | `apps/<app-name>/src/features/<feature>/gateways/` | `apps/myproject-web/src/features/payment/gateways/stripe_payment_gateway.ts` | 永続化以外の外部システム、外部サービスと通信する契約、接続先別の実装、外部データ形式との変換を配置する。 |
 | `apps/<app-name>/src/ui/` | `apps/myproject-web/src/ui/primary_button.tsx` | 複数のFeatureで使用する、業務上の判断を持たないComponentとデザイン定義を配置する。UIを持つアプリケーションで使用する。 |
 | `apps/<app-name>/src/localization/` | `apps/myproject-web/src/localization/ja.json` | 表示言語の選択と翻訳データを配置する。 |

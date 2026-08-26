@@ -20,19 +20,13 @@
 
 ## 2. フォルダ構成
 
-表のパスはリポジトリルートを基準とする。
-
-表は複数の実行単位を持つモノレポの構成を示す。実行単位が1つだけの場合は、各パスから`apps/<app-name>/`を取り除き、`Cargo.toml`、`src/`、`tests/`などをリポジトリ直下へ配置する。
-
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `apps/<app-name>/src/` | `apps/myproject-cli/src/` | アプリケーションのソースルート。 |
-| `apps/<app-name>/src/app.rs` | `apps/myproject-cli/src/app.rs` | 起動、ライフサイクル、実行経路との接続を公開するルートモジュール。 |
-| `apps/<app-name>/src/app/` | `apps/myproject-cli/src/app/lifecycle.rs` | 起動、ライフサイクル、実行経路との接続を担う内部モジュールを配置する。 |
-| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-cli/src/app/bootstrap/mod.rs`、`apps/myproject-cli/src/app/bootstrap/auth.rs` | 依存関係を生成して接続するComposition Rootを配置する。このフォルダは必ず作る。 |
+| `apps/<app-name>/src/app.rs` | `apps/myproject-cli/src/app.rs` | 起動と実行経路との接続を公開するルートモジュール。 |
+| `apps/<app-name>/src/app/` | `apps/myproject-cli/src/app/commands.rs` | 起動と実行経路との接続を担う内部モジュールを配置する。 |
+| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-cli/src/app/bootstrap/mod.rs`、`apps/myproject-cli/src/app/bootstrap/auth.rs` | 依存関係を生成して接続するComposition Rootを配置する。 |
 | `apps/<app-name>/src/app/state.rs` | `apps/myproject-api/src/app/state.rs` | Webフレームワークへ登録する共有状態を一つの型へまとめる場合だけ使用する。 |
-| `apps/<app-name>/src/core.rs` | `apps/myproject-cli/src/core.rs` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を公開するモジュール。 |
-| `apps/<app-name>/src/core/` | `apps/myproject-cli/src/core/identity.rs`、`apps/myproject-cli/src/core/identity/user_id.rs` | 業務概念ごとのサブモジュールを宣言し、その内部モジュールを配置する。 |
 | `apps/<app-name>/src/infra.rs` | `apps/myproject-cli/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-cli/src/infra/postgres.rs`、`apps/myproject-cli/src/infra/postgres/connection_pool.rs` | 外部資源ごとのサブモジュールを宣言し、その内部モジュールを配置する。 |
 | `apps/<app-name>/src/features.rs` | `apps/myproject-cli/src/features.rs` | Featureモジュールを宣言する。 |
@@ -45,8 +39,8 @@
 | `apps/<app-name>/src/features/<feature>/presentation/widgets/` | `apps/myproject-cli/src/features/auth/presentation/widgets/password_field.rs` | Featureが所有する表示で再利用するUI部品の内部モジュールを配置する。 |
 | `apps/<app-name>/src/features/<feature>/handlers.rs` | `apps/myproject-cli/src/features/auth/handlers.rs` | FeatureがUIを介さずに外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/handlers/` | `apps/myproject-cli/src/features/auth/handlers/sign_in_handler.rs` | Handlerの内部モジュールを配置する。 |
-| `apps/<app-name>/src/features/<feature>/repositories.rs` | `apps/myproject-cli/src/features/order/repositories.rs` | Featureが所有するデータを永続化ストレージへ保存、取得する契約と実装を所有するモジュール。 |
-| `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-cli/src/features/order/repositories/postgres_order_repository.rs` | 保存先ごとのRepository実装と、保存形式との変換を行う内部モジュールを配置する。 |
+| `apps/<app-name>/src/features/<feature>/repositories.rs` | `apps/myproject-cli/src/features/checkout/repositories.rs` | Featureが所有するデータを永続化ストレージへ保存、取得する契約と実装を所有するモジュール。 |
+| `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-cli/src/features/checkout/repositories/postgres_order_repository.rs` | 保存先ごとのRepository実装と、保存形式との変換を行う内部モジュールを配置する。 |
 | `apps/<app-name>/src/features/<feature>/gateways.rs` | `apps/myproject-cli/src/features/payment/gateways.rs` | 永続化以外の外部システム、外部サービスと通信する契約と実装を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/gateways/` | `apps/myproject-cli/src/features/payment/gateways/stripe_payment_gateway.rs` | 接続先別のGateway実装と、外部データ形式との変換を行う内部モジュールを配置する。 |
 | `apps/<app-name>/src/ui.rs` | `apps/myproject-cli/src/ui.rs` | 業務上の判断を持たないUIの公開境界。UIを持つ実行単位だけで使用する。 |
@@ -72,7 +66,7 @@ UIを持つアプリケーションでは、Featureから別Featureのルート�
 
 ### 構成単位への分割
 
-`app/bootstrap/mod.rs`が複数のFeatureや実行経路を直接構成し、依存関係を追跡しにくくなる場合は、`app/bootstrap/<feature>.rs`、`app/bootstrap/http.rs`、`app/bootstrap/jobs.rs`などへ生成処理を分ける。`app/bootstrap/mod.rs`は共有資源を生成して各モジュールを接続する。`app.rs`は起動、ライフサイクル、実行経路との接続を公開し、`main.rs`はプロセスの開始に必要な値を受け取って`app`を呼び出す。
+`app/bootstrap/mod.rs`が複数のFeatureや実行経路を直接構成し、依存関係を追跡しにくくなる場合は、`app/bootstrap/<feature>.rs`、`app/bootstrap/http.rs`、`app/bootstrap/jobs.rs`などへ生成処理を分ける。`app/bootstrap/mod.rs`は共有資源を生成して各モジュールを接続する。`app.rs`は起動と実行経路との接続を公開し、`main.rs`はプロセスの開始に必要な値を受け取って`app`を呼び出す。
 
 ```text
 src/
@@ -82,7 +76,6 @@ src/
 │   │   ├── auth.rs
 │   │   ├── dashboard.rs
 │   │   └── mod.rs
-│   ├── lifecycle.rs
 │   └── state.rs
 └── main.rs
 ```
@@ -97,7 +90,7 @@ pub(super) fn build_dashboard(database: DatabasePool) -> DashboardHandler {
 }
 ```
 
-共有資源は引数で受け取り、構築済みのHandler、Router、Controllerなど、そのFeatureの公開境界を返す。生成関数には認可、入力検証、データ加工などの業務処理を記述しない。
+生成関数には認可、入力検証、データ加工などの業務処理を記述しない。
 
 ### Webアプリケーションの共有状態
 
