@@ -4,9 +4,8 @@
 
 1. [概要](#1-概要)
 2. [フォルダ構成](#2-フォルダ構成)
-3. [Composition Root](#3-composition-root)
-4. [Repository、Gatewayの実装](#4-repositorygatewayの実装)
-5. [検証](#5-検証)
+3. [Repository、Gatewayの実装](#3-repositorygatewayの実装)
+4. [検証](#4-検証)
 
 ---
 
@@ -56,70 +55,9 @@
 | `apps/<app-name>/benches/` | `apps/myproject-cli/benches/parse_benchmark.rs` | ベンチマークが必要な場合だけ使用する。 |
 | `crates/<name>/` | `crates/design-tokens/` | 複数の実行単位から共有するRust crate。 |
 
-別Featureの要素は、依存先Featureのルートモジュールが`pub use`で再公開したものだけを参照し、依存先の内部モジュールを直接参照しない。別FeatureのUI部品を利用する側は、公開された引数とコールバックだけを使い、依存先の表示状態を直接操作しない。
-
-UIを持つアプリケーションでは、Featureから別Featureのルートを参照しない。画面とUI部品は遷移が必要になったことをコールバックまたはメッセージで通知し、`app`のルーターが遷移先を決定する。
-
 ---
 
-## 3. Composition Root
-
-### 構成単位への分割
-
-`app/bootstrap/mod.rs`が複数のFeatureや実行経路を直接構成し、依存関係を追跡しにくくなる場合は、`app/bootstrap/<feature>.rs`、`app/bootstrap/http.rs`、`app/bootstrap/jobs.rs`などへ生成処理を分ける。`app/bootstrap/mod.rs`は共有資源を生成して各モジュールを接続する。`app.rs`は起動と実行経路との接続を公開し、`main.rs`はプロセスの開始に必要な値を受け取って`app`を呼び出す。
-
-```text
-src/
-├── app.rs
-├── app/
-│   ├── bootstrap/
-│   │   ├── auth.rs
-│   │   ├── dashboard.rs
-│   │   └── mod.rs
-│   └── state.rs
-└── main.rs
-```
-
-```rust
-// app/bootstrap/dashboard.rs
-pub(super) fn build_dashboard(database: DatabasePool) -> DashboardHandler {
-    let repository = PostgresDashboardRepository::new(database);
-    let service = DashboardService::new(repository);
-
-    DashboardHandler::new(service)
-}
-```
-
-生成関数には認可、入力検証、データ加工などの業務処理を記述しない。
-
-### Webアプリケーションの共有状態
-
-AxumやActix Webで複数のHandlerが使う外部資源を一つの状態型へまとめる場合は、`app/state.rs`に`AppState`を定義し、Composition Rootで生成してフレームワークへ登録する。`AppState`には共有する外部資源のハンドル、設定、構築済みのFeature状態だけを保持し、任意の型を検索する`resolve`のような機能を持たせない。
-
-```rust
-// app/state.rs
-#[derive(Clone)]
-pub struct AppState {
-    pub(super) database: DatabasePool,
-    pub(super) config: Arc<AppConfig>,
-}
-
-// app/bootstrap/dashboard.rs
-pub(super) fn build_dashboard(state: &AppState) -> DashboardHandler {
-    let repository = PostgresDashboardRepository::new(state.database.clone());
-    let service = DashboardService::new(repository);
-
-    DashboardHandler::new(service)
-}
-```
-
-`AppState`全体を受け取れる範囲はComposition Rootとフレームワーク境界に限定する。FeatureのServiceやRepositoryには必要な依存関係を個別に渡し、`Database::global()`や`Container::resolve::<Database>()`のように処理の内部から依存関係を取得しない。
-
-AxumのHandlerが一部の状態しか使わない場合は、Feature固有の状態型を定義し、`FromRef<AppState>`による部分状態として`State(feature_state): State<FeatureState>`の形で受け取る。Actix Webでは、用途ごとの状態型を`web::Data<T>`として登録し、Handlerの引数に必要な型だけを宣言する。`web::Data<T>`や接続プールなど、内部で共有所有を実装する型をさらに`Arc`で包まず、共有所有が必要で安価な複製手段を持たない型だけに`Arc<T>`を使用する。
-
----
-
-## 4. Repository、Gatewayの実装
+## 3. Repository、Gatewayの実装
 
 Repository、Gatewayの契約はtraitとして定義する。実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
 
@@ -139,7 +77,7 @@ struct NotificationDispatcher {
 
 ---
 
-## 5. 検証
+## 4. 検証
 
 | 目的 | 検証対象 | ツール |
 | --- | --- | --- |
