@@ -56,11 +56,11 @@ Provider、Riverpodなどを採用する場合は、`bloc/`を方式固有の配
 | `apps/<app-name>/lib/ui/navigation/` | `apps/myproject-client/lib/ui/navigation/app_navigation_bar.dart` | ナビゲーションバー、タブ、パンくずを配置する。 |
 | `apps/<app-name>/lib/ui/list/` | `apps/myproject-client/lib/ui/list/paged_list.dart` | 機能固有の判断を持たない一覧表示を配置する。 |
 | `apps/<app-name>/lib/ui/table/` | `apps/myproject-client/lib/ui/table/sortable_table.dart` | 機能固有の判断を持たない表を配置する。 |
-| `apps/<app-name>/lib/features/<feature>/<feature>.dart` | `apps/myproject-client/lib/features/auth/auth.dart` | Feature外へ公開する型、処理、Screen、BLoC、Handler、RepositoryとGatewayの契約、各実装の生成関数だけを`export`する。 |
+| `apps/<app-name>/lib/features/<feature>/<feature>.dart` | `apps/myproject-client/lib/features/auth/auth.dart` | Feature外へ公開する型、処理、Screen、Widget、BLoC、Handler、RepositoryとGatewayの契約、各実装の生成関数だけを`export`する。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のWidgetだけを参照する。 |
 | `apps/<app-name>/lib/features/<feature>/<concept>.dart` | `apps/myproject-client/lib/features/auth/auth_session.dart` | Featureが所有する一つの業務概念について、値、状態、識別子、制約を型として定義する。 |
 | `apps/<app-name>/lib/features/<feature>/<responsibility>/` | `apps/myproject-client/lib/features/auth/sign_in/` | Feature内の一つの責務に属する型と処理を配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/screens/` | `apps/myproject-client/lib/features/auth/presentation/screens/sign_in_screen.dart` | ルーティングの遷移先となるScreenを配置する。 |
-| `apps/<app-name>/lib/features/<feature>/presentation/widgets/` | `apps/myproject-client/lib/features/auth/presentation/widgets/password_field.dart` | 同じFeatureの表示で再利用するWidgetを配置する。 |
+| `apps/<app-name>/lib/features/<feature>/presentation/widgets/` | `apps/myproject-client/lib/features/auth/presentation/widgets/password_field.dart` | Featureが所有する表示で再利用するWidgetを配置する。別Featureでも再利用するWidgetは、`<feature>.dart`から明示的に`export`する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/bloc/` | `apps/myproject-client/lib/features/auth/presentation/bloc/sign_in_bloc.dart` | Featureの表示状態を管理するEvent、State、BLoCを配置する。 |
 | `apps/<app-name>/lib/features/<feature>/handlers/` | `apps/myproject-client/lib/features/notification/handlers/push_notification_handler.dart` | UIを介さず外部からの要求を受け取る境界を配置する。業務ロジックは持たせず、Feature内の処理へ委譲する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/` | `apps/myproject-client/lib/features/cart/repositories/cart_repository.dart` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、保存形式との変換を配置する。 |
@@ -94,13 +94,17 @@ Provider、Riverpodなどを採用する場合は、`bloc/`を方式固有の配
 | `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
 | `core/` | Dart標準ライブラリと業務型の表現に必要な外部パッケージのみ。Flutter SDK、Feature、`infra/`、外部システムのSDKには依存しない |
 | `infra/` | 技術基盤の外部SDK、パッケージのみ |
-| Screen、Widget | 同じFeatureのBLoCと型、`core/`、`ui/` |
-| BLoC | 同じFeatureの処理と型、`core/` |
+| Screen、Widget | 同じFeatureのBLoCと型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のWidget、`core/`、`ui/` |
+| BLoC | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
 | Handler | 同じFeatureの処理と型、`core/` |
-| Feature内の処理 | 同じFeatureのRepository契約、Gateway契約、型、`core/` |
+| Feature内の処理 | 同じFeatureのRepository契約、Gateway契約、型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
 | Repository実装 | Repository契約、同じFeatureの型、外部SDK、外部データ形式 |
 | Gateway実装 | Gateway契約、同じFeatureの型、外部SDK、外部データ形式 |
 | `ui/` | Flutter SDKのみ |
+
+別Featureの要素は、依存先の`<feature>.dart`から`export`されたものだけを参照し、依存先の`presentation/`、`repositories/`、`gateways/`などの内部ファイルを直接importしない。別FeatureのWidgetを利用する側は、公開された引数とコールバックだけを使い、依存先のBLoCや内部状態を直接操作しない。
+
+UIを持つアプリケーションでは、Featureから別Featureのルートをimportしない。Screen、Widget、BLoCは遷移が必要になったことをコールバックまたはEventで通知し、`app/router/`が遷移先を決定する。
 
 外部SDKのクライアント、Repository、Gatewayの実装は`app/bootstrap.dart`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、RepositoryとGatewayはFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
 

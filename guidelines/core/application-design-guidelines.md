@@ -64,6 +64,16 @@
 | `<source-root>/core/<domain>/` | 複数のFeatureが共有する一つの業務概念でまとめる。言語上の種類による`types/`、`models/`、`errors/`や、役割が不明確な`utils/`は作らない。 | `core/identity/user_id`、`core/commerce/money` |
 | `<source-root>/infra/<resource>/` | 構築する外部資源、製品、通信方式ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 | `infra/postgres/connection_pool`、`infra/sentry/client` |
 
+### Feature間の依存
+
+Feature外へ公開する要素は、業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`app/`が依存関係を接続するために使う実行境界、RepositoryとGatewayの契約、生成処理に限定する。Featureが別のFeatureの業務能力を利用する場合は、依存先Featureが公開する業務型、処理とその呼び出し契約だけに単方向で依存し、RepositoryとGatewayの契約や実装、外部データ形式、内部ファイルは参照しない。Feature間で利用することだけを理由に、機能固有の型や処理を`core/`へ移さない。
+
+Featureの表示に別Featureの機能固有UIを組み込む場合は、依存先Featureが再利用用として公開するUIコンポーネントだけを参照する。依存先の表示状態管理や内部のUI部品を直接操作せず、公開APIで定めた引数とコールバックを使う。業務上の判断を持たないUI部品はFeatureではなく`ui/`へ配置する。
+
+UIを持つアプリケーションでは、Featureから別Featureのルートを参照しない。Featureは遷移が必要になったことをコールバックなどで通知し、`app/`のルーターが遷移先を決定する。
+
+Feature間の依存は循環させない。双方向の依存や多数の相互依存が必要になった場合は、複数Featureを組み合わせる利用者目的を一つのFeatureに持たせるか、Featureの境界を見直す。`app/`は依存関係の接続だけを担当し、Featureをまたぐ業務上の判断を持たない。
+
 ### 依存方向
 
 | 依存元 | 依存先 |
@@ -71,8 +81,9 @@
 | `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
 | `core/` | 標準ライブラリと業務型の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
 | `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
-| Feature内の`presentation/`、`handlers/` | 同じFeatureの処理、型、`core/`、`ui/`（`presentation/`のみ） |
-| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、`core/` |
+| Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`core/`、`ui/` |
+| Feature内の`handlers/` | 同じFeatureの処理と型、`core/` |
+| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
 | `repositories/`、`gateways/`の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
 | `ui/` | フレームワークのみ。`core/`、Featureには依存しない |
 
