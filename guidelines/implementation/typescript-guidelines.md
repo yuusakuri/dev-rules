@@ -4,18 +4,17 @@
 
 1. [概要](#1-概要)
 2. [フォルダ構成](#2-フォルダ構成)
-3. [検証](#3-検証)
-4. [参考資料](#4-参考資料)
+3. [型](#3-型)
+4. [検証](#4-検証)
+5. [参考資料](#5-参考資料)
 
 ---
 
 ## 1. 概要
 
-本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)を前提とする。
+本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
-TypeScriptの`strict`と、型情報を使用するlintを有効にする。公開する関数、コンポーネント、コールバックの引数と戻り値の型を明示する。
-
-記述方法は、「参考資料」のGoogle TypeScript Style Guideに従う。
+TypeScriptの`strict`と、型情報を使用するlintを有効にする。
 
 ---
 
@@ -47,7 +46,13 @@ TypeScriptの`strict`と、型情報を使用するlintを有効にする。公�
 
 ---
 
-## 3. 検証
+## 3. 型
+
+公開する関数、コンポーネント、コールバックの引数と戻り値の型を明示する。
+
+---
+
+## 4. 検証
 
 ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 
@@ -67,11 +72,11 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 
 ---
 
-## 4. 参考資料
+## 5. 参考資料
 
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
-| 1. 概要、3. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
+| 1. 概要、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
 | 1. 概要 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
-| 1. 概要、3. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
-| 3. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を確認する。 |
+| 1. 概要、4. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
+| 4. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を確認する。 |
