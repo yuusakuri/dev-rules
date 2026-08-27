@@ -219,9 +219,30 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 検索条件は用途ごとの取得操作または読み取り専用クエリとして定義する。既存のORMやデータアクセスAPIと同じ粒度の汎用CRUDを包むだけのRepositoryは設けない。
 
-### 外部システムをGatewayで分離する
+Repositoryは、保存と取得を担う永続化の境界に限って使う。永続化を伴わない外部システムや外部資源の境界には使用しない。
 
-決済、通知、他サービスのAPI、外部ライブラリ、デバイスなど、永続化以外の外部システムや外部資源を利用する場合は、Gatewayパターンを使う。Gatewayは利用側の目的に沿った操作だけを公開し、外部APIの呼び出し、外部形式との変換、外部SDKの型とエラーを実装内へ閉じ込める。引数、戻り値、エラーは利用側が扱う型で定義し、業務上の判断は利用側で行う。
+### 外部システムとの境界を責務の名前で分離する
+
+決済、通知、他サービスのAPI、外部ライブラリ、デバイス、時刻、ID発番、乱数など、永続化以外の外部システムや外部資源を利用する場合は、利用側の目的に沿った操作だけを公開する境界を定義し、外部APIの呼び出し、外部形式との変換、外部SDKの型とエラーを実装内へ閉じ込める。引数、戻り値、エラーは利用側が扱う型で定義し、業務上の判断は利用側で行う。
+
+境界の名前は、外部に接続することではなく、利用側から見て何を提供するかで決める。その責務を表す既存の名前がある場合はそれを使い、接続形態を表す`Gateway`を一律に付けない。`Gateway`は、決済網への窓口のように、外部システムへの窓口を指す名称としてその分野で定着している場合に使用する。実装の名前には接続先、方式、供給元を含め、契約と実装を名前で区別する。
+
+利用側から見た責務と、その責務に対して実際のRust OSSで使われている名前を示す。
+
+| 対象 | 契約の名前 | 実装の名前 | 実際のRust OSSの例 |
+| --- | --- | --- | --- |
+| 永続化 | `Repository`、`Store` | `PostgresOrderRepository` | [cqrs-es](https://docs.rs/cqrs-es/latest/cqrs_es/)の`EventStore`、`ViewRepository`、`PersistedEventRepository` |
+| オブジェクトストレージ、ファイル | `ObjectStore`、`Loader`、`Reader` | `AmazonS3`、`LocalFileSystem` | [object_store](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html)の`ObjectStore`と、実装の`AmazonS3`、`LocalFileSystem`、`InMemory` |
+| 時刻 | `Clock`、`TimeProvider` | `SystemClock`、`MonotonicClock`、`FakeRelativeClock` | [rustls](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)の`TimeProvider::current_time`、[governor](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)の`Clock::now`と、実装の`SystemClock`、`FakeRelativeClock` |
+| 乱数 | `Rng` | `StdRng`、`SmallRng` | [rand_core](https://docs.rs/rand_core/latest/rand_core/)の`Rng`（0.10で`RngCore`から改称）、`SeedableRng` |
+| ID発番 | `IdGenerator`、`Generator` | `SnowflakeIdGenerator` | [snowflaked](https://docs.rs/snowflaked/latest/snowflaked/)の`Generator`、`Snowflake`、[uuid](https://docs.rs/uuid/latest/uuid/struct.Uuid.html)の`Uuid::new_v4` |
+| 設定読込 | `Provider`、`Loader` | `EnvConfigProvider` | [figment](https://docs.rs/figment/latest/figment/trait.Provider.html)の`Provider`と、実装の`Env`、`Serialized` |
+| メッセージ送信 | `Publisher`、`Producer` | `KafkaEventProducer` | [rdkafka](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html)の`Producer`と、実装の`FutureProducer`、`ThreadedProducer` |
+| メール送信 | `Mailer`、`EmailSender` | `SmtpMailer` | [lettre](https://docs.rs/lettre/latest/lettre/trait.Transport.html)の`Transport`と、実装の`SmtpTransport`、`FileTransport`、`StubTransport` |
+| 決済 | `PaymentGateway` | `StripePaymentGateway` | [payment_kit](https://docs.rs/payment_kit/latest/payment_kit/)の`PaymentGateway` |
+| 外部サービスのAPI | `Client` | `StripeClient` | [reqwest](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)の`Client`、aws-sdkの各`Client` |
+
+`SystemClockGateway`、`UuidGateway`、`RandomGateway`のように、外部に触れることだけを理由に`Gateway`を付けると、名前から何を提供するのかが分からなくなる。`Clock`、`IdGenerator`、`Rng`のように、供給する対象そのものを名前にする。
 
 ### 既存モジュールに手を加えずに機能を追加する（Decorator）
 
@@ -245,6 +266,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 外部接続の命名 | 外部通信やインフラストラクチャの処理を、`api`、`data`、`infrastructure` のような抽象的な技術概念で命名、集約しない。実際の接続先システム、サービス、通信対象を明示する（例: `stripe_payment`、`device_hub`）。 |
+| 外部との境界の命名 | 外部システムや外部資源との境界は、外部に接続することではなく、利用側へ何を提供するかで命名する。責務を表す既存の名前がある場合はそれを使い、`Gateway`のような接続形態を表す語を一律に付けない。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock`、`IdGenerator`、`Rng`、`PaymentGateway` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
@@ -288,8 +310,15 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap` | 名詞 | 集合 |
 | `Store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore` | 名詞 | データ |
 | `Registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry` | 名詞 | データ |
-| `Repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する抽象に使用する。インターフェースとして定義し、実装を差し替えられる構造にする。 | `OrderRepository`、`PostgresOrderRepository` | 名詞 | データ |
-| `Gateway` | 永続化以外の外部システムや外部資源を、利用側の目的に沿った操作で扱う抽象に使用する。具体的な接続先を実装の名前に含める。 | `PaymentGateway`、`StripePaymentGateway` | 名詞 | 通信 |
+| `Repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する抽象に使用する。インターフェースとして定義し、実装を差し替えられる構造にする。永続化を伴わない外部システムや外部資源の境界には使用しない。 | `OrderRepository`、`PostgresOrderRepository` | 名詞 | データ |
+| `Gateway` | 外部システムへの窓口を指す名称として、その分野で定着している場合に使用する。具体的な接続先を実装の名前に含める。責務を表す既存の名前がある対象へ、外部資源を扱うことだけを理由に付けない。 | `PaymentGateway`、`StripePaymentGateway` | 名詞 | 通信 |
+| `Clock` | 現在時刻または経過時間を供給する抽象に使用する。実装の名前には、供給元と時刻の性質を含める。 | `Clock`、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
+| `Provider` | 利用側が必要とする値を供給する抽象に使用する。何を供給するかを名前に含める。`Repository`、`Loader`、`Clock`など、対象を直接表す名前が適切な場合は使用しない。 | `TimeProvider`、`ConfigProvider` | 名詞 | データ |
+| `Generator` | 識別子など、新しい値を生成する抽象に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator` | 名詞 | 生成 |
+| `Rng` | 乱数を供給する抽象に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | `Rng`、`SeedableRng`、`StdRng` | 名詞 | 生成 |
+| `Client` | 外部サービスのAPIを呼び出す型に使用する。接続先のサービスを名前に含める。 | `StripeClient`、`GitHubClient` | 名詞 | 通信 |
+| `Mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。チャネルの送信側を表す `Sender` とは区別する。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 |
+| `Publisher`、`Producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer` | 名詞 | 通信 |
 | `Pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool` | 名詞 | リソース |
 | `Cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache` | 名詞 | データ |
 | `Buffer` | バイト列や要素を一時的に蓄積する型に使用する。 | `ReceiveBuffer` | 名詞 | データ |
@@ -501,6 +530,9 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |
+| 6. 設計パターン | [Repository](https://martinfowler.com/eaaCatalog/repository.html) | 永続化されたデータを、コレクションのように扱う境界として分離する構造を説明する。 |
+| 6. 設計パターン | [Gateway](https://martinfowler.com/eaaCatalog/gateway.html) | 外部システムや外部資源へのアクセスを1つの型へ包む構造を説明する。 |
+| 7. 命名 | [Naming - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/naming.html) | エコシステムで実際に使われている型、トレイト、関数の命名を確認する。 |
 | 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) | ログの重大度と構造化項目の標準を定義する。 |
 | 10. ログ | [Naming \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/general/naming/) | 属性名とイベント名の命名規則を定義する。 |
 | 10. ログ | [Exception attributes \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/attributes-registry/exception/) | 例外を記録する項目の名称と内容を定義する。 |

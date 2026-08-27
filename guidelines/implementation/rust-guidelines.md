@@ -4,7 +4,7 @@
 
 1. [概要](#1-概要)
 2. [フォルダ構成](#2-フォルダ構成)
-3. [Repository、Gatewayの実装](#3-repositorygatewayの実装)
+3. [Repository、外部システム境界の実装](#3-repository外部システム境界の実装)
 4. [検証](#4-検証)
 5. [参考資料](#5-参考資料)
 
@@ -41,8 +41,8 @@
 | `apps/<app-name>/src/features/<feature>/handlers/` | `apps/myproject-cli/src/features/auth/handlers/sign_in_handler.rs` | Handlerの内部モジュールを配置する。 |
 | `apps/<app-name>/src/features/<feature>/repositories.rs` | `apps/myproject-cli/src/features/checkout/repositories.rs` | Featureが所有するデータを永続化ストレージへ保存、取得する契約と実装を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-cli/src/features/checkout/repositories/postgres_order_repository.rs` | 保存先ごとのRepository実装と、保存形式との変換を行う内部モジュールを配置する。 |
-| `apps/<app-name>/src/features/<feature>/gateways.rs` | `apps/myproject-cli/src/features/payment/gateways.rs` | 永続化以外の外部システム、外部サービスと通信する契約と実装を所有するモジュール。 |
-| `apps/<app-name>/src/features/<feature>/gateways/` | `apps/myproject-cli/src/features/payment/gateways/stripe_payment_gateway.rs` | 接続先別のGateway実装と、外部データ形式との変換を行う内部モジュールを配置する。 |
+| `apps/<app-name>/src/features/<feature>/gateways.rs` | `apps/myproject-cli/src/features/payment/gateways.rs` | 永続化以外の外部システム、外部資源と通信する契約と実装を所有するモジュール。モジュール名は境界の置き場所を表す。trait名は`Gateway`に固定せず、責務を表す名前を使う。 |
+| `apps/<app-name>/src/features/<feature>/gateways/` | `apps/myproject-cli/src/features/payment/gateways/stripe_payment_gateway.rs` | 接続先別の実装と、外部データ形式との変換を行う内部モジュールを配置する。ファイル名は実装の型名に合わせる（例: `stripe_payment_gateway.rs`、`smtp_mailer.rs`）。 |
 | `apps/<app-name>/src/ui.rs` | `apps/myproject-cli/src/ui.rs` | 業務上の判断を持たないUIの公開境界。UIを持つ実行単位だけで使用する。 |
 | `apps/<app-name>/src/ui/` | `apps/myproject-cli/src/ui/primary_button.rs` | UIの内部モジュールを配置する。 |
 | `apps/<app-name>/src/localization.rs` | `apps/myproject-cli/src/localization.rs` | 表示言語の選択と翻訳の取得を定義する。多言語対応がある場合だけ使用する。 |
@@ -58,21 +58,65 @@
 
 ---
 
-## 3. Repository、Gatewayの実装
+## 3. Repository、外部システム境界の実装
 
-Repository、Gatewayの契約はtraitとして定義する。実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
+永続化と、永続化以外の外部システムとの境界の契約はtraitとして定義する。実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
+
+traitの名前は、[共通設計原則](../core/software-design-guidelines.md)の「外部システムとの境界を責務の名前で分離する」に従い、外部に接続することではなく、利用側へ何を提供するかで決める。実装の型名には接続先、方式、供給元を含める。
+
+```rust
+// 責務を表す既存の名前を使う。rustlsの`TimeProvider`、governorの`Clock`と同じ形。
+trait Clock {
+    fn now(&self) -> DateTime<Utc>;
+}
+
+struct SystemClock;
+
+impl Clock for SystemClock {
+    fn now(&self) -> DateTime<Utc> {
+        Utc::now()
+    }
+}
+
+// snowflakedの`Generator`と同じく、生成する対象を名前にする。
+trait OrderIdGenerator {
+    fn generate(&self) -> OrderId;
+}
+
+// 外部システムへの窓口を指す名称が分野で定着している場合だけ`Gateway`を使う。
+trait PaymentGateway {
+    async fn authorize(&self, request: &AuthorizationRequest) -> Result<PaymentId, PaymentError>;
+}
+
+struct StripePaymentGateway {
+    client: StripeClient,
+}
+```
+
+```rust
+// NG: 外部資源へ触れることだけを理由に`Gateway`を付けた契約。
+// 名前が接続形態しか表さず、何を提供するのかが分からない。
+trait SystemClockGateway {
+    fn now(&self) -> DateTime<Utc>;
+}
+
+trait UuidGateway {
+    fn generate(&self) -> Uuid;
+}
+```
 
 契約を受け取る側は、ジェネリクスとトレイト境界（型パラメータまたは`impl Trait`）で受け取り、静的ディスパッチで解決することを基本とする。
 
 ```rust
 // 基本形：静的ディスパッチ。実装はコンパイル時に1つに決まる。
-struct OrderService<R: OrderRepository> {
+struct OrderService<R: OrderRepository, C: Clock> {
     repository: R,
+    clock: C,
 }
 
 // 実行時に複数の実装を切り替える必要がある場合だけ動的ディスパッチを使う。
 struct NotificationDispatcher {
-    channels: Vec<Box<dyn NotificationGateway>>,
+    notifiers: Vec<Box<dyn Notifier>>,
 }
 ```
 
