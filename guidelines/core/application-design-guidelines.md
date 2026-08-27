@@ -40,10 +40,9 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `<source-root>/app/` | `app/router` | 起動、ルーティング、実行経路との接続を配置する。 |
-| `<source-root>/app/bootstrap/` | `app/bootstrap/http_server`、`app/bootstrap/background_worker` | 起動点にあるComposition Rootと、そこから呼び出す構築処理を配置する。起動処理から分ける場合は、構築結果と所有範囲を説明できる単位の生成関数にする。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
+| `<source-root>/app/` | `app/router` | ルーティングと実行経路との接続を配置する。言語やフレームワークが起動点の配置を定めている場合は、その配置を優先する。 |
 | `<source-root>/core/` | `core/errors/` | 複数のFeatureが共有する基盤を配置する。 |
-| `<source-root>/infra/` | `infra/logger` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置し、Composition Rootから呼び出す。 |
+| `<source-root>/infra/` | `infra/logger` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置する。 |
 | `<source-root>/infra/<resource>/` | `infra/postgres/connection_pool`、`infra/sentry/client` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 |
 | `<source-root>/features/<feature>/` | `features/auth` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | `features/auth/presentation` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
@@ -58,7 +57,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 | 依存元 | 依存先 |
 | --- | --- |
-| `app/`、例外時の`bootstrap/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
+| 起動点、`app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
 | `core/` | 標準ライブラリと基盤の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
 | `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
 | Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`core/`、`ui/` |

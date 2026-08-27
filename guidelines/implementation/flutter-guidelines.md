@@ -34,15 +34,14 @@
 | `apps/<app-name>/macos/` | `apps/myproject-client/macos/Runner/Info.plist` | macOS固有の設定とネイティブコードを配置する。macOSへ配信する場合に使用する。 |
 | `apps/<app-name>/linux/` | `apps/myproject-client/linux/runner/main.cc` | Linux固有の設定とネイティブコードを配置する。Linuxへ配信する場合に使用する。 |
 | `apps/<app-name>/windows/` | `apps/myproject-client/windows/runner/main.cpp` | Windows固有の設定とネイティブコードを配置する。Windowsへ配信する場合に使用する。 |
-| `apps/<app-name>/lib/main.dart` | `apps/myproject-client/lib/main.dart` | エントリーポイント。`app/bootstrap/`の初期化処理を呼び出し、`runApp`を実行する。 |
+| `apps/<app-name>/lib/main.dart` | `apps/myproject-client/lib/main.dart` | エントリーポイント。設定を読み、外部SDKのクライアントとRepository、Gatewayの実装を生成してアプリケーションへ渡し、`runApp`を実行する。 |
 | `apps/<app-name>/lib/app/app.dart` | `apps/myproject-client/lib/app/app.dart` | `MaterialApp`、アプリケーション全体で共有する`RepositoryProvider`と`BlocProvider`、ルーター、テーマ、多言語対応を接続する。 |
-| `apps/<app-name>/lib/app/bootstrap/` | `apps/myproject-client/lib/app/bootstrap/app_bootstrap.dart` | 外部SDKのクライアントと各FeatureのRepository、Gatewayの実装を生成し、アプリケーションへ渡すComposition Rootを配置する。 |
 | `apps/<app-name>/lib/app/router/` | `apps/myproject-client/lib/app/router/app_router.dart` | ルーティングと、ルートまたは共通の親が所有するBLoCの生成、接続を定義する。各Featureの公開APIだけを参照する。 |
 | `apps/<app-name>/lib/app/theme/` | `apps/myproject-client/lib/app/theme/app_theme.dart` | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
 | `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳データだけを配置する。生成コードは置かない。文言へ埋め込む数値、日付の書式は、プレースホルダーの`format`で指定する。 |
 | `apps/<app-name>/lib/generated/l10n/` | `apps/myproject-client/lib/generated/l10n/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。`l10n.yaml`の`output-dir`で出力先を`lib/l10n/`の外へ指定する。手動では編集しない。 |
 | `apps/<app-name>/lib/locale_format/` | `apps/myproject-client/lib/locale_format/currency_format.dart` | 文言の外側で使う数値、日付、通貨などの書式処理を`intl`パッケージで定義する。 |
-| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/sentry/client.dart` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。呼び出すのはComposition Root（`app/bootstrap/`）と、そこから委譲された構築処理、テストに限る。Featureの業務処理からは呼び出さない。 |
+| `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/sentry/client.dart` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。呼び出すのは`main.dart`、アプリケーションの接続処理、テストに限る。Featureの業務処理からは呼び出さない。 |
 | `apps/<app-name>/lib/ui/` | `apps/myproject-client/lib/ui/ui.dart`、`apps/myproject-client/lib/ui/button/primary_button.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品を役割ごとのサブフォルダへ配置する。公開するUI部品は`ui.dart`から`export`する。 |
 | `apps/<app-name>/lib/features/<feature>/<feature>.dart` | `apps/myproject-client/lib/features/auth/auth.dart` | Feature外へ公開する型、処理、Screen、Widget、BLoC、Handler、RepositoryとGatewayの契約、各実装の生成関数だけを`export`する。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のWidgetだけを参照する。 |
 | `apps/<app-name>/lib/features/<feature>/<concept>.dart` | `apps/myproject-client/lib/features/auth/auth_session.dart` | Featureが所有する一つの業務概念について、値、状態、識別子、制約を型として定義する。 |
@@ -83,7 +82,7 @@
 | BLoC | 同じFeatureの処理と型 |
 | `ui/` | Flutter SDKのみ |
 
-外部SDKのクライアント、Repository、Gatewayの実装は`app/bootstrap/`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、RepositoryとGatewayはFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
+外部SDKのクライアント、Repository、Gatewayの実装は`main.dart`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、RepositoryとGatewayはFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
 
 ---
 

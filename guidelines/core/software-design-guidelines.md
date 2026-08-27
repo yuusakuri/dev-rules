@@ -63,7 +63,9 @@ Type、Interface、Class、Functionなどのプログラミング言語上の構
 
 業務上の方針などの上位モジュールを、DB、外部API、フレームワークなどの下位モジュールから独立させる必要がある場合は、上位モジュールが必要とする操作を契約として定義し、下位モジュールにその契約を実装させる。契約には上位モジュールが使う操作だけを含め、外部SDKなどの提供側が持つAPIをそのまま写さない。
 
-Dependency Inversionは、具体型への依存を一律に禁じる原則ではない。純粋な計算、値変換、内部データ構造、交換する必要のない実装には具体型を使い、実装の交換、外部技術との分離、複数実装の切り替えなど、実際の境界がある場合だけ契約を定義する。将来の可能性やテスト用のモックだけを理由に契約を追加しない。
+業務上の判断を、外部I/O、永続化、時刻、ID生成、乱数などから独立して検証する場合も、上位モジュールが必要とする操作を契約または関数の引数として受け取る。下位モジュールの内部では、外部SDK、ファイル、トランザクションなど、その実装だけが使用して終了まで管理する資源を直接生成してよい。
+
+Dependency Inversionは、具体型への依存を一律に禁じる原則ではない。純粋な計算、値変換、内部データ構造、交換する必要のない実装には具体型を使い、外部技術との分離や複数実装の切り替えなど、実際の境界がある場合だけ契約を定義する。将来の可能性やテスト用のモックだけを理由に契約を追加しない。
 
 ### 差し替えても壊れないようにする（Liskov Substitution）
 
@@ -73,10 +75,6 @@ Dependency Inversionは、具体型への依存を一律に禁じる原則では
 
 モジュールは、新しい振る舞いの追加に対して開き、既存コードの変更に対して閉じた状態を目指す。機能追加のたびに既存コードへ手を入れると、動いていた処理まで巻き込む。インターフェースとDependency Inversionを組み合わせれば、実装を追加するだけで機能を広げられる。
 
-### 実行環境によって結果が変わる操作を境界で扱う
-
-業務上の判断を外部I/O、永続化、時刻、ID生成、乱数などから独立して検証する必要がある場合は、上位モジュールが必要とする操作を契約または関数の引数として受け取る。下位モジュールの内部では、外部SDK、ファイル、トランザクションなど、その実装が所有する具体的な資源を直接生成してよい。
-
 ### 依存関係を明示的に受け渡す（Dependency Injection）
 
 呼び出し側が選択または共有する必要がある協働オブジェクトは、コンストラクターまたは関数の引数として受け取る。Dependency Injectionには、具体型を通常のコードで渡す方法も含まれ、trait、インターフェース、DIコンテナーの使用を必須としない。処理対象となる入力値や、実装の内部だけで使う補助オブジェクトまで、依存関係として外部から渡さない。
@@ -85,31 +83,160 @@ Dependency Inversionは、具体型への依存を一律に禁じる原則では
 
 処理の内部から、グローバル変数、静的アクセサー、DIコンテナー、Service Locatorを使って依存関係を検索しない。取得場所が隠れると、処理の理解と単体テストが難しくなる。
 
-DIコンテナーをアプリケーションのコードから明示的に参照する場合は、Composition Rootだけに限定する。業務処理を担う型や関数はコンテナーへ依存させず、通常のコンストラクターまたは関数呼び出しで生成、実行できる状態を保つ。
+### 起動点で依存関係を構成する
 
-### 依存関係の選択と結線を利用処理から分離する
+実行可能なアプリケーションは、`main`などの起動点で設定を読み、プロセス内で共有する外部資源と依存関係の実装を生成し、最上位の実行対象を組み立ててから実行を開始する。この構成箇所をComposition Rootと呼び、特定のファイル名、フォルダ名、フレームワークへ結び付けない。ライブラリはComposition Rootを持たず、利用するアプリケーションが構成できるコンストラクターまたは生成関数を公開する。
 
-アプリケーションまたは実行プロセスごとに、起動点の近くへComposition Rootを一つ設ける。Composition Rootは、設定を読み、長く共有する外部資源と依存関係の実装を選択して生成し、最上位の実行対象を組み立てて起動する。ライブラリはComposition Rootを持たず、利用するアプリケーションが構成できるコンストラクターまたは生成関数を公開する。
+構成には通常のコンストラクターと関数呼び出しを使用する。DIコンテナーを使用する場合も参照箇所は起動点に限定し、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出する。業務処理を担う型や関数はコンテナーへ依存させない。
 
-結線には、通常のコード、DIコンテナー、自動登録のいずれも使用できる。方式にかかわらず、最終的な依存関係を追跡でき、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出できるようにする。
+一回の操作だけで使うファイル、トランザクション、外部コマンドや、型の内部構造を成り立たせる補助オブジェクトは、それを利用して終了まで管理する実装の内部で生成する。生成手順が複雑な場合は、生成対象に固有のBuilderまたはFactoryを使用し、任意の依存関係を検索する汎用コンテナーとして扱わない。
 
-すべてのオブジェクトや外部資源をComposition Rootで生成する必要はない。一回の操作だけで使うファイル、トランザクション、外部コマンドや、型の内部構造を成り立たせる補助オブジェクトは、それを利用して終了まで管理する実装の内部で生成する。利用処理から分離する対象は、上位モジュールが選択すべき実装と、複数の処理で共有する資源の結線である。
+終了処理が必要な依存関係は、それを生成または所有する側がライフサイクルを管理する。起動点で共有資源を生成した場合は、その資源を使う処理を停止してから終了し、言語やフレームワークが所有権やスコープを管理する場合は標準の終了方法に従う。
 
-終了処理が必要な依存関係は、それを生成または所有する側がライフサイクルを管理する。共有資源をComposition Rootで生成した場合は、依存する処理を停止してから資源を終了する。言語、フレームワーク、DIコンテナーが所有権やスコープを管理する場合は、その標準の終了方法に従う。
-
-### Composition Rootから構築処理を委譲する
-
-Composition Rootが長くなり、依存関係を追跡しにくくなる場合は、HTTPのRouter、バックグラウンドWorker、DB接続プールなど、構築結果と所有範囲を説明できる単位の生成関数へ処理を委譲する。Composition Rootはそれらの関数を呼び出し、アプリケーション全体の実装選択とライフサイクルを引き続き決定するため、委譲先を別のComposition Rootとして扱わない。
-
-生成関数は、必要な設定と共有資源を引数で受け取り、構築済みの対象を返す。生成対象の設定手順が複雑な場合は、その対象専用のBuilderまたはFactoryを使用してよい。生成関数やBuilderに、グローバルな依存関係の取得、汎用的な依存関係の検索、業務上の判断を持たせない。
-
-### 共有状態は利用範囲とライフサイクルでまとめる
+### 共有状態は実行責務とライフサイクルでまとめる
 
 フレームワークが一つの状態型を要求する場合や、イベントループなどの実行主体が複数の状態と資源を同じ期間所有する場合は、利用範囲とライフサイクルが一致する値を専用の型へまとめてよい。複数の値を持つ`State`や`Context`であっても、その型自身が実行状態を管理する責務を持つなら、依存関係を検索するためだけの型とは区別する。型名は、`State`、`Context`、`Dependencies`などの定型で決めず、その型が表す責務に合わせる。
 
 共有状態には、型名や文字列から任意の依存関係を検索する機能を持たせない。HTTPハンドラーなどのフレームワーク境界は、フレームワークの仕組みに従って共有状態全体または必要な部分状態を受け取ってよい。境界から独立した業務処理を呼び出すときは、その処理が必要とする依存関係を個別に渡す。
 
 イベントループや状態機械など、共有状態そのものが処理の実行主体である場合は、その型が必要な状態と資源を所有してよい。実際の責務が一つである型を、フィールド数だけを理由に分割しない。
+
+### Rust OSSに見られる依存関係の構成
+
+次の実装は、専用のDIコンテナーを設けず、Rustの通常の型、関数、Builder、共有状態を使って依存関係を構成している。これらはフォルダ構成の共通規則ではなく、前節までの規則を実際のコードへ当てはめた例である。
+
+| プロジェクト | 実際の構成 | この規則との対応 |
+| --- | --- | --- |
+| ripgrep | [`main`が引数を解析して`run`を呼び、検索時にMatcher、Searcher、Printerを生成して`SearchWorker`へ渡す。](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L44-L129) [`SearchWorker`は検索対象に応じたReaderを内部で生成する。](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L338) | 検索処理が必要とする協働オブジェクトを引数として明示する。Builderは`SearchWorker`という生成対象に限定し、一回の検索対象を読むReaderはWorkerの内部で生成する。 |
+| rust-analyzer | [`main_loop`がConfigとConnectionを受け取り、`GlobalState`を生成してイベントループを開始する。](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L41-L72) [`GlobalState::new`はVFS、タスクプール、チャネルなどを生成する。](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L232-L280) | イベントループという一つの実行責務が、同じ期間に使う状態と資源を所有する。フィールド数だけを理由に状態を分割しない。 |
+| Cargo | [`main`が`GlobalContext`を生成し、CLIの実行処理へ渡す。](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/bin/cargo/main.rs#L17-L35) [`GlobalContext`は設定、Shell、作業ディレクトリ、HTTP関連の状態などを所有する。](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/context/mod.rs#L206-L260) [`compile`は通常の`DefaultExecutor`を選び、拡張点を使う呼び出しだけが`dyn Executor`を渡す。](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/ops/cargo_compile/mod.rs#L131-L147) | プロセス全体の実行環境はContextとして所有し、実装を差し替える箇所だけをtraitの境界にする。 |
+| axum | [公式の依存性注入例では、`main`がRepository、State、Router、Listenerを順に構築し、ハンドラーが`State` extractorで依存関係を受け取る。](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L99) | フレームワークが要求する共有状態へ、同じRouterで使う依存関係をまとめる。ジェネリクスとtrait objectは、実行時切り替えの有無だけでなく、型の複雑さも含めて選ぶ。 |
+
+リンク先の実装から、構成を表す箇所を抜粋する。ripgrepは、検索に必要な値を生成して`SearchWorker`へ渡している。
+
+```rust
+let mut searcher = args.search_worker(
+    args.matcher()?,
+    args.searcher()?,
+    args.printer(mode, args.stdout()),
+)?;
+```
+
+rust-analyzerは、設定と通信路から実行主体を生成し、そのままイベントループを開始している。
+
+```rust
+GlobalState::new(connection.sender, config).run(connection.receiver)
+```
+
+Cargoは、標準の実装を選び、差し替え可能なコンパイル処理へ明示的に渡している。
+
+```rust
+let exec: Arc<dyn Executor> = Arc::new(DefaultExecutor);
+compile_with_exec(ws, options, &exec)
+```
+
+axumの公式例では、ハンドラーがRepositoryを保持する共有状態を引数として受け取っている。
+
+```rust
+async fn create_user_dyn(
+    State(state): State<AppStateDyn>,
+    Json(params): Json<UserParams>,
+) -> Json<User> {
+```
+
+### Rustでの適用例
+
+次の例では、`main`がRepositoryの実装、業務処理、axumの共有状態、Router、Listenerを順に構築する。ハンドラーはフレームワークとの境界にとどめ、業務処理は外部から受け取ったRepositoryの契約だけに依存する。
+
+```toml
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread"] }
+```
+
+```rust
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
+
+use axum::{
+    Router,
+    extract::{Path, State},
+    http::StatusCode,
+    routing::post,
+};
+
+#[derive(Clone)]
+struct Order {
+    id: String,
+}
+
+#[derive(Debug)]
+struct SaveOrderError;
+
+trait OrderRepository: Send + Sync {
+    fn save(&self, order: Order) -> Result<(), SaveOrderError>;
+}
+
+#[derive(Default)]
+struct InMemoryOrderRepository {
+    orders: Mutex<HashMap<String, Order>>,
+}
+
+impl OrderRepository for InMemoryOrderRepository {
+    fn save(&self, order: Order) -> Result<(), SaveOrderError> {
+        let mut orders = self.orders.lock().map_err(|_| SaveOrderError)?;
+        orders.insert(order.id.clone(), order);
+        Ok(())
+    }
+}
+
+struct PlaceOrder {
+    repository: Arc<dyn OrderRepository>,
+}
+
+impl PlaceOrder {
+    fn new(repository: Arc<dyn OrderRepository>) -> Self {
+        Self { repository }
+    }
+
+    fn execute(&self, order_id: String) -> Result<(), SaveOrderError> {
+        self.repository.save(Order { id: order_id })
+    }
+}
+
+#[derive(Clone)]
+struct AppState {
+    place_order: Arc<PlaceOrder>,
+}
+
+async fn handle_place_order(
+    State(state): State<AppState>,
+    Path(order_id): Path<String>,
+) -> Result<StatusCode, StatusCode> {
+    state
+        .place_order
+        .execute(order_id)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(StatusCode::CREATED)
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let repository: Arc<dyn OrderRepository> = Arc::new(InMemoryOrderRepository::default());
+    let place_order = Arc::new(PlaceOrder::new(repository));
+    let state = AppState { place_order };
+
+    let app = Router::new()
+        .route("/orders/{order_id}", post(handle_place_order))
+        .with_state(state);
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
+
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+```
 
 ### 循環依存を避ける
 

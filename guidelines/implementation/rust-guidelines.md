@@ -4,7 +4,7 @@
 
 1. [概要](#1-概要)
 2. [フォルダ構成](#2-フォルダ構成)
-3. [Repository、Gatewayの実装](#3-repositorygatewayの実装)
+3. [依存関係の構成とRepository、Gatewayの実装](#3-依存関係の構成とrepositorygatewayの実装)
 4. [検証](#4-検証)
 5. [参考資料](#5-参考資料)
 
@@ -23,10 +23,7 @@
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `apps/<app-name>/src/` | `apps/myproject-cli/src/` | アプリケーションのソースルート。 |
-| `apps/<app-name>/src/app.rs` | `apps/myproject-cli/src/app.rs` | 起動と実行経路との接続を公開するルートモジュール。 |
-| `apps/<app-name>/src/app/` | `apps/myproject-cli/src/app/commands.rs` | 起動と実行経路との接続を担う内部モジュールを配置する。 |
-| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-cli/src/app/bootstrap/mod.rs`、`apps/myproject-cli/src/app/bootstrap/http_server.rs` | 起動点にあるComposition Rootと、そこから呼び出す構築処理を配置する。起動処理から分ける場合は、構築結果と所有範囲を説明できる単位の生成関数にする。 |
-| `apps/<app-name>/src/app/state.rs` | `apps/myproject-api/src/app/state.rs` | Webフレームワークへ登録する共有状態を一つの型へまとめる場合だけ使用する。 |
+| `apps/<app-name>/src/main.rs` | `apps/myproject-cli/src/main.rs` | 実行可能クレートのエントリーポイント。設定を読み、共有する外部資源と使用する実装を生成し、最上位の実行対象を組み立てて起動する。 |
 | `apps/<app-name>/src/infra.rs` | `apps/myproject-cli/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-cli/src/infra/postgres.rs`、`apps/myproject-cli/src/infra/postgres/connection_pool.rs` | 外部資源ごとのサブモジュールを宣言し、その内部モジュールを配置する。 |
 | `apps/<app-name>/src/features.rs` | `apps/myproject-cli/src/features.rs` | Featureモジュールを宣言する。 |
@@ -58,23 +55,13 @@
 
 ---
 
-## 3. Repository、Gatewayの実装
+## 3. 依存関係の構成とRepository、Gatewayの実装
 
-Repository、Gatewayの契約はtraitとして定義する。実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
+実行可能クレートでは、`main`で設定を読み、プロセス内で共有する外部資源と使用する実装を生成し、実行主体またはRouterへ渡してから実行を開始する。
 
-契約を受け取る側は、ジェネリクスとトレイト境界（型パラメータまたは`impl Trait`）で受け取り、静的ディスパッチで解決することを基本とする。
+Repository、Gatewayの契約は、Featureを保存先や外部システムから独立させる場合にtraitとして定義する。使用する実装は`main`で選択して生成し、Featureの処理へコンストラクターまたは関数の引数として渡す。実装を交換しない処理まで一律にtraitへ変換しない。
 
-```rust
-// 基本形：静的ディスパッチ。実装はコンパイル時に1つに決まる。
-struct OrderService<R: OrderRepository> {
-    repository: R,
-}
-
-// 実行時に複数の実装を切り替える必要がある場合だけ動的ディスパッチを使う。
-struct NotificationDispatcher {
-    channels: Vec<Box<dyn NotificationGateway>>,
-}
-```
+契約の受け取り方は、コンパイル時に具体型が決まり、型パラメーターが利用側へ広がっても複雑にならない場合はジェネリクスを使用する。実行時に実装を選ぶ場合、異なる実装を同じコレクションへ保持する場合、またはフレームワークへ渡す状態の型を単純に保つ場合は、`Arc<dyn Trait>`や`Box<dyn Trait>`を使用する。
 
 ---
 
