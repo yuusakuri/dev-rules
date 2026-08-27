@@ -266,10 +266,22 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Handle` | 実行中の処理、外部リソース、サービスなどを操作、監視、終了待機するための参照や権限を表す型に使用する。 | [`JoinHandle`](https://docs.rs/tokio/latest/tokio/task/struct.JoinHandle.html)、`ConnectionHandle` | 名詞 | リソース |
 | `Sender`、`Receiver` | メッセージ経路やチャネルの送信側には `Sender`、受信側には `Receiver` を使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。 | `MessageSender`、`EventReceiver`、[`mpsc::Sender`](https://doc.rust-lang.org/std/sync/mpsc/struct.Sender.html)、[`mpsc::Receiver`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html) | 名詞 | 通信 |
 | `Permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | `ConnectionPermit`、`ExecutionPermit`、[`SemaphorePermit`](https://docs.rs/tokio/latest/tokio/sync/struct.SemaphorePermit.html) | 名詞 | リソース |
+| `Runtime` | タスクの実行、スケジューリング、資源の保持を担う実行基盤を表す型に使用する。 | [`tokio`の`Runtime`](https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html) | 名詞 | リソース |
+| `Token` | 取り消し要求や実行権など、保持していること自体が意味を持ち、複製して配れる値に使用する。 | [`tokio_util`の`CancellationToken`](https://docs.rs/tokio-util/latest/tokio_util/sync/struct.CancellationToken.html) | 名詞 | 制御 |
+| `Layer` | 既存の処理を包み、横断的な機能を足す構成単位に使用する。包む対象のインターフェースは変えない。 | [`tower`の`Layer`](https://docs.rs/tower/latest/tower/trait.Layer.html)、[`tracing_subscriber`の`Layer`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/layer/trait.Layer.html) | 名詞 | 制御 |
+| `Span` | 開始と終了を持つ処理区間を表す型に使用する。区間に属するログや計測を、その区間へ結び付ける。 | [`tracing`の`Span`](https://docs.rs/tracing/latest/tracing/struct.Span.html) | 名詞 | ログ |
 | `Bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `Bytes` を付ける。整数値そのものや、用途が整数値に限定されないバイト列には付けない。 | `LengthBytes`、`TimestampBytes`、[`u32::to_be_bytes`](https://doc.rust-lang.org/std/primitive.u32.html#method.to_be_bytes) | 名詞 | データ |
 | `Frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | `RequestFrame`、`UartFrame`、[`smoltcp`の`EthernetFrame`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.EthernetFrame.html)、[`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) | 名詞 | 通信 |
 | `Packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket`、[`smoltcp`の`TcpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.TcpPacket.html)、[`UdpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.UdpPacket.html)、[`Ipv4Packet`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.Ipv4Packet.html) | 名詞 | 通信 |
 | `Datagram` | 送達確認と順序保証を持たない単位で送受信する通信データを表す型に使用する。 | `SensorDatagram`、[`quinn`の`Datagram`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.Datagram.html) | 名詞 | 通信 |
+| `Endpoint` | 通信の受け口となる、待ち受けまたは接続の起点を表す型に使用する。 | [`quinn`の`Endpoint`](https://docs.rs/quinn/latest/quinn/struct.Endpoint.html) | 名詞 | 通信 |
+| `Listener` | 接続要求を待ち受け、確立した通信路を受け取る型に使用する。 | [`TcpListener`](https://doc.rust-lang.org/std/net/struct.TcpListener.html)、[`tokio`の`TcpListener`](https://docs.rs/tokio/latest/tokio/net/struct.TcpListener.html) | 名詞 | 通信 |
+| `Socket` | OSが提供する通信端点をそのまま扱う型に使用する。 | [`UdpSocket`](https://doc.rust-lang.org/std/net/struct.UdpSocket.html) | 名詞 | 通信 |
+| `Connection` | 確立済みの通信路を表す型に使用する。接続先または方式を実装の名前に含める。 | [`quinn`の`Connection`](https://docs.rs/quinn/latest/quinn/struct.Connection.html)、`PgConnection` | 名詞 | 通信 |
+| `Stream` | 連続して流れるバイト列または値を、順に読み書きする型に使用する。境界が定められた単位を扱う場合は `Frame`、`Packet` を使う。 | [`TcpStream`](https://doc.rust-lang.org/std/net/struct.TcpStream.html)、[`futures`の`Stream`](https://docs.rs/futures/latest/futures/stream/trait.Stream.html) | 名詞 | 通信 |
+| `Request`、`Response` | 外部へ送る要求と、それに対する応答を表す型に使用する。対象の操作を名前に含める。 | [`http`の`Request`](https://docs.rs/http/latest/http/request/struct.Request.html)、[`Response`](https://docs.rs/http/latest/http/response/struct.Response.html) | 名詞 | 通信 |
+| `Router` | 受け取った要求を、経路や条件に対応する処理へ振り分ける型に使用する。 | [`axum`の`Router`](https://docs.rs/axum/latest/axum/struct.Router.html) | 名詞 | 通信 |
+| `Widget` | 画面へ描画する部品を表す型に使用する。描画する対象を名前に含める。 | `PasswordField`、[`ratatui`の`Widget`](https://docs.rs/ratatui/latest/ratatui/widgets/trait.Widget.html) | 名詞 | 表示 |
 | `Tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | `SearchTokenizer`、[`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
 | `Lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | `ConfigLexer`、[`logos`の`Lexer`](https://docs.rs/logos/latest/logos/struct.Lexer.html) | 名詞 | 解析 |
 | `Reader` | ファイル、ストリーム、デバイス、メモリなどの入力元からデータを読み取る型に使用する。読み取り位置、部分読み取り、終端、入力バッファの管理を主な責務とする。 | `FileReader`、`PacketReader`、[`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html)、[`csv`の`Reader`](https://docs.rs/csv/latest/csv/struct.Reader.html) | 名詞 | 入出力 |
@@ -277,9 +289,13 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Parser` | 文字列、バイト列、トークン列を、定義された文法や形式に従った構文構造へ変換する型に使用する。区切り、階層、順序、構文上の妥当性の判断を主な責務とする。 | `FrameParser`、`CommandParser`、[`clap`の`Parser`](https://docs.rs/clap/latest/clap/trait.Parser.html) | 名詞 | 解析 |
 | `Encoder` | 値やPacketを、保存、転送、通信などに使用する符号化表現へ変換する型に使用する。通信ではPacketからFrameを構築する処理や、Frameを送信可能なバイト列へ変換してヘッダー、長さ、区切り、検査値などを付加する処理に使用する。 | `PacketEncoder`、`FrameEncoder`、[`tokio_util::codec`の`Encoder`](https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Encoder.html) | 名詞 | 変換 |
 | `Decoder` | 符号化された表現を、元の表現または後続処理が利用できる表現へ戻す型に使用する。通信では受信したバイト列からFrameを復元する処理や、Frameの内容を解釈してPacketを生成する処理に使用する。 | `FrameDecoder`、`PacketDecoder`、[`tokio_util::codec`の`Decoder`](https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Decoder.html) | 名詞 | 変換 |
+| `Codec` | 同じ形式の符号化と復号を一つの型にまとめる場合に使用する。対象の形式を名前に含める。 | [`tokio_util`の`LinesCodec`](https://docs.rs/tokio-util/latest/tokio_util/codec/struct.LinesCodec.html) | 名詞 | 変換 |
 | `Serializer` | プログラム内の構造化された値や型付きオブジェクトを、保存または転送できる表現へ変換する型に使用する。 | `JsonSerializer`、[`serde`の`Serializer`](https://docs.rs/serde/latest/serde/trait.Serializer.html) | 名詞 | 変換 |
 | `Deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。 | `JsonDeserializer`、[`serde`の`Deserializer`](https://docs.rs/serde/latest/serde/trait.Deserializer.html) | 名詞 | 変換 |
 | `Record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | [`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) | 名詞 | データ |
+| `Id` | 識別子を表す型の名前は `Id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | `UserId`、[`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
+| `Event` | すでに起きた出来事を表す型に使用する。名前は過去形にし、生成後は変更しない。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html)、[`cqrs-es`の`DomainEvent`](https://docs.rs/cqrs-es/latest/cqrs_es/trait.DomainEvent.html) | 名詞 | データ |
+| `Config` | 実行時に読み込む設定値の集合を表す型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html) | 名詞 | データ |
 | `Formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter`、[`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
 | `From`、`TryFrom` | ある型や表現を別の型や表現へ変換する場合に使用する。フィールド間の対応付けを含め、変換専用の型を作らず、変換元または変換先の型へ言語標準の変換機構として実装する。`Encoder`、`Decoder`、`Serializer`、`Deserializer` が適切な場合は使用しない。 | [`From`](https://doc.rust-lang.org/std/convert/trait.From.html)、[`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) | 名詞 | 変換 |
 | `Validate` | 入力が形式、範囲、不変条件などの制約を満たすか検証する操作に使用する。検証専用の型を作らず、検証対象の型へ実装する。入力の意味を別の意味へ変換する処理は担当しない。 | [`validator`の`Validate`](https://docs.rs/validator/latest/validator/trait.Validate.html) | 動詞 | 解析 |
@@ -290,11 +306,13 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore`、[`object_store`の`ObjectStore`](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html) | 名詞 | データ |
 | `Registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry`、[`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
 | `Repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。インターフェースとして定義し、実装を差し替えられる構造にする。永続化を伴わない外部システムや外部資源の境界には使用しない。 | `OrderRepository`、`PostgresOrderRepository`、[`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html) | 名詞 | データ |
+| `Transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
 | `Connector` | 特定の外部システムやサービスへの接続と、その形式変換をまとめた実装に使用する。接続先を名前に含める。差し替え可能な実装を接続先ごとに並べる場合に使用し、利用側が呼び出す契約の名前には使用しない。 | `StripeConnector`、`SlackConnector`、[HyperSwitchの`connectors`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors) | 名詞 | 通信 |
 | `Clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
 | `Provider` | 利用側が必要とする値を供給する型に使用する。何を供給するかを名前に含める。`Repository`、`Loader`、`Clock`など、対象を直接表す名前が適切な場合は使用しない。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、`ConfigProvider` | 名詞 | データ |
 | `Generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator`、[`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/) | 名詞 | 生成 |
 | `Rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
+| `Mock`、`Fake` | テストのために本物の実装を置き換える型に使用する。呼び出しの記録と検証を目的とする場合は `Mock`、動作する簡易な代替実装には `Fake` を使う。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/)、[`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
 | `Client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含め、呼び出す機能を限定する場合はその機能も名前に含める。 | `StripeClient`、`GitHubClient`、`StripePaymentClient`、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 名詞 | 通信 |
 | `Gateway` | 同じ外部機能を提供する複数のサービスを一つの操作へまとめ、接続先を差し替えられるようにする型に使用する。利用側が扱う型で操作を定義し、接続先ごとの違いは実装へ閉じ込めて実装の名前で区別する。 | [`payment_kit`の`PaymentGateway`](https://docs.rs/payment_kit/latest/payment_kit/)、`StripePaymentGateway` | 名詞 | 通信 |
 | `Mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。チャネルの送信側を表す `Sender` とは区別する。 | `Mailer`、`SmtpMailer`、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) | 名詞 | 通信 |
@@ -306,6 +324,8 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `TaskQueue`、[`crossbeam`の`SegQueue`](https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html) | 名詞 | 集合 |
 | `Stack` | LIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `UndoStack`、[`rpds`の`Stack`](https://docs.rs/rpds/latest/rpds/stack/struct.Stack.html) | 名詞 | 集合 |
 | `new` | 型を生成する標準的なコンストラクターに使用する。外部リソースの取得など、生成操作を具体的に表す名前が適切な場合は使用しない。 | `Client::new()`、[`String::new`](https://doc.rust-lang.org/std/string/struct.String.html#method.new) | 形容詞 | 生成 |
+| `Options` | 生成や実行時に指定する任意設定をまとめる型に使用する。既定値を持ち、必要な項目だけを変更できる構造にする。 | [`OpenOptions`](https://doc.rust-lang.org/std/fs/struct.OpenOptions.html)、[`sqlx`の`PgConnectOptions`](https://docs.rs/sqlx/latest/sqlx/postgres/struct.PgConnectOptions.html) | 名詞 | 生成 |
+| `Builder` | 値を段階的に組み立てて生成する型に使用する。組み立てる対象を名前に含める。 | [`thread::Builder`](https://doc.rust-lang.org/std/thread/struct.Builder.html)、[`tokio`の`runtime::Builder`](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html)、[`reqwest`の`ClientBuilder`](https://docs.rs/reqwest/latest/reqwest/struct.ClientBuilder.html) | 名詞 | 生成 |
 | `default` | デフォルト値によって型を生成するコンストラクターに使用する。`new` と両方を提供する場合は、同じ結果になるようにする。 | `Config::default()`、[`Default::default`](https://doc.rust-lang.org/std/default/trait.Default.html#tymethod.default) | 形容詞 | 生成 |
 | `with` + 設定名 | 追加の初期設定を指定する副コンストラクターに使用する。表記形式は言語の標準規約に従う。 | `Buffer::with_capacity(1024)`、[`Vec::with_capacity`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) | 前置詞 | 生成 |
 | `from` + 入力元 | 既存データの意味や形式を示しながら型を生成する変換コンストラクターに使用する。表記形式は言語の標準規約に従う。 | `Frame::from_bytes(bytes)`、[`String::from_utf8`](https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8) | 前置詞 | 生成 |
@@ -317,6 +337,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `to` + 型名 | コピー、割り当て、検査、計算などを伴い、新しい値または別表現を生成する変換に使用する。表記形式は言語の標準規約に従う。 | [`to_vec`](https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec)、`to_string` | 前置詞 | 変換 |
 | `into` + 型名 | 元の値の所有権または管理責任を移して別の型へ変換する場合に使用する。所有権の概念がない言語では、元の値を消費する変換に使用する。 | [`into_bytes`](https://doc.rust-lang.org/std/string/struct.String.html#method.into_bytes)、`into_inner` | 前置詞 | 変換 |
 | `try` + 操作名 | 通常版と対になり、待機、ブロック、パニックなどを避けて失敗を戻り値として返す代替操作に使用する。単に失敗する可能性があるすべての処理には付けない。 | `try_send`、[`try_lock`](https://doc.rust-lang.org/std/sync/struct.Mutex.html#method.try_lock)、`try_reserve` | 動詞 | 制御 |
+| `checked` + 演算名 | 演算結果が表現できる範囲を超える場合に、失敗を戻り値として返す処理に使用する。上限または下限で止める場合は `saturating`、あふれた分を切り捨てる場合は `wrapping` を使う。 | [`u32::checked_add`](https://doc.rust-lang.org/std/primitive.u32.html#method.checked_add)、`saturating_add`、`wrapping_add` | 動詞句 | 制御 |
 | `spawn` | 独立して実行されるスレッド、タスク、プロセスなどを開始する処理に使用する。開始した処理を監視または終了待機する必要がある場合は、`Handle` を返す。 | `spawn_worker`、[`thread::spawn`](https://doc.rust-lang.org/std/thread/fn.spawn.html) | 動詞 | 制御 |
 | `take` | 保持している値を取り出し、元の場所を空の状態または既定値へ置き換える処理に使用する。 | `take_message`、[`mem::take`](https://doc.rust-lang.org/std/mem/fn.take.html) | 動詞 | 制御 |
 | `replace` | 保持している値を新しい値へ置き換え、以前の値を返す処理に使用する。単に削除する処理には使用しない。 | `replace_config`、[`mem::replace`](https://doc.rust-lang.org/std/mem/fn.replace.html) | 動詞 | 制御 |
@@ -332,6 +353,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `drain` | 指定範囲または全要素を集合から一括して取り出す処理に使用する。 | [`drain(range)`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain) | 動詞 | 集合 |
 | `clear` | 全要素を削除して空にする処理に使用する。 | [`clear()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.clear) | 動詞 | 集合 |
 | `extend` | イテレーターや別の集合から複数の要素を追加する処理に使用する。 | [`extend(items)`](https://doc.rust-lang.org/std/iter/trait.Extend.html#tymethod.extend) | 動詞 | 集合 |
+| `iter` | コレクションの反復子を返す処理に使用する。可変参照を返す場合は `iter_mut`、所有権を渡す場合は `into_iter` を使う。 | [`slice::iter`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter)、[`iter_mut`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut)、`into_iter` | 動詞 | 集合 |
 | `len` | 要素数を返す処理に使用する。 | [`len()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.len) | 名詞 | 集合 |
 | `is_empty` | 集合が空かどうかを判定する処理に使用する。 | [`is_empty()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.is_empty) | 動詞句 | 集合 |
 | `contains` | 指定した要素またはキーを含むか判定する処理に使用する。 | [`contains(item)`](https://doc.rust-lang.org/std/collections/struct.HashSet.html#method.contains) | 動詞 | 集合 |
