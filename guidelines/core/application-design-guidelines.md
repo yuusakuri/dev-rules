@@ -41,7 +41,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `<source-root>/app/` | `app/router` | 起動、ルーティング、実行経路との接続を配置する。 |
-| `<source-root>/app/bootstrap/` | `app/bootstrap/postgres`、`app/bootstrap/stripe` | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
+| `<source-root>/app/bootstrap/` | `app/bootstrap/http_server`、`app/bootstrap/background_worker` | 起動点にあるComposition Rootと、そこから呼び出す構築処理を配置する。起動処理から分ける場合は、構築結果と所有範囲を説明できる単位の生成関数にする。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
 | `<source-root>/core/` | `core/errors/` | 複数のFeatureが共有する基盤を配置する。 |
 | `<source-root>/infra/` | `infra/logger` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置し、Composition Rootから呼び出す。 |
 | `<source-root>/infra/<resource>/` | `infra/postgres/connection_pool`、`infra/sentry/client` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 |

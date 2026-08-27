@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | `apps/<app-name>/src/` | `apps/myproject-web/src/` | TypeScriptアプリケーションのソースルート。 |
 | `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、実行経路との接続を配置する。 |
-| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/stripe.ts` | 依存関係を生成して接続するComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダまたはファイルを分ける。フレームワークにより`app/`に制限や規則がある場合は、`apps/<app-name>/src/bootstrap/`へ配置する。 |
+| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/http_server.ts` | 起動点にあるComposition Rootと、そこから呼び出す構築処理を配置する。起動処理から分ける場合は、構築結果と所有範囲を説明できる単位の生成関数にする。フレームワークにより`app/`に制限や規則がある場合は、`apps/<app-name>/src/bootstrap/`へ配置する。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-web/src/infra/sentry/client.ts` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置し、Composition Rootから呼び出す。 |
 | `apps/<app-name>/src/features/<feature>/` | `apps/myproject-web/src/features/auth/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Feature外へ公開する型、関数、Component、Handler、RepositoryとGatewayの契約、各実装の生成関数だけをexportする。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のComponentだけを参照する。 |

@@ -25,7 +25,7 @@
 | `apps/<app-name>/src/` | `apps/myproject-cli/src/` | アプリケーションのソースルート。 |
 | `apps/<app-name>/src/app.rs` | `apps/myproject-cli/src/app.rs` | 起動と実行経路との接続を公開するルートモジュール。 |
 | `apps/<app-name>/src/app/` | `apps/myproject-cli/src/app/commands.rs` | 起動と実行経路との接続を担う内部モジュールを配置する。 |
-| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-cli/src/app/bootstrap/mod.rs`、`apps/myproject-cli/src/app/bootstrap/postgres.rs` | 依存関係を生成して接続するComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにモジュールを分ける。 |
+| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-cli/src/app/bootstrap/mod.rs`、`apps/myproject-cli/src/app/bootstrap/http_server.rs` | 起動点にあるComposition Rootと、そこから呼び出す構築処理を配置する。起動処理から分ける場合は、構築結果と所有範囲を説明できる単位の生成関数にする。 |
 | `apps/<app-name>/src/app/state.rs` | `apps/myproject-api/src/app/state.rs` | Webフレームワークへ登録する共有状態を一つの型へまとめる場合だけ使用する。 |
 | `apps/<app-name>/src/infra.rs` | `apps/myproject-cli/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-cli/src/infra/postgres.rs`、`apps/myproject-cli/src/infra/postgres/connection_pool.rs` | 外部資源ごとのサブモジュールを宣言し、その内部モジュールを配置する。 |
