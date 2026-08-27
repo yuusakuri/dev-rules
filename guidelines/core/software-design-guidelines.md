@@ -266,9 +266,9 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Handle` | 実行中の処理、外部リソース、サービスなどを操作、監視、終了待機するための参照や権限を表す型に使用する。 | [`JoinHandle`](https://docs.rs/tokio/latest/tokio/task/struct.JoinHandle.html)、`ConnectionHandle` | 名詞 | リソース |
 | `Sender`、`Receiver` | メッセージ経路やチャネルの送信側には `Sender`、受信側には `Receiver` を使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。 | `MessageSender`、`EventReceiver`、[`mpsc::Sender`](https://doc.rust-lang.org/std/sync/mpsc/struct.Sender.html)、[`mpsc::Receiver`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html) | 名詞 | 通信 |
 | `Permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | `ConnectionPermit`、`ExecutionPermit`、[`SemaphorePermit`](https://docs.rs/tokio/latest/tokio/sync/struct.SemaphorePermit.html) | 名詞 | リソース |
-| `Bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `Bytes` を付ける。整数値そのものや、用途が整数値に限定されないバイト列には付けない。 | `LengthBytes`、`TimestampBytes` | 名詞 | データ |
+| `Bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `Bytes` を付ける。整数値そのものや、用途が整数値に限定されないバイト列には付けない。 | `LengthBytes`、`TimestampBytes`、[`u32::to_be_bytes`](https://doc.rust-lang.org/std/primitive.u32.html#method.to_be_bytes) | 名詞 | データ |
 | `Frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | `RequestFrame`、`UartFrame`、[`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) | 名詞 | 通信 |
-| `Packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket` | 名詞 | 通信 |
+| `Packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket`、[`smoltcp`の`Ipv4Packet`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.Ipv4Packet.html) | 名詞 | 通信 |
 | `Tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | `SearchTokenizer`、[`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
 | `Lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | `ConfigLexer`、[`logos`の`Lexer`](https://docs.rs/logos/latest/logos/struct.Lexer.html) | 名詞 | 解析 |
 | `Reader` | ファイル、ストリーム、デバイス、メモリなどの入力元からデータを読み取る型に使用する。読み取り位置、部分読み取り、終端、入力バッファの管理を主な責務とする。 | `FileReader`、`PacketReader`、[`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html)、[`csv`の`Reader`](https://docs.rs/csv/latest/csv/struct.Reader.html) | 名詞 | 入出力 |
@@ -283,7 +283,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Converter` | 特定の型や表現を別の型や表現へ変換する型に使用する。より具体的な `Encoder`、`Decoder`、`Serializer`、`Deserializer`、`Mapper` が適切な場合は使用しない。 | `UnitConverter` | 名詞 | 変換 |
 | `Mapper` | 複数のフィールドを持つ構造を、対応する別の構造へ変換する型に使用する。外部データ型から内部モデルへの変換など、フィールド間の対応付けを主な責務とする。 | `UserMapper` | 名詞 | 変換 |
 | `Validator` | 入力が形式、範囲、不変条件などの制約を満たすか検証する型に使用する。入力の意味を別の意味へ変換する処理は担当しない。 | `RequestValidator` | 名詞 | 解析 |
-| `Loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | `ConfigLoader` | 名詞 | 入出力 |
+| `Loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | `ConfigLoader`、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
 | `List` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | `UserList`、[`LinkedList`](https://doc.rust-lang.org/std/collections/struct.LinkedList.html) | 名詞 | 集合 |
 | `Set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | `PermissionSet`、[`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) | 名詞 | 集合 |
 | `Map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap`、[`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
@@ -301,8 +301,8 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Publisher`、`Producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
 | `Pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool`、[`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
 | `Cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache`、[`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
-| `Buffer` | バイト列や要素を一時的に蓄積する型に使用する。 | `ReceiveBuffer` | 名詞 | データ |
-| `Table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | `RoutingTable` | 名詞 | データ |
+| `Buffer` | バイト列や要素を一時的に蓄積する型に使用する。 | `ReceiveBuffer`、[`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html) | 名詞 | データ |
+| `Table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | `RoutingTable`、[`datafusion`の`MemTable`](https://docs.rs/datafusion/latest/datafusion/datasource/memory/struct.MemTable.html) | 名詞 | データ |
 | `Queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `TaskQueue`、[`crossbeam`の`SegQueue`](https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html) | 名詞 | 集合 |
 | `Stack` | LIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `UndoStack` | 名詞 | 集合 |
 | `new` | 型を生成する標準的なコンストラクターに使用する。外部リソースの取得など、生成操作を具体的に表す名前が適切な場合は使用しない。 | `Client::new()`、[`String::new`](https://doc.rust-lang.org/std/string/struct.String.html#method.new) | 形容詞 | 生成 |
