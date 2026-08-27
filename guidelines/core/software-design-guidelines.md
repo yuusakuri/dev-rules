@@ -267,8 +267,9 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Sender`、`Receiver` | メッセージ経路やチャネルの送信側には `Sender`、受信側には `Receiver` を使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。 | `MessageSender`、`EventReceiver`、[`mpsc::Sender`](https://doc.rust-lang.org/std/sync/mpsc/struct.Sender.html)、[`mpsc::Receiver`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html) | 名詞 | 通信 |
 | `Permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | `ConnectionPermit`、`ExecutionPermit`、[`SemaphorePermit`](https://docs.rs/tokio/latest/tokio/sync/struct.SemaphorePermit.html) | 名詞 | リソース |
 | `Bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `Bytes` を付ける。整数値そのものや、用途が整数値に限定されないバイト列には付けない。 | `LengthBytes`、`TimestampBytes`、[`u32::to_be_bytes`](https://doc.rust-lang.org/std/primitive.u32.html#method.to_be_bytes) | 名詞 | データ |
-| `Frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | `RequestFrame`、`UartFrame`、[`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) | 名詞 | 通信 |
-| `Packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket`、[`smoltcp`の`Ipv4Packet`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.Ipv4Packet.html) | 名詞 | 通信 |
+| `Frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | `RequestFrame`、`UartFrame`、[`smoltcp`の`EthernetFrame`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.EthernetFrame.html)、[`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) | 名詞 | 通信 |
+| `Packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket`、[`smoltcp`の`TcpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.TcpPacket.html)、[`UdpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.UdpPacket.html)、[`Ipv4Packet`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.Ipv4Packet.html) | 名詞 | 通信 |
+| `Datagram` | 送達確認と順序保証を持たない単位で送受信する通信データを表す型に使用する。 | `SensorDatagram`、[`quinn`の`Datagram`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.Datagram.html) | 名詞 | 通信 |
 | `Tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | `SearchTokenizer`、[`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
 | `Lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | `ConfigLexer`、[`logos`の`Lexer`](https://docs.rs/logos/latest/logos/struct.Lexer.html) | 名詞 | 解析 |
 | `Reader` | ファイル、ストリーム、デバイス、メモリなどの入力元からデータを読み取る型に使用する。読み取り位置、部分読み取り、終端、入力バッファの管理を主な責務とする。 | `FileReader`、`PacketReader`、[`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html)、[`csv`の`Reader`](https://docs.rs/csv/latest/csv/struct.Reader.html) | 名詞 | 入出力 |
@@ -280,9 +281,8 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。 | `JsonDeserializer`、[`serde`の`Deserializer`](https://docs.rs/serde/latest/serde/trait.Deserializer.html) | 名詞 | 変換 |
 | `Record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | [`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) | 名詞 | データ |
 | `Formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter`、[`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
-| `Converter` | 特定の型や表現を別の型や表現へ変換する型に使用する。より具体的な `Encoder`、`Decoder`、`Serializer`、`Deserializer`、`Mapper` が適切な場合は使用しない。 | `UnitConverter` | 名詞 | 変換 |
-| `Mapper` | 複数のフィールドを持つ構造を、対応する別の構造へ変換する型に使用する。外部データ型から内部モデルへの変換など、フィールド間の対応付けを主な責務とする。 | `UserMapper` | 名詞 | 変換 |
-| `Validator` | 入力が形式、範囲、不変条件などの制約を満たすか検証する型に使用する。入力の意味を別の意味へ変換する処理は担当しない。 | `RequestValidator` | 名詞 | 解析 |
+| `From`、`TryFrom` | ある型や表現を別の型や表現へ変換する場合に使用する。フィールド間の対応付けを含め、変換専用の型を作らず、変換元または変換先の型へ言語標準の変換機構として実装する。`Encoder`、`Decoder`、`Serializer`、`Deserializer` が適切な場合は使用しない。 | [`From`](https://doc.rust-lang.org/std/convert/trait.From.html)、[`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) | 名詞 | 変換 |
+| `Validate` | 入力が形式、範囲、不変条件などの制約を満たすか検証する操作に使用する。検証専用の型を作らず、検証対象の型へ実装する。入力の意味を別の意味へ変換する処理は担当しない。 | [`validator`の`Validate`](https://docs.rs/validator/latest/validator/trait.Validate.html) | 動詞 | 解析 |
 | `Loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | `ConfigLoader`、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
 | `List` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | `UserList`、[`LinkedList`](https://doc.rust-lang.org/std/collections/struct.LinkedList.html) | 名詞 | 集合 |
 | `Set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | `PermissionSet`、[`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) | 名詞 | 集合 |
@@ -301,10 +301,10 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Publisher`、`Producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
 | `Pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool`、[`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
 | `Cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache`、[`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
-| `Buffer` | バイト列や要素を一時的に蓄積する型に使用する。 | `ReceiveBuffer`、[`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html) | 名詞 | データ |
+| `Buffer`、`Buf` | バイト列や要素を一時的に蓄積する型に使用する。短縮形の `Buf` も同じ意味で使用する。 | `ReceiveBuffer`、[`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html)、[`tokio`の`ReadBuf`](https://docs.rs/tokio/latest/tokio/io/struct.ReadBuf.html)、[`bytes`の`BufMut`](https://docs.rs/bytes/latest/bytes/buf/trait.BufMut.html) | 名詞 | データ |
 | `Table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | `RoutingTable`、[`datafusion`の`MemTable`](https://docs.rs/datafusion/latest/datafusion/datasource/memory/struct.MemTable.html) | 名詞 | データ |
 | `Queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `TaskQueue`、[`crossbeam`の`SegQueue`](https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html) | 名詞 | 集合 |
-| `Stack` | LIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `UndoStack` | 名詞 | 集合 |
+| `Stack` | LIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `UndoStack`、[`rpds`の`Stack`](https://docs.rs/rpds/latest/rpds/stack/struct.Stack.html) | 名詞 | 集合 |
 | `new` | 型を生成する標準的なコンストラクターに使用する。外部リソースの取得など、生成操作を具体的に表す名前が適切な場合は使用しない。 | `Client::new()`、[`String::new`](https://doc.rust-lang.org/std/string/struct.String.html#method.new) | 形容詞 | 生成 |
 | `default` | デフォルト値によって型を生成するコンストラクターに使用する。`new` と両方を提供する場合は、同じ結果になるようにする。 | `Config::default()`、[`Default::default`](https://doc.rust-lang.org/std/default/trait.Default.html#tymethod.default) | 形容詞 | 生成 |
 | `with` + 設定名 | 追加の初期設定を指定する副コンストラクターに使用する。表記形式は言語の標準規約に従う。 | `Buffer::with_capacity(1024)`、[`Vec::with_capacity`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) | 前置詞 | 生成 |
@@ -338,7 +338,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `sort` | 要素を規則に従って並べ替える処理に使用する。 | [`sort()`](https://doc.rust-lang.org/std/primitive.slice.html#method.sort) | 動詞 | 集合 |
 | `entry` | 指定キーのエントリを返す処理に使用する。存在する場合は既存エントリ、存在しない場合は空エントリを返し、照会と挿入を一度の探索で行えるようにする。 | [`entry(key)`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.entry) | 名詞 | 集合 |
 | `get_or_insert` | 対応する要素が存在する場合はその要素を返し、存在しない場合は指定値を挿入して返す処理に使用する。 | [`get_or_insert(value)`](https://doc.rust-lang.org/std/option/enum.Option.html#method.get_or_insert) | 動詞句 | 集合 |
-| `get_or_default` | 対応する要素が存在する場合はその要素を返し、存在しない場合はデフォルト値を挿入して返す処理に使用する。 | `get_or_default()` | 動詞句 | 集合 |
+| `or_default` | 対応する要素が存在する場合はその要素を返し、存在しない場合はデフォルト値を挿入して返す処理に使用する。 | [`Entry::or_default`](https://doc.rust-lang.org/std/collections/hash_map/enum.Entry.html#method.or_default)、[`Option::get_or_insert_default`](https://doc.rust-lang.org/std/option/enum.Option.html#method.get_or_insert_default) | 動詞句 | 集合 |
 
 ---
 
