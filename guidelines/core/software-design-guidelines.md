@@ -23,6 +23,8 @@
 
 本書の原則は、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
+本書のコード例は、規則の形を示す目的でRustを用いる。例は規則を説明するために要点だけを抜き出したものであり、そのまま動作する完全なプログラムではない。例の原型とした実装は「参考資料」に示す。
+
 ---
 
 ## 2. 責務の分離
@@ -67,6 +69,22 @@ Type、Interface、Class、Functionなどのプログラミング言語上の構
 
 Dependency Inversionは、具体型への依存を一律に禁じる原則ではない。純粋な計算、値変換、内部データ構造、交換する必要のない実装には具体型を使い、外部技術との分離や複数実装の切り替えなど、実際の境界がある場合だけ契約を定義する。将来の可能性やテスト用のモックだけを理由に契約を追加しない。
 
+次のビルド処理は、外部から実行方法を差し替える一点だけを契約にしている。契約には上位が呼ぶ操作だけを置き、差し替えを必要としない通常の呼び出しは標準の実装を選ぶ。
+
+```rust
+pub trait Executor: Send + Sync {
+    fn exec(&self, command: BuildCommand, unit: &Unit) -> Result<(), BuildError>;
+}
+
+pub fn compile(
+    workspace: &Workspace,
+    options: &CompileOptions,
+) -> Result<Compilation, BuildError> {
+    let executor: Arc<dyn Executor> = Arc::new(DefaultExecutor);
+    compile_with_executor(workspace, options, &executor)
+}
+```
+
 ### 差し替えても壊れないようにする（Liskov Substitution）
 
 あるインターフェースの実装を別の実装へ差し替えても、呼び出し元の動作が壊れてはならない。実装が事前条件、事後条件、不変条件を破ると、呼び出し元は特定の実装でしか動かない書き方に暗黙のうちに依存し、抽象は形だけのものになる。
@@ -83,13 +101,53 @@ Dependency Inversionは、具体型への依存を一律に禁じる原則では
 
 処理の内部から、グローバル変数、静的アクセサー、DIコンテナー、Service Locatorを使って依存関係を検索しない。取得場所が隠れると、処理の理解と単体テストが難しくなる。
 
+次の検索処理は、呼び出し側が選ぶMatcher、Searcher、Printerを生成時の引数として受け取り、処理対象である検索対象は実行のたびに引数で受け取る。処理対象を生成時に渡すと、対象ごとにWorkerを作り直すことになる。
+
+```rust
+let mut worker = SearchWorkerBuilder::new().build(
+    args.matcher()?,
+    args.searcher()?,
+    args.printer(mode, args.stdout()),
+);
+
+for haystack in args.haystacks()? {
+    worker.search(&haystack)?;
+}
+```
+
 ### 起動点で依存関係を構成する
 
 実行可能なアプリケーションは、`main`などの起動点で設定を読み、プロセス内で共有する外部資源と依存関係の実装を生成し、最上位の実行対象を組み立ててから実行を開始する。この構成箇所をComposition Rootと呼び、特定のファイル名、フォルダ名、フレームワークへ結び付けない。ライブラリはComposition Rootを持たず、利用するアプリケーションが構成できるコンストラクターまたは生成関数を公開する。
 
 構成には通常のコンストラクターと関数呼び出しを使用する。DIコンテナーを使用する場合も参照箇所は起動点に限定し、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出する。業務処理を担う型や関数はコンテナーへ依存させない。
 
+次の起動点は、設定と通信路を用意し、それらから実行主体を生成して実行を開始するところまでを担う。起動点が持つ処理はこの構成だけで、業務上の判断は実行主体の側にある。
+
+```rust
+fn main() -> Result<(), StartupError> {
+    let config = Config::load()?;
+    let connection = Connection::stdio()?;
+
+    GlobalState::new(connection.sender, config).run(connection.receiver)?;
+    Ok(())
+}
+```
+
 一回の操作だけで使うファイル、トランザクション、外部コマンドや、型の内部構造を成り立たせる補助オブジェクトは、それを利用して終了まで管理する実装の内部で生成する。生成手順が複雑な場合は、生成対象に固有のBuilderまたはFactoryを使用し、任意の依存関係を検索する汎用コンテナーとして扱わない。
+
+次の処理は、一回の検索でだけ使う外部コマンドとReaderを内部で生成し、検索の終了まで管理する。これらを起動点から渡すと、呼び出し側が検索対象ごとの生成と後始末を引き受けることになる。
+
+```rust
+fn search_preprocessor(&mut self, path: &Path) -> io::Result<SearchResult> {
+    let mut command = Command::new(&self.config.preprocessor);
+    command.arg(path).stdin(Stdio::from(File::open(path)?));
+
+    let mut reader = self.command_builder.build(&mut command)?;
+    let result = self.search_reader(path, &mut reader);
+    reader.close()?;
+    result
+}
+```
 
 終了処理が必要な依存関係は、それを生成または所有する側がライフサイクルを管理する。起動点で共有資源を生成した場合は、その資源を使う処理を停止してから終了し、言語やフレームワークが所有権やスコープを管理する場合は標準の終了方法に従う。
 
@@ -101,140 +159,34 @@ Dependency Inversionは、具体型への依存を一律に禁じる原則では
 
 イベントループや状態機械など、共有状態そのものが処理の実行主体である場合は、その型が必要な状態と資源を所有してよい。実際の責務が一つである型を、フィールド数だけを理由に分割しない。
 
-### Rust OSSに見られる依存関係の構成
-
-次の実装は、専用のDIコンテナーを設けず、Rustの通常の型、関数、Builder、共有状態を使って依存関係を構成している。これらはフォルダ構成の共通規則ではなく、前節までの規則を実際のコードへ当てはめた例である。
-
-| プロジェクト | 実際の構成 | この規則との対応 |
-| --- | --- | --- |
-| ripgrep | [`main`が引数を解析して`run`を呼び、検索時にMatcher、Searcher、Printerを生成して`SearchWorker`へ渡す。](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L44-L129) [`SearchWorker`は検索対象に応じたReaderを内部で生成する。](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L338) | 検索処理が必要とする協働オブジェクトを引数として明示する。Builderは`SearchWorker`という生成対象に限定し、一回の検索対象を読むReaderはWorkerの内部で生成する。 |
-| rust-analyzer | [`main_loop`がConfigとConnectionを受け取り、`GlobalState`を生成してイベントループを開始する。](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L41-L72) [`GlobalState::new`はVFS、タスクプール、チャネルなどを生成する。](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L232-L280) | イベントループという一つの実行責務が、同じ期間に使う状態と資源を所有する。フィールド数だけを理由に状態を分割しない。 |
-| Cargo | [`main`が`GlobalContext`を生成し、CLIの実行処理へ渡す。](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/bin/cargo/main.rs#L17-L35) [`GlobalContext`は設定、Shell、作業ディレクトリ、HTTP関連の状態などを所有する。](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/context/mod.rs#L206-L260) [`compile`は通常の`DefaultExecutor`を選び、拡張点を使う呼び出しだけが`dyn Executor`を渡す。](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/ops/cargo_compile/mod.rs#L131-L147) | プロセス全体の実行環境はContextとして所有し、実装を差し替える箇所だけをtraitの境界にする。 |
-| axum | [公式の依存性注入例では、`main`がRepository、State、Router、Listenerを順に構築し、ハンドラーが`State` extractorで依存関係を受け取る。](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L99) | フレームワークが要求する共有状態へ、同じRouterで使う依存関係をまとめる。ジェネリクスとtrait objectは、実行時切り替えの有無だけでなく、型の複雑さも含めて選ぶ。 |
-
-リンク先の実装から、構成を表す箇所を抜粋する。ripgrepは、検索に必要な値を生成して`SearchWorker`へ渡している。
+次の型は複数の状態と資源を持つが、イベントループを実行するのはこの型自身であり、所有する値はすべてループと同じ期間だけ生きる。依存関係を名前で検索する機能は持たない。
 
 ```rust
-let mut searcher = args.search_worker(
-    args.matcher()?,
-    args.searcher()?,
-    args.printer(mode, args.stdout()),
-)?;
-```
-
-rust-analyzerは、設定と通信路から実行主体を生成し、そのままイベントループを開始している。
-
-```rust
-GlobalState::new(connection.sender, config).run(connection.receiver)
-```
-
-Cargoは、標準の実装を選び、差し替え可能なコンパイル処理へ明示的に渡している。
-
-```rust
-let exec: Arc<dyn Executor> = Arc::new(DefaultExecutor);
-compile_with_exec(ws, options, &exec)
-```
-
-axumの公式例では、ハンドラーがRepositoryを保持する共有状態を引数として受け取っている。
-
-```rust
-async fn create_user_dyn(
-    State(state): State<AppStateDyn>,
-    Json(params): Json<UserParams>,
-) -> Json<User> {
-```
-
-### Rustでの適用例
-
-次の例では、`main`がRepositoryの実装、業務処理、axumの共有状態、Router、Listenerを順に構築する。ハンドラーはフレームワークとの境界にとどめ、業務処理は外部から受け取ったRepositoryの契約だけに依存する。
-
-```toml
-[dependencies]
-axum = "0.8"
-tokio = { version = "1", features = ["macros", "net", "rt-multi-thread"] }
-```
-
-```rust
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
-
-use axum::{
-    Router,
-    extract::{Path, State},
-    http::StatusCode,
-    routing::post,
-};
-
-#[derive(Clone)]
-struct Order {
-    id: String,
+struct GlobalState {
+    sender: Sender<Message>,
+    config: Arc<Config>,
+    analysis_host: AnalysisHost,
+    task_pool: TaskPool,
 }
 
-#[derive(Debug)]
-struct SaveOrderError;
+impl GlobalState {
+    fn new(sender: Sender<Message>, config: Config) -> Self {
+        let analysis_host = AnalysisHost::new(config.lru_capacity());
+        let task_pool = TaskPool::with_threads(config.main_loop_num_threads());
+        Self {
+            sender,
+            config: Arc::new(config),
+            analysis_host,
+            task_pool,
+        }
+    }
 
-trait OrderRepository: Send + Sync {
-    fn save(&self, order: Order) -> Result<(), SaveOrderError>;
-}
-
-#[derive(Default)]
-struct InMemoryOrderRepository {
-    orders: Mutex<HashMap<String, Order>>,
-}
-
-impl OrderRepository for InMemoryOrderRepository {
-    fn save(&self, order: Order) -> Result<(), SaveOrderError> {
-        let mut orders = self.orders.lock().map_err(|_| SaveOrderError)?;
-        orders.insert(order.id.clone(), order);
+    fn run(mut self, receiver: Receiver<Message>) -> Result<(), LoopError> {
+        while let Ok(message) = receiver.recv() {
+            self.handle_message(message)?;
+        }
         Ok(())
     }
-}
-
-struct PlaceOrder {
-    repository: Arc<dyn OrderRepository>,
-}
-
-impl PlaceOrder {
-    fn new(repository: Arc<dyn OrderRepository>) -> Self {
-        Self { repository }
-    }
-
-    fn execute(&self, order_id: String) -> Result<(), SaveOrderError> {
-        self.repository.save(Order { id: order_id })
-    }
-}
-
-#[derive(Clone)]
-struct AppState {
-    place_order: Arc<PlaceOrder>,
-}
-
-async fn handle_place_order(
-    State(state): State<AppState>,
-    Path(order_id): Path<String>,
-) -> Result<StatusCode, StatusCode> {
-    state
-        .place_order
-        .execute(order_id)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(StatusCode::CREATED)
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let repository: Arc<dyn OrderRepository> = Arc::new(InMemoryOrderRepository::default());
-    let place_order = Arc::new(PlaceOrder::new(repository));
-    let state = AppState { place_order };
-
-    let app = Router::new()
-        .route("/orders/{order_id}", post(handle_place_order))
-        .with_state(state);
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
-
-    axum::serve(listener, app).await?;
-    Ok(())
 }
 ```
 
@@ -631,7 +583,12 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [Architectural principles - .NET](https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles) | Dependency Inversionと依存関係の明示を、上位の方針と下位の実装詳細の依存方向から説明する。 |
 | 3. 依存関係の管理 | [Dependency injection guidelines - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines) | 明示的な依存性注入、Service Locatorの回避、依存関係のライフサイクルを説明する。 |
 | 3. 依存関係の管理 | [Dependency Injection :: Spring Framework](https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html) | コンストラクター注入とコンテナーによる依存関係の構成を説明する。 |
-| 3. 依存関係の管理 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | Routerへ共有状態を設定する方法と、必要な部分状態を`FromRef`で取り出す方法を示す。 |
+| 3. 依存関係の管理 | [Cargo `ops::compile`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/ops/cargo_compile/mod.rs#L131-L147) | 「上位の方針を下位の実装詳細から分離する」のコード例の原型。差し替える一点だけを`Executor` traitにし、通常の呼び出しは`DefaultExecutor`を選ぶ。 |
+| 3. 依存関係の管理 | [Cargo `main`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/bin/cargo/main.rs#L17-L58) | 起動点で`GlobalContext`を生成し、CLIの実行処理へ渡す実装。 |
+| 3. 依存関係の管理 | [ripgrep `search`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L113-L140) | 「依存関係を明示的に受け渡す」のコード例の原型。Matcher、Searcher、Printerを生成して`SearchWorker`へ渡し、検索対象は実行ごとに渡す。 |
+| 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の原型。一回の検索で使う外部コマンドとReaderを内部で生成して閉じる。 |
+| 3. 依存関係の管理 | [rust-analyzer `main_loop`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L41-L72) | 「起動点で依存関係を構成する」の起動点を示すコード例の原型。Configと通信路から`GlobalState`を生成し、そのまま実行を開始する。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::new`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L232-L280) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の原型。イベントループが同じ期間に使う状態と資源を一つの型が所有する。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |

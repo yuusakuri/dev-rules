@@ -31,6 +31,6 @@ TypeScript、Web UIの4文書が適用される。
 
 ## このリポジトリ自体を変更する場合
 
-- 規則の追加、削除、移動時は [`guidelines/README.md`](guidelines/README.md) の一覧と適用例を同時に更新する。
+- 規則の追加、削除、移動時は [`guidelines/README.md`](guidelines/README.md) の一覧を同時に更新する。
 - AIの入口や導入方法が変わる場合は、このファイルとルートの [`README.md`](README.md) を同時に更新する。
 - 規則本文には、具体的で検証可能な条件とアクションを記載する。

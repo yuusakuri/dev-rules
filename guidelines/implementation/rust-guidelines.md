@@ -57,11 +57,108 @@
 
 ## 3. 依存関係の構成とRepository、Gatewayの実装
 
-実行可能クレートでは、`main`で設定を読み、プロセス内で共有する外部資源と使用する実装を生成し、実行主体またはRouterへ渡してから実行を開始する。
+本章のコード例は、HTTPサーバーを持つ実行可能クレートを題材に、axum 0.8を使用した場合の構成を段階ごとに示す。
 
-Repository、Gatewayの契約は、Featureを保存先や外部システムから独立させる場合にtraitとして定義する。使用する実装は`main`で選択して生成し、Featureの処理へコンストラクターまたは関数の引数として渡す。実装を交換しない処理まで一律にtraitへ変換しない。
+### 契約は交換する境界にだけ定義する
+
+Repository、Gatewayの契約は、Featureを保存先や外部システムから独立させる場合にtraitとして定義する。契約には利用側が呼ぶ操作だけを置き、実装を交換しない処理まで一律にtraitへ変換しない。
+
+共有状態やハンドラーから使う契約には、`Send + Sync`を付ける。
+
+```rust
+struct User {
+    id: UserId,
+    name: String,
+}
+
+trait UserRepository: Send + Sync {
+    fn save(&self, user: &User) -> Result<(), SaveUserError>;
+    fn find(&self, id: UserId) -> Result<Option<User>, FindUserError>;
+}
+```
+
+### `main`で依存関係を構成する
+
+実行可能クレートでは、`main`で設定を読み、プロセス内で共有する外部資源と使用する実装を生成し、実行主体またはRouterへ渡してから実行を開始する。使用する実装の選択は`main`だけで行い、Featureの処理は渡された契約だけを見る。
+
+```rust
+#[tokio::main]
+async fn main() -> Result<(), StartupError> {
+    let config = Config::from_env()?;
+    let users: Arc<dyn UserRepository> =
+        Arc::new(PostgresUserRepository::connect(&config.database_url).await?);
+    let state = AppState { users };
+
+    let app = Router::new()
+        .route("/users", post(handle_create_user))
+        .route("/users/{id}", get(handle_get_user))
+        .with_state(state);
+
+    let listener = TcpListener::bind(config.address).await?;
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+```
+
+### ハンドラーはフレームワークとの境界にとどめる
+
+ハンドラーは、`State` extractorで共有状態を受け取り、リクエストの値を業務処理の引数へ変換し、結果をレスポンスへ変換するだけにする。業務処理には、共有状態そのものではなく、その処理が必要とする契約を渡す。
+
+```rust
+#[derive(Clone)]
+struct AppState {
+    users: Arc<dyn UserRepository>,
+}
+
+async fn handle_create_user(
+    State(state): State<AppState>,
+    Json(params): Json<CreateUserParams>,
+) -> Result<Json<UserResponse>, StatusCode> {
+    let user = create_user(state.users.as_ref(), params.name)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Json(UserResponse::from(user)))
+}
+
+fn create_user(users: &dyn UserRepository, name: String) -> Result<User, SaveUserError> {
+    let user = User {
+        id: UserId::new(),
+        name,
+    };
+    users.save(&user)?;
+    Ok(user)
+}
+```
+
+### ジェネリクスとtrait objectを使い分ける
 
 契約の受け取り方は、コンパイル時に具体型が決まり、型パラメーターが利用側へ広がっても複雑にならない場合はジェネリクスを使用する。実行時に実装を選ぶ場合、異なる実装を同じコレクションへ保持する場合、またはフレームワークへ渡す状態の型を単純に保つ場合は、`Arc<dyn Trait>`や`Box<dyn Trait>`を使用する。
+
+ジェネリクスで受け取る場合、型パラメーターは共有状態、ハンドラー、ルートの登録まで広がる。
+
+```rust
+#[derive(Clone)]
+struct AppState<R> {
+    users: R,
+}
+
+async fn handle_get_user<R: UserRepository>(
+    State(state): State<AppState<R>>,
+    Path(id): Path<UserId>,
+) -> Result<Json<UserResponse>, StatusCode> {
+    match state.users.find(id) {
+        Ok(Some(user)) => Ok(Json(UserResponse::from(user))),
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
+
+let app = Router::new()
+    .route(
+        "/users/{id}",
+        get(handle_get_user::<PostgresUserRepository>),
+    )
+    .with_state(AppState { users });
+```
 
 ---
 
@@ -84,4 +181,6 @@ Repository、Gatewayの契約は、Featureを保存先や外部システムか�
 | 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
 | 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
 | 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的なファイルとフォルダの配置を確認する。 |
+| 3. 依存関係の構成とRepository、Gatewayの実装 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L147) | 本章のコード例の原型。Repositoryの実装を`main`で生成してStateへ入れ、trait objectとジェネリクスの両方でハンドラーへ渡す。 |
+| 3. 依存関係の構成とRepository、Gatewayの実装 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | Routerへ共有状態を設定する方法と、必要な部分状態を`FromRef`で取り出す方法を確認する。 |
 | 4. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの実行方法とlintの設定を確認する。 |
