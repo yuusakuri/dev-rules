@@ -57,7 +57,7 @@
 
 ## 3. 依存関係の構成とRepository、Gatewayの実装
 
-本章のコード例は、HTTPサーバーを持つ実行可能クレートを題材に、axum 0.8を使用した場合の構成を段階ごとに示す。
+本章のコード例は、axumの公式例`examples/dependency-injection`からの抜粋で、規則に関係しない行を削って載せている。削除以外の改変は、本規則と共通設計原則の命名に合わせた改名だけで、改名先の書き方の出典は「参考資料」に示す。
 
 ### 契約は交換する境界にだけ定義する
 
@@ -66,14 +66,25 @@ Repository、Gatewayの契約は、Featureを保存先や外部システムか�
 共有状態やハンドラーから使う契約には、`Send + Sync`を付ける。
 
 ```rust
-struct User {
-    id: UserId,
-    name: String,
+trait UserRepository: Send + Sync {
+    fn get_user(&self, id: Uuid) -> Option<User>;
+
+    fn save_user(&self, user: &User);
 }
 
-trait UserRepository: Send + Sync {
-    fn save(&self, user: &User) -> Result<(), SaveUserError>;
-    fn find(&self, id: UserId) -> Result<Option<User>, FindUserError>;
+#[derive(Debug, Clone, Default)]
+struct InMemoryUserRepository {
+    map: Arc<Mutex<HashMap<Uuid, User>>>,
+}
+
+impl UserRepository for InMemoryUserRepository {
+    fn get_user(&self, id: Uuid) -> Option<User> {
+        self.map.lock().unwrap().get(&id).cloned()
+    }
+
+    fn save_user(&self, user: &User) {
+        self.map.lock().unwrap().insert(user.id, user.clone());
+    }
 }
 ```
 
@@ -83,18 +94,17 @@ trait UserRepository: Send + Sync {
 
 ```rust
 #[tokio::main]
-async fn main() -> Result<(), StartupError> {
-    let config = Config::from_env()?;
-    let users: Arc<dyn UserRepository> =
-        Arc::new(PostgresUserRepository::connect(&config.database_url).await?);
-    let state = AppState { users };
+async fn main() -> anyhow::Result<()> {
+    let user_repository = InMemoryUserRepository::default();
 
     let app = Router::new()
-        .route("/users", post(handle_create_user))
         .route("/users/{id}", get(handle_get_user))
-        .with_state(state);
+        .route("/users", post(handle_create_user))
+        .with_state(AppState {
+            user_repository: Arc::new(user_repository),
+        });
 
-    let listener = TcpListener::bind(config.address).await?;
+    let listener = TcpListener::bind("127.0.0.1:3000").await?;
     axum::serve(listener, app).await?;
     Ok(())
 }
@@ -102,30 +112,26 @@ async fn main() -> Result<(), StartupError> {
 
 ### ハンドラーはフレームワークとの境界にとどめる
 
-ハンドラーは、`State` extractorで共有状態を受け取り、リクエストの値を業務処理の引数へ変換し、結果をレスポンスへ変換するだけにする。業務処理には、共有状態そのものではなく、その処理が必要とする契約を渡す。
+ハンドラーは、`State` extractorで共有状態を受け取り、リクエストの値を業務処理へ渡し、結果をレスポンスへ変換するだけにする。業務処理には、共有状態そのものではなく、その処理が必要とする契約を渡す。
 
 ```rust
 #[derive(Clone)]
 struct AppState {
-    users: Arc<dyn UserRepository>,
+    user_repository: Arc<dyn UserRepository>,
 }
 
 async fn handle_create_user(
     State(state): State<AppState>,
-    Json(params): Json<CreateUserParams>,
-) -> Result<Json<UserResponse>, StatusCode> {
-    let user = create_user(state.users.as_ref(), params.name)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Json(UserResponse::from(user)))
-}
-
-fn create_user(users: &dyn UserRepository, name: String) -> Result<User, SaveUserError> {
+    Json(params): Json<UserParams>,
+) -> Json<User> {
     let user = User {
-        id: UserId::new(),
-        name,
+        id: Uuid::new_v4(),
+        name: params.name,
     };
-    users.save(&user)?;
-    Ok(user)
+
+    state.user_repository.save_user(&user);
+
+    Json(user)
 }
 ```
 
@@ -137,27 +143,29 @@ fn create_user(users: &dyn UserRepository, name: String) -> Result<User, SaveUse
 
 ```rust
 #[derive(Clone)]
-struct AppState<R> {
-    users: R,
+struct AppStateGeneric<T> {
+    user_repository: T,
 }
 
-async fn handle_get_user<R: UserRepository>(
-    State(state): State<AppState<R>>,
-    Path(id): Path<UserId>,
-) -> Result<Json<UserResponse>, StatusCode> {
-    match state.users.find(id) {
-        Ok(Some(user)) => Ok(Json(UserResponse::from(user))),
-        Ok(None) => Err(StatusCode::NOT_FOUND),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+async fn handle_get_user_generic<T>(
+    State(state): State<AppStateGeneric<T>>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<User>, StatusCode>
+where
+    T: UserRepository,
+{
+    match state.user_repository.get_user(id) {
+        Some(user) => Ok(Json(user)),
+        None => Err(StatusCode::NOT_FOUND),
     }
 }
 
-let app = Router::new()
+let using_generic = Router::new()
     .route(
         "/users/{id}",
-        get(handle_get_user::<PostgresUserRepository>),
+        get(handle_get_user_generic::<InMemoryUserRepository>),
     )
-    .with_state(AppState { users });
+    .with_state(AppStateGeneric { user_repository });
 ```
 
 ---
@@ -181,6 +189,9 @@ let app = Router::new()
 | 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
 | 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
 | 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的なファイルとフォルダの配置を確認する。 |
-| 3. 依存関係の構成とRepository、Gatewayの実装 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L147) | 本章のコード例の原型。Repositoryの実装を`main`で生成してStateへ入れ、trait objectとジェネリクスの両方でハンドラーへ渡す。 |
+| 3. 依存関係の構成とRepository、Gatewayの実装 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 本章のコード例の抜粋元。Repositoryの実装を`main`で生成してStateへ入れ、trait objectとジェネリクスの両方でハンドラーへ渡す。掲載時にログの初期化と、両方式を`nest`で同時に公開する構成を削っている。 |
+| 3. 依存関係の構成とRepository、Gatewayの実装 | [Repository（PoEAA）](https://martinfowler.com/eaaCatalog/repository.html) | 抜粋元の`UserRepo`を`UserRepository`へ改名した際の、名前の出典。 |
+| 3. 依存関係の構成とRepository、Gatewayの実装 | [rust-analyzer `handlers::request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L77) | 抜粋元の`create_user_dyn`などを`handle_create_user`へ改名した際の、`handle_`で始める書き方の出典。 |
+| 3. 依存関係の構成とRepository、Gatewayの実装 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、`main`が`anyhow::Result`を返す書き方の出典。 |
 | 3. 依存関係の構成とRepository、Gatewayの実装 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | Routerへ共有状態を設定する方法と、必要な部分状態を`FromRef`で取り出す方法を確認する。 |
 | 4. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの実行方法とlintの設定を確認する。 |

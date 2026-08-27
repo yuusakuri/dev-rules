@@ -23,7 +23,7 @@
 
 本書の原則は、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
-本書のコード例は、規則の形を示す目的でRustを用いる。例は規則を説明するために要点だけを抜き出したものであり、そのまま動作する完全なプログラムではない。例の原型とした実装は「参考資料」に示す。
+本書のコード例は、規則の形を示す目的でRustを用いる。例は実在するOSSの実装からの抜粋で、規則に関係しない行を削って載せている。削除以外の改変（複数の型や引数を独自の型へまとめるなど）は行わない。抜粋元は「参考資料」に示す。
 
 ---
 
@@ -72,16 +72,21 @@ Dependency Inversionは、具体型への依存を一律に禁じる原則では
 次のビルド処理は、外部から実行方法を差し替える一点だけを契約にしている。契約には上位が呼ぶ操作だけを置き、差し替えを必要としない通常の呼び出しは標準の実装を選ぶ。
 
 ```rust
-pub trait Executor: Send + Sync {
-    fn exec(&self, command: BuildCommand, unit: &Unit) -> Result<(), BuildError>;
+pub trait Executor: Send + Sync + 'static {
+    fn exec(
+        &self,
+        cmd: &ProcessBuilder,
+        id: PackageId,
+        target: &Target,
+        mode: CompileMode,
+        on_stdout_line: &mut dyn FnMut(&str) -> CargoResult<()>,
+        on_stderr_line: &mut dyn FnMut(&str) -> CargoResult<()>,
+    ) -> CargoResult<()>;
 }
 
-pub fn compile(
-    workspace: &Workspace,
-    options: &CompileOptions,
-) -> Result<Compilation, BuildError> {
-    let executor: Arc<dyn Executor> = Arc::new(DefaultExecutor);
-    compile_with_executor(workspace, options, &executor)
+pub fn compile<'a>(ws: &Workspace<'a>, options: &CompileOptions) -> CargoResult<Compilation<'a>> {
+    let exec: Arc<dyn Executor> = Arc::new(DefaultExecutor);
+    compile_with_exec(ws, options, &exec)
 }
 ```
 
@@ -101,17 +106,23 @@ pub fn compile(
 
 処理の内部から、グローバル変数、静的アクセサー、DIコンテナー、Service Locatorを使って依存関係を検索しない。取得場所が隠れると、処理の理解と単体テストが難しくなる。
 
-次の検索処理は、呼び出し側が選ぶMatcher、Searcher、Printerを生成時の引数として受け取り、処理対象である検索対象は実行のたびに引数で受け取る。処理対象を生成時に渡すと、対象ごとにWorkerを作り直すことになる。
+次の検索処理は、呼び出し側が選ぶMatcher、Searcher、Printerを生成時の引数として受け取り、処理対象である検索対象は実行のたびに引数で受け取る。処理対象を生成時に渡すと、対象ごとに検索処理を作り直すことになる。
 
 ```rust
-let mut worker = SearchWorkerBuilder::new().build(
+let haystack_builder = args.haystack_builder();
+let unsorted = args
+    .walk_builder()?
+    .build()
+    .filter_map(|result| haystack_builder.build_from_result(result));
+let haystacks = args.sort(unsorted);
+
+let mut searcher = args.search_worker(
     args.matcher()?,
     args.searcher()?,
     args.printer(mode, args.stdout()),
-);
-
-for haystack in args.haystacks()? {
-    worker.search(&haystack)?;
+)?;
+for haystack in haystacks {
+    searcher.search(&haystack)?;
 }
 ```
 
@@ -121,15 +132,21 @@ for haystack in args.haystacks()? {
 
 構成には通常のコンストラクターと関数呼び出しを使用する。DIコンテナーを使用する場合も参照箇所は起動点に限定し、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出する。業務処理を担う型や関数はコンテナーへ依存させない。
 
-次の起動点は、設定と通信路を用意し、それらから実行主体を生成して実行を開始するところまでを担う。起動点が持つ処理はこの構成だけで、業務上の判断は実行主体の側にある。
+次の起動処理は、プロセスが使う通信路を開き、設定を組み立ててから実行対象へ渡す。
 
 ```rust
-fn main() -> Result<(), StartupError> {
-    let config = Config::load()?;
-    let connection = Connection::stdio()?;
+let (connection, io_threads) = Connection::stdio();
+let config = Config::new(root_path, capabilities, workspace_roots, client_info);
 
-    GlobalState::new(connection.sender, config).run(connection.receiver)?;
-    Ok(())
+main_loop(config, connection)?;
+io_threads.join()?;
+```
+
+渡された設定と通信路から実行主体を生成し、そのまま実行を開始する。この関数が持つ処理は構成だけで、業務上の判断は実行主体の側にある。
+
+```rust
+pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
+    GlobalState::new(connection.sender, config).run(connection.receiver)
 }
 ```
 
@@ -139,13 +156,18 @@ fn main() -> Result<(), StartupError> {
 
 ```rust
 fn search_preprocessor(&mut self, path: &Path) -> io::Result<SearchResult> {
-    let mut command = Command::new(&self.config.preprocessor);
-    command.arg(path).stdin(Stdio::from(File::open(path)?));
+    use std::{fs::File, process::Stdio};
 
-    let mut reader = self.command_builder.build(&mut command)?;
-    let result = self.search_reader(path, &mut reader);
-    reader.close()?;
-    result
+    let bin = self.config.preprocessor.as_ref().unwrap();
+    let mut cmd = std::process::Command::new(bin);
+    cmd.arg(path).stdin(Stdio::from(File::open(path)?));
+
+    let mut rdr = self.command_builder.build(&mut cmd)?;
+    let result = self.search_reader(path, &mut rdr);
+    let close_result = rdr.close();
+    let search_result = result?;
+    close_result?;
+    Ok(search_result)
 }
 ```
 
@@ -159,33 +181,46 @@ fn search_preprocessor(&mut self, path: &Path) -> io::Result<SearchResult> {
 
 イベントループや状態機械など、共有状態そのものが処理の実行主体である場合は、その型が必要な状態と資源を所有してよい。実際の責務が一つである型を、フィールド数だけを理由に分割しない。
 
-次の型は複数の状態と資源を持つが、イベントループを実行するのはこの型自身であり、所有する値はすべてループと同じ期間だけ生きる。依存関係を名前で検索する機能は持たない。
+次の型は多数の状態と資源を持つが、イベントループを実行するのはこの型自身であり、所有する値はすべてループと同じ期間だけ生きる。依存関係を名前で検索する機能は持たない。
 
 ```rust
-struct GlobalState {
-    sender: Sender<Message>,
-    config: Arc<Config>,
-    analysis_host: AnalysisHost,
-    task_pool: TaskPool,
+pub(crate) struct GlobalState {
+    sender: Sender<lsp_server::Message>,
+    pub(crate) task_pool: Handle<TaskPool<Task>, Receiver<Task>>,
+    pub(crate) config: Arc<Config>,
+    pub(crate) analysis_host: AnalysisHost,
 }
 
 impl GlobalState {
-    fn new(sender: Sender<Message>, config: Config) -> Self {
-        let analysis_host = AnalysisHost::new(config.lru_capacity());
-        let task_pool = TaskPool::with_threads(config.main_loop_num_threads());
-        Self {
+    pub(crate) fn new(sender: Sender<lsp_server::Message>, config: Config) -> GlobalState {
+        let task_pool = {
+            let (sender, receiver) = unbounded();
+            let handle = TaskPool::new_with_threads(sender, config.main_loop_num_threads());
+            Handle { handle, receiver }
+        };
+        let analysis_host = AnalysisHost::new(config.lru_parse_query_capacity());
+
+        let mut this = GlobalState {
             sender,
-            config: Arc::new(config),
-            analysis_host,
             task_pool,
-        }
+            config: Arc::new(config.clone()),
+            analysis_host,
+        };
+        this.update_configuration(config);
+        this
     }
 
-    fn run(mut self, receiver: Receiver<Message>) -> Result<(), LoopError> {
-        while let Ok(message) = receiver.recv() {
-            self.handle_message(message)?;
+    fn run(mut self, inbox: Receiver<lsp_server::Message>) -> anyhow::Result<()> {
+        while let Ok(event) = self.next_event(&inbox) {
+            let Some(event) = event else {
+                anyhow::bail!("client exited without proper shutdown sequence");
+            };
+            self.handle_event(event);
         }
-        Ok(())
+
+        Err(anyhow::anyhow!(
+            "A receiver has been dropped, something panicked!"
+        ))
     }
 }
 ```
@@ -583,12 +618,16 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [Architectural principles - .NET](https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles) | Dependency Inversionと依存関係の明示を、上位の方針と下位の実装詳細の依存方向から説明する。 |
 | 3. 依存関係の管理 | [Dependency injection guidelines - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines) | 明示的な依存性注入、Service Locatorの回避、依存関係のライフサイクルを説明する。 |
 | 3. 依存関係の管理 | [Dependency Injection :: Spring Framework](https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html) | コンストラクター注入とコンテナーによる依存関係の構成を説明する。 |
-| 3. 依存関係の管理 | [Cargo `ops::compile`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/ops/cargo_compile/mod.rs#L131-L147) | 「上位の方針を下位の実装詳細から分離する」のコード例の原型。差し替える一点だけを`Executor` traitにし、通常の呼び出しは`DefaultExecutor`を選ぶ。 |
+| 3. 依存関係の管理 | [Cargo `Executor`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/compiler/mod.rs#L130-L153) | 「上位の方針を下位の実装詳細から分離する」のコード例の抜粋元。契約の定義。掲載時に既定実装を持つ`init`と`force_rebuild`を削っている。 |
+| 3. 依存関係の管理 | [Cargo `ops::compile`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/ops/cargo_compile/mod.rs#L131-L137) | 同じコード例の抜粋元。差し替えを必要としない呼び出しが`DefaultExecutor`を選ぶ箇所。 |
 | 3. 依存関係の管理 | [Cargo `main`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/bin/cargo/main.rs#L17-L58) | 起動点で`GlobalContext`を生成し、CLIの実行処理へ渡す実装。 |
-| 3. 依存関係の管理 | [ripgrep `search`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L113-L140) | 「依存関係を明示的に受け渡す」のコード例の原型。Matcher、Searcher、Printerを生成して`SearchWorker`へ渡し、検索対象は実行ごとに渡す。 |
-| 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の原型。一回の検索で使う外部コマンドとReaderを内部で生成して閉じる。 |
-| 3. 依存関係の管理 | [rust-analyzer `main_loop`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L41-L72) | 「起動点で依存関係を構成する」の起動点を示すコード例の原型。Configと通信路から`GlobalState`を生成し、そのまま実行を開始する。 |
-| 3. 依存関係の管理 | [rust-analyzer `GlobalState::new`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L232-L280) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の原型。イベントループが同じ期間に使う状態と資源を一つの型が所有する。 |
+| 3. 依存関係の管理 | [ripgrep `search`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L113-L141) | 「依存関係を明示的に受け渡す」のコード例の抜粋元。掲載時に統計と打ち切り、エラーの分岐を削っている。 |
+| 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の抜粋元。掲載時にエラーへの文脈付与（`map_err`）を削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `run_server`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L184-L198) | 「起動点で依存関係を構成する」の通信路を開くコード例の抜粋元。 |
+| 3. 依存関係の管理 | [rust-analyzer `run_session`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/session.rs#L105-L169) | 同じコード例の抜粋元。設定を組み立てて`main_loop`へ渡し、終了時にIOスレッドを待ち合わせる箇所。掲載時に両方のエラーを報告する`match`を`?`へ削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `main_loop`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L41-L72) | 「起動点で依存関係を構成する」の実行主体を生成するコード例の抜粋元。掲載時にプロファイラとスレッド優先度の設定を削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L338) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時に約40あるフィールドと、その生成のうち4つ以外を削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::run`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L177-L218) | 同じコード例の抜粋元。状態を所有する型自身がイベントループを回す箇所。掲載時に起動時の登録処理と終了通知の判定を削っている。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |
