@@ -23,7 +23,7 @@
 
 本書の原則は、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
-本書のコード例は、規則の形を示す目的でRustを用いる。例は実在するOSSの実装からの抜粋で、規則に関係しない行を削って載せている。削除以外の改変（複数の型や引数を独自の型へまとめるなど）は行わない。抜粋元は「参考資料」に示す。
+本書のコード例は、規則の形を示す目的でRustを用いる。例は実在するOSSの実装からの抜粋で、規則に関係しない部分は削るか`// ...`、`/* ... */`で省略する。複数の型や引数を独自の型へまとめるなどの書き換えは行わない。抜粋元と、書き方を合わせた出典は「参考資料」に示す。
 
 ---
 
@@ -73,15 +73,8 @@ Dependency Inversionは、具体型への依存を一律に禁じる原則では
 
 ```rust
 pub trait Executor: Send + Sync + 'static {
-    fn exec(
-        &self,
-        cmd: &ProcessBuilder,
-        id: PackageId,
-        target: &Target,
-        mode: CompileMode,
-        on_stdout_line: &mut dyn FnMut(&str) -> CargoResult<()>,
-        on_stderr_line: &mut dyn FnMut(&str) -> CargoResult<()>,
-    ) -> CargoResult<()>;
+    fn exec(&self, cmd: &ProcessBuilder, id: PackageId /* ... */) -> CargoResult<()>;
+    // ...
 }
 
 pub fn compile<'a>(ws: &Workspace<'a>, options: &CompileOptions) -> CargoResult<Compilation<'a>> {
@@ -109,13 +102,6 @@ pub fn compile<'a>(ws: &Workspace<'a>, options: &CompileOptions) -> CargoResult<
 次の検索処理は、呼び出し側が選ぶMatcher、Searcher、Printerを生成時の引数として受け取り、処理対象である検索対象は実行のたびに引数で受け取る。処理対象を生成時に渡すと、対象ごとに検索処理を作り直すことになる。
 
 ```rust
-let haystack_builder = args.haystack_builder();
-let unsorted = args
-    .walk_builder()?
-    .build()
-    .filter_map(|result| haystack_builder.build_from_result(result));
-let haystacks = args.sort(unsorted);
-
 let mut searcher = args.search_worker(
     args.matcher()?,
     args.searcher()?,
@@ -126,27 +112,71 @@ for haystack in haystacks {
 }
 ```
 
+### 静的に決まる依存関係と実行時に選ぶ依存関係で受け取り方を変える
+
+型パラメーターによる指定（ジェネリクス、テンプレート）と、動的ディスパッチ（インターフェース、trait object、仮想関数）の両方を持つ言語では、次の基準で受け取り方を選ぶ。
+
+- コンパイル時に具体型が決まり、型パラメーターが利用側へ広がっても複雑にならない場合は、型パラメーターで受け取る。
+- 実行時に実装を選ぶ場合、異なる実装を同じコレクションへ保持する場合、またはフレームワークへ渡す型を単純に保つ場合は、動的ディスパッチで受け取る。
+
+型パラメーターは、それを持つ型を使うすべての場所へ広がる。次の例では、共有状態に付けた型パラメーターがハンドラーの定義とルートの登録にも現れる。動的ディスパッチで受け取る場合、この型パラメーターは現れない（「共有状態は実行責務とライフサイクルでまとめる」の例）。
+
+```rust
+#[derive(Clone)]
+struct AppStateGeneric<T> {
+    user_repository: T,
+}
+
+async fn handle_get_user<T>(
+    State(state): State<AppStateGeneric<T>>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<User>, StatusCode>
+where
+    T: UserRepository,
+{
+    // ...
+}
+
+let using_generic = Router::new()
+    .route(
+        "/users/{id}",
+        get(handle_get_user::<InMemoryUserRepository>),
+    )
+    .with_state(AppStateGeneric { user_repository });
+```
+
 ### 起動点で依存関係を構成する
 
 実行可能なアプリケーションは、`main`などの起動点で設定を読み、プロセス内で共有する外部資源と依存関係の実装を生成し、最上位の実行対象を組み立ててから実行を開始する。この構成箇所をComposition Rootと呼び、特定のファイル名、フォルダ名、フレームワークへ結び付けない。ライブラリはComposition Rootを持たず、利用するアプリケーションが構成できるコンストラクターまたは生成関数を公開する。
 
 構成には通常のコンストラクターと関数呼び出しを使用する。DIコンテナーを使用する場合も参照箇所は起動点に限定し、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出する。業務処理を担う型や関数はコンテナーへ依存させない。
 
-次の起動処理は、プロセスが使う通信路を開き、設定を組み立ててから実行対象へ渡す。
-
-```rust
-let (connection, io_threads) = Connection::stdio();
-let config = Config::new(root_path, capabilities, workspace_roots, client_info);
-
-main_loop(config, connection)?;
-io_threads.join()?;
-```
-
-渡された設定と通信路から実行主体を生成し、そのまま実行を開始する。この関数が持つ処理は構成だけで、業務上の判断は実行主体の側にある。
+次の起動点は、受け取った設定と通信路から実行主体を生成し、そのまま実行を開始する。起動点が持つ処理は構成だけで、業務上の判断は実行主体の側にある。
 
 ```rust
 pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
+    // ...
     GlobalState::new(connection.sender, config).run(connection.receiver)
+}
+```
+
+フレームワークを使う場合も、実装の選択は起動点だけで行う。次の起動点は、Repositoryの実装を生成して共有状態へ入れ、ルーティングと受け口を組み立ててから実行を開始する。
+
+```rust
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let user_repository = InMemoryUserRepository::default();
+
+    let app = Router::new()
+        .route("/users", post(handle_create_user))
+        // ...
+        .with_state(AppState {
+            user_repository: Arc::new(user_repository),
+        });
+
+    let listener = TcpListener::bind("127.0.0.1:3000").await?;
+    axum::serve(listener, app).await?;
+    Ok(())
 }
 ```
 
@@ -156,8 +186,6 @@ pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
 
 ```rust
 fn search_preprocessor(&mut self, path: &Path) -> io::Result<SearchResult> {
-    use std::{fs::File, process::Stdio};
-
     let bin = self.config.preprocessor.as_ref().unwrap();
     let mut cmd = std::process::Command::new(bin);
     cmd.arg(path).stdin(Stdio::from(File::open(path)?));
@@ -188,7 +216,7 @@ pub(crate) struct GlobalState {
     sender: Sender<lsp_server::Message>,
     pub(crate) task_pool: Handle<TaskPool<Task>, Receiver<Task>>,
     pub(crate) config: Arc<Config>,
-    pub(crate) analysis_host: AnalysisHost,
+    // ...
 }
 
 impl GlobalState {
@@ -198,30 +226,39 @@ impl GlobalState {
             let handle = TaskPool::new_with_threads(sender, config.main_loop_num_threads());
             Handle { handle, receiver }
         };
-        let analysis_host = AnalysisHost::new(config.lru_parse_query_capacity());
-
-        let mut this = GlobalState {
+        // ...
+        GlobalState {
             sender,
             task_pool,
-            config: Arc::new(config.clone()),
-            analysis_host,
-        };
-        this.update_configuration(config);
-        this
+            config: Arc::new(config),
+        }
     }
 
     fn run(mut self, inbox: Receiver<lsp_server::Message>) -> anyhow::Result<()> {
         while let Ok(event) = self.next_event(&inbox) {
-            let Some(event) = event else {
-                anyhow::bail!("client exited without proper shutdown sequence");
-            };
             self.handle_event(event);
         }
-
-        Err(anyhow::anyhow!(
-            "A receiver has been dropped, something panicked!"
-        ))
+        // ...
     }
+}
+```
+
+フレームワークが一つの状態型を要求する場合は、その状態を受け取る境界をハンドラーにとどめ、業務処理には必要な依存関係だけを渡す。
+
+```rust
+#[derive(Clone)]
+struct AppState {
+    user_repository: Arc<dyn UserRepository>,
+}
+
+async fn handle_create_user(
+    State(state): State<AppState>,
+    Json(params): Json<UserParams>,
+) -> Json<User> {
+    // ...
+    state.user_repository.save_user(&user);
+
+    Json(user)
 }
 ```
 
@@ -336,6 +373,20 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 業務ロジックをDB、ファイル、端末ストレージなどの保存方式から分離する場合は、Repositoryパターンを使う。Repositoryは利用側に必要な取得、保存、削除などの操作だけを公開し、SQL、ORMのQuery型、DB接続、カーソル、ファイル形式など保存方式に固有の型と処理を実装内へ閉じ込める。
 
 検索条件は用途ごとの取得操作または読み取り専用クエリとして定義する。既存のORMやデータアクセスAPIと同じ粒度の汎用CRUDを包むだけのRepositoryは設けない。
+
+契約には利用側が呼ぶ操作だけを置き、保存方式に固有の型は実装の内部へ閉じ込める。
+
+```rust
+trait UserRepository: Send + Sync {
+    fn get_user(&self, id: Uuid) -> Option<User>;
+
+    fn save_user(&self, user: &User);
+}
+
+struct InMemoryUserRepository {
+    map: Arc<Mutex<HashMap<Uuid, User>>>,
+}
+```
 
 ### 外部システムをGatewayで分離する
 
@@ -628,6 +679,12 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [rust-analyzer `main_loop`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L41-L72) | 「起動点で依存関係を構成する」の実行主体を生成するコード例の抜粋元。掲載時にプロファイラとスレッド優先度の設定を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L338) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時に約40あるフィールドと、その生成のうち4つ以外を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::run`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L177-L218) | 同じコード例の抜粋元。状態を所有する型自身がイベントループを回す箇所。掲載時に起動時の登録処理と終了通知の判定を削っている。 |
+| 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「静的に決まる依存関係と実行時に選ぶ依存関係で受け取り方を変える」「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時にログの初期化と、trait objectとジェネリクスの両方を`nest`で同時に公開する構成を削っている。 |
+| 3. 依存関係の管理 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | フレームワークが要求する共有状態の設定方法と、必要な部分状態を`FromRef`で取り出す方法を説明する。 |
+| 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
+| 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「永続化処理をRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体を削っている。 |
+| 6. 設計パターン | [Repository（PoEAA）](https://martinfowler.com/eaaCatalog/repository.html) | 抜粋元の`UserRepo`を`UserRepository`へ改名した際の、名前の出典。 |
+| 7. 命名 | [rust-analyzer `handlers::request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L77) | 抜粋元の`create_user_dyn`などを`handle_create_user`へ改名した際の、`handle_`で始める書き方の出典。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |

@@ -4,9 +4,8 @@
 
 1. [概要](#1-概要)
 2. [フォルダ構成](#2-フォルダ構成)
-3. [依存関係の構成とRepository、Gatewayの実装](#3-依存関係の構成とrepositorygatewayの実装)
-4. [検証](#4-検証)
-5. [参考資料](#5-参考資料)
+3. [検証](#3-検証)
+4. [参考資料](#4-参考資料)
 
 ---
 
@@ -55,122 +54,7 @@
 
 ---
 
-## 3. 依存関係の構成とRepository、Gatewayの実装
-
-本章のコード例は、axumの公式例`examples/dependency-injection`からの抜粋で、規則に関係しない行を削って載せている。削除以外の改変は、本規則と共通設計原則の命名に合わせた改名だけで、改名先の書き方の出典は「参考資料」に示す。
-
-### 契約は交換する境界にだけ定義する
-
-Repository、Gatewayの契約は、Featureを保存先や外部システムから独立させる場合にtraitとして定義する。契約には利用側が呼ぶ操作だけを置き、実装を交換しない処理まで一律にtraitへ変換しない。
-
-共有状態やハンドラーから使う契約には、`Send + Sync`を付ける。
-
-```rust
-trait UserRepository: Send + Sync {
-    fn get_user(&self, id: Uuid) -> Option<User>;
-
-    fn save_user(&self, user: &User);
-}
-
-#[derive(Debug, Clone, Default)]
-struct InMemoryUserRepository {
-    map: Arc<Mutex<HashMap<Uuid, User>>>,
-}
-
-impl UserRepository for InMemoryUserRepository {
-    fn get_user(&self, id: Uuid) -> Option<User> {
-        self.map.lock().unwrap().get(&id).cloned()
-    }
-
-    fn save_user(&self, user: &User) {
-        self.map.lock().unwrap().insert(user.id, user.clone());
-    }
-}
-```
-
-### `main`で依存関係を構成する
-
-実行可能クレートでは、`main`で設定を読み、プロセス内で共有する外部資源と使用する実装を生成し、実行主体またはRouterへ渡してから実行を開始する。使用する実装の選択は`main`だけで行い、Featureの処理は渡された契約だけを見る。
-
-```rust
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let user_repository = InMemoryUserRepository::default();
-
-    let app = Router::new()
-        .route("/users/{id}", get(handle_get_user))
-        .route("/users", post(handle_create_user))
-        .with_state(AppState {
-            user_repository: Arc::new(user_repository),
-        });
-
-    let listener = TcpListener::bind("127.0.0.1:3000").await?;
-    axum::serve(listener, app).await?;
-    Ok(())
-}
-```
-
-### ハンドラーはフレームワークとの境界にとどめる
-
-ハンドラーは、`State` extractorで共有状態を受け取り、リクエストの値を業務処理へ渡し、結果をレスポンスへ変換するだけにする。業務処理には、共有状態そのものではなく、その処理が必要とする契約を渡す。
-
-```rust
-#[derive(Clone)]
-struct AppState {
-    user_repository: Arc<dyn UserRepository>,
-}
-
-async fn handle_create_user(
-    State(state): State<AppState>,
-    Json(params): Json<UserParams>,
-) -> Json<User> {
-    let user = User {
-        id: Uuid::new_v4(),
-        name: params.name,
-    };
-
-    state.user_repository.save_user(&user);
-
-    Json(user)
-}
-```
-
-### ジェネリクスとtrait objectを使い分ける
-
-契約の受け取り方は、コンパイル時に具体型が決まり、型パラメーターが利用側へ広がっても複雑にならない場合はジェネリクスを使用する。実行時に実装を選ぶ場合、異なる実装を同じコレクションへ保持する場合、またはフレームワークへ渡す状態の型を単純に保つ場合は、`Arc<dyn Trait>`や`Box<dyn Trait>`を使用する。
-
-ジェネリクスで受け取る場合、型パラメーターは共有状態、ハンドラー、ルートの登録まで広がる。
-
-```rust
-#[derive(Clone)]
-struct AppStateGeneric<T> {
-    user_repository: T,
-}
-
-async fn handle_get_user_generic<T>(
-    State(state): State<AppStateGeneric<T>>,
-    Path(id): Path<Uuid>,
-) -> Result<Json<User>, StatusCode>
-where
-    T: UserRepository,
-{
-    match state.user_repository.get_user(id) {
-        Some(user) => Ok(Json(user)),
-        None => Err(StatusCode::NOT_FOUND),
-    }
-}
-
-let using_generic = Router::new()
-    .route(
-        "/users/{id}",
-        get(handle_get_user_generic::<InMemoryUserRepository>),
-    )
-    .with_state(AppStateGeneric { user_repository });
-```
-
----
-
-## 4. 検証
+## 3. 検証
 
 テストは「フォルダ構成」に従って配置する。実行コマンドは、各プロジェクトで定義する。
 
@@ -182,16 +66,11 @@ let using_generic = Router::new()
 
 ---
 
-## 5. 参考資料
+## 4. 参考資料
 
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
 | 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
 | 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
 | 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的なファイルとフォルダの配置を確認する。 |
-| 3. 依存関係の構成とRepository、Gatewayの実装 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 本章のコード例の抜粋元。Repositoryの実装を`main`で生成してStateへ入れ、trait objectとジェネリクスの両方でハンドラーへ渡す。掲載時にログの初期化と、両方式を`nest`で同時に公開する構成を削っている。 |
-| 3. 依存関係の構成とRepository、Gatewayの実装 | [Repository（PoEAA）](https://martinfowler.com/eaaCatalog/repository.html) | 抜粋元の`UserRepo`を`UserRepository`へ改名した際の、名前の出典。 |
-| 3. 依存関係の構成とRepository、Gatewayの実装 | [rust-analyzer `handlers::request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L77) | 抜粋元の`create_user_dyn`などを`handle_create_user`へ改名した際の、`handle_`で始める書き方の出典。 |
-| 3. 依存関係の構成とRepository、Gatewayの実装 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、`main`が`anyhow::Result`を返す書き方の出典。 |
-| 3. 依存関係の構成とRepository、Gatewayの実装 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | Routerへ共有状態を設定する方法と、必要な部分状態を`FromRef`で取り出す方法を確認する。 |
-| 4. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの実行方法とlintの設定を確認する。 |
+| 3. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの実行方法とlintの設定を確認する。 |
