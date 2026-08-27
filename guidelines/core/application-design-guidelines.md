@@ -8,6 +8,7 @@
 4. [セキュリティ](#4-セキュリティ)
 5. [CLI](#5-cli)
 6. [テスト](#6-テスト)
+7. [参考資料](#7-参考資料)
 
 ---
 
@@ -19,56 +20,52 @@
 
 ## 2. フォルダ構成
 
-表のパスはリポジトリルートを基準とする。
+本書と各実装規則のフォルダ構成表は、複数の実行単位を持つモノレポの構成を示す。表のパスはリポジトリルートを基準とする。言語またはフレームワークによる配置の制限や規則がある場合は、この表よりそちらを優先する。
 
-言語またはフレームワークによる配置の制限や規則がある場合は、この表よりそちらを優先する。フォルダは必要になった時点で作る。
+各種ファイルとディレクトリは実際に必要な場合のみ作る。
 
-### モノレポ構成
+`<source-root>`は、`apps/<app-name>/src/`、`apps/<app-name>/lib/`など、言語またはフレームワークが定めるソースルートを表す。実行単位が1つだけの場合は、各パスから`apps/<app-name>/`を取り除き、`src/`、`lib/`などをリポジトリ直下へ配置する。
 
-複数の実行単位を1つのリポジトリで管理するモノレポでは、`apps/<app-name>/`、`packages/<name>/`のように実行単位ごとにディレクトリを分ける。実行単位が1つだけのリポジトリでは`apps/<app-name>/`によるラップを省略し、以降の表で`<source-root>`が指す位置を、リポジトリ直下に置く言語標準のソースディレクトリ（`src/`、`lib/`など）に置き換える。
-
-| パス | 説明 |
-| --- | --- |
-| `apps/<app-name>/` | 実行単位ごとのアプリケーション。`<app-name>`は任意のアプリ名を指定する。`<project-name>-<responsibility>`を推奨する。 |
-| `apps/<app-name>/config/` | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
-| `apps/<app-name>/<generated-dir>/` | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
+| パス | 例 | 説明 |
+| --- | --- | --- |
+| `apps/<app-name>/` | `apps/myproject-api/` | 実行単位ごとのアプリケーション。`<app-name>`は任意のアプリ名を指定する。`<project-name>-<responsibility>`を推奨する。 |
+| `apps/<app-name>/config/` | `apps/myproject-api/config/application.yaml` | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
+| `apps/<app-name>/<generated-dir>/` | `apps/myproject-web/dist/` | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
 
 ### ソース構成
 
-アプリケーションのソースはFeature Firstで構成する。Featureは、`auth`、`search`、`checkout`のように、一つの利用者目的または業務能力を表す。
+アプリケーションのソースは、Feature単位でまとめるFeature First構成とする。Featureは、一つの利用者目的または業務能力を表す。
 
-| パス | 説明 |
-| --- | --- |
-| `<source-root>/app/` | 起動、ルーティング、ライフサイクル、依存関係の生成と接続（Composition Root）を配置する。フレームワークによる制限や規則がある場合は`bootstrap/`へ配置する。 |
-| `<source-root>/core/` | 複数のFeatureにまたがって同じ意味を持つドメイン型とエラー型（Shared Kernel）を配置する。特定のFeatureに閉じた型を、汎用ユーティリティ置き場として先回りして置かない。肥大化する場合はFeatureの境界を見直す。 |
-| `<source-root>/infra/` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。Featureの型や業務ルールに依存せず、`app/`のComposition Rootが呼び出す。 |
-| `<source-root>/features/<feature>/` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
-| `<source-root>/features/<feature>/presentation/` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
-| `<source-root>/features/<feature>/handlers/` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックは持たせず、Feature内の処理へ委譲する薄い層にする。 |
-| `<source-root>/features/<feature>/repositories/` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。例: `postgres_order_repository` |
-| `<source-root>/features/<feature>/gateways/` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。例: `stripe_payment_gateway` |
-| `<source-root>/ui/` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
+Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
 
-### `core/`と`infra/`の内部構成
-
-`core/`と`infra/`の直下に関連するファイルが複数生じた場合は、次の単位でサブフォルダへまとめる。関連するファイルが1つだけの場合はサブフォルダを作らず、直下へ配置する。
-
-| パス | 分け方 | 例 |
+| パス | 例 | 説明 |
 | --- | --- | --- |
-| `<source-root>/core/<domain>/` | 複数のFeatureが共有する一つの業務概念でまとめる。言語上の種類による`types/`、`models/`、`errors/`や、役割が不明確な`utils/`は作らない。 | `core/identity/user_id`、`core/commerce/money` |
-| `<source-root>/infra/<resource>/` | 構築する外部資源、製品、通信方式ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 | `infra/postgres/connection_pool`、`infra/sentry/client` |
+| `<source-root>/app/` | `app/router` | 起動、ルーティング、実行経路との接続を配置する。 |
+| `<source-root>/app/bootstrap/` | `app/bootstrap/postgres`、`app/bootstrap/stripe` | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
+| `<source-root>/core/` | `core/errors/` | 複数のFeatureが共有する基盤を配置する。 |
+| `<source-root>/infra/` | `infra/logger` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置し、Composition Rootから呼び出す。 |
+| `<source-root>/infra/<resource>/` | `infra/postgres/connection_pool`、`infra/sentry/client` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 |
+| `<source-root>/features/<feature>/` | `features/auth` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
+| `<source-root>/features/<feature>/presentation/` | `features/auth/presentation` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
+| `<source-root>/features/<feature>/handlers/` | `features/auth/handlers` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
+| `<source-root>/features/<feature>/repositories/` | `features/checkout/repositories/postgres_order_repository` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。 |
+| `<source-root>/features/<feature>/gateways/` | `features/payment/gateways/stripe_payment_gateway` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。 |
+| `<source-root>/ui/` | `ui/primary_button` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
+| `<source-root>/localization/` | `localization/ja` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
+| `<source-root>/locale_format/` | `locale_format/number_format` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
 
 ### 依存方向
 
 | 依存元 | 依存先 |
 | --- | --- |
-| `app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
-| `core/` | 標準ライブラリと業務型の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
+| `app/`、例外時の`bootstrap/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
+| `core/` | 標準ライブラリと基盤の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
 | `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
-| Feature内の`presentation/`、`handlers/` | 同じFeatureの処理、型、`core/`、`ui/`（`presentation/`のみ） |
-| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、`core/` |
+| Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`core/`、`ui/` |
+| Feature内の`handlers/` | 同じFeatureの処理と型、`core/` |
+| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
 | `repositories/`、`gateways/`の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
-| `ui/` | フレームワークのみ。`core/`、Featureには依存しない |
+| `ui/` | フレームワークのみに依存し、Featureには依存しない |
 
 ---
 
@@ -129,3 +126,15 @@ Shell スクリプト以外の CLI に適用する。
 | 単体テスト | 多 | 外部I/Oを持たない計算、業務上の制約、状態遷移、処理の組み立て。 |
 | 結合テスト | 中 | データベース、HTTP、OSの機能、ミドルウェアと内部処理の接続。 |
 | E2Eテスト | 少 | 利用者の主要な操作と、停止するとサービスの提供に重大な影響を与える処理経路。 |
+
+---
+
+## 7. 参考資料
+
+| 本書の章 | 参考資料 | 説明 |
+| --- | --- | --- |
+| 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みを分離する条件と構成を確認する。 |
+| 4. セキュリティ | [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) | 外部入力を受け取る境界で検証する項目と方法を確認する。 |
+| 4. セキュリティ | [Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | 機密情報の保存、利用、記録を安全に扱う方法を確認する。 |
+| 4. セキュリティ | [Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) | 認証情報を検証し、利用者を確定する方法を確認する。 |
+| 4. セキュリティ | [Authorization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html) | 操作ごとに権限を判定する方法を確認する。 |
