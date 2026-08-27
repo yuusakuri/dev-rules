@@ -41,8 +41,8 @@
 | `apps/<app-name>/src/features/<feature>/handlers/` | `apps/myproject-cli/src/features/auth/handlers/sign_in_handler.rs` | Handlerの内部モジュールを配置する。 |
 | `apps/<app-name>/src/features/<feature>/repositories.rs` | `apps/myproject-cli/src/features/checkout/repositories.rs` | Featureが所有するデータを永続化ストレージへ保存、取得する契約と実装を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-cli/src/features/checkout/repositories/postgres_order_repository.rs` | 保存先ごとのRepository実装と、保存形式との変換を行う内部モジュールを配置する。 |
-| `apps/<app-name>/src/features/<feature>/gateways.rs` | `apps/myproject-cli/src/features/payment/gateways.rs` | 永続化以外の外部システム、外部資源と通信する契約と実装を所有するモジュール。モジュール名は境界の置き場所を表す。trait名は`Gateway`に固定せず、責務を表す名前を使う。 |
-| `apps/<app-name>/src/features/<feature>/gateways/` | `apps/myproject-cli/src/features/payment/gateways/stripe_payment_gateway.rs` | 接続先別の実装と、外部データ形式との変換を行う内部モジュールを配置する。ファイル名は実装の型名に合わせる（例: `stripe_payment_gateway.rs`、`smtp_mailer.rs`）。 |
+| `apps/<app-name>/src/features/<feature>/connectors.rs` | `apps/myproject-cli/src/features/payment/connectors.rs` | 永続化以外の外部システム、外部資源と通信する契約と実装を所有するモジュール。モジュール名は境界の置き場所を表す。trait名は`Gateway`に固定せず、責務を表す名前を使う。 |
+| `apps/<app-name>/src/features/<feature>/connectors/` | `apps/myproject-cli/src/features/payment/connectors/stripe_payment_gateway.rs` | 接続先別の実装と、外部データ形式との変換を行う内部モジュールを配置する。ファイル名は実装の型名に合わせる（例: `stripe_payment_gateway.rs`、`smtp_mailer.rs`）。 |
 | `apps/<app-name>/src/ui.rs` | `apps/myproject-cli/src/ui.rs` | 業務上の判断を持たないUIの公開境界。UIを持つ実行単位だけで使用する。 |
 | `apps/<app-name>/src/ui/` | `apps/myproject-cli/src/ui/primary_button.rs` | UIの内部モジュールを配置する。 |
 | `apps/<app-name>/src/localization.rs` | `apps/myproject-cli/src/localization.rs` | 表示言語の選択と翻訳の取得を定義する。多言語対応がある場合だけ使用する。 |
@@ -62,10 +62,10 @@
 
 永続化と、永続化以外の外部システムとの境界の契約はtraitとして定義する。実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
 
-traitの名前は、[共通設計原則](../core/software-design-guidelines.md)の「外部システムとの境界を責務の名前で分離する」に従い、外部に接続することではなく、利用側へ何を提供するかで決める。実装の型名には接続先、方式、供給元を含める。
+traitの名前は、[共通設計原則](../core/software-design-guidelines.md)の「命名」に従い、外部に接続することではなく、利用側へ何を提供するかで決める。実装の型名には接続先、方式、供給元を含める。
 
 ```rust
-// 責務を表す既存の名前を使う。rustlsの`TimeProvider`、governorの`Clock`と同じ形。
+// 責務を表す既存の名前を使う。`TimeProvider`、`Clock`と同じ形。
 trait Clock {
     fn now(&self) -> DateTime<Utc>;
 }
@@ -78,7 +78,7 @@ impl Clock for SystemClock {
     }
 }
 
-// snowflakedの`Generator`と同じく、生成する対象を名前にする。
+// `Generator`と同じく、生成する対象を名前にする。
 trait OrderIdGenerator {
     fn generate(&self) -> OrderId;
 }

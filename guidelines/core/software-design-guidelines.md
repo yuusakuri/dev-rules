@@ -219,30 +219,11 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 検索条件は用途ごとの取得操作または読み取り専用クエリとして定義する。既存のORMやデータアクセスAPIと同じ粒度の汎用CRUDを包むだけのRepositoryは設けない。
 
-Repositoryは、保存と取得を担う永続化の境界に限って使う。永続化を伴わない外部システムや外部資源の境界には使用しない。
-
-### 外部システムとの境界を責務の名前で分離する
+### 外部システムとの境界を分離する
 
 決済、通知、他サービスのAPI、外部ライブラリ、デバイス、時刻、ID発番、乱数など、永続化以外の外部システムや外部資源を利用する場合は、利用側の目的に沿った操作だけを公開する境界を定義し、外部APIの呼び出し、外部形式との変換、外部SDKの型とエラーを実装内へ閉じ込める。引数、戻り値、エラーは利用側が扱う型で定義し、業務上の判断は利用側で行う。
 
-境界の名前は、外部に接続することではなく、利用側から見て何を提供するかで決める。その責務を表す既存の名前がある場合はそれを使い、接続形態を表す`Gateway`を一律に付けない。`Gateway`は、決済網への窓口のように、外部システムへの窓口を指す名称としてその分野で定着している場合に使用する。実装の名前には接続先、方式、供給元を含め、契約と実装を名前で区別する。
-
-利用側から見た責務と、その責務に対して実際のRust OSSで使われている名前を示す。
-
-| 対象 | 契約の名前 | 実装の名前 | 実際のRust OSSの例 |
-| --- | --- | --- | --- |
-| 永続化 | `Repository`、`Store` | `PostgresOrderRepository` | [cqrs-es](https://docs.rs/cqrs-es/latest/cqrs_es/)の`EventStore`、`ViewRepository`、`PersistedEventRepository` |
-| オブジェクトストレージ、ファイル | `ObjectStore`、`Loader`、`Reader` | `AmazonS3`、`LocalFileSystem` | [object_store](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html)の`ObjectStore`と、実装の`AmazonS3`、`LocalFileSystem`、`InMemory` |
-| 時刻 | `Clock`、`TimeProvider` | `SystemClock`、`MonotonicClock`、`FakeRelativeClock` | [rustls](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)の`TimeProvider::current_time`、[governor](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)の`Clock::now`と、実装の`SystemClock`、`FakeRelativeClock` |
-| 乱数 | `Rng` | `StdRng`、`SmallRng` | [rand_core](https://docs.rs/rand_core/latest/rand_core/)の`Rng`（0.10で`RngCore`から改称）、`SeedableRng` |
-| ID発番 | `IdGenerator`、`Generator` | `SnowflakeIdGenerator` | [snowflaked](https://docs.rs/snowflaked/latest/snowflaked/)の`Generator`、`Snowflake`、[uuid](https://docs.rs/uuid/latest/uuid/struct.Uuid.html)の`Uuid::new_v4` |
-| 設定読込 | `Provider`、`Loader` | `EnvConfigProvider` | [figment](https://docs.rs/figment/latest/figment/trait.Provider.html)の`Provider`と、実装の`Env`、`Serialized` |
-| メッセージ送信 | `Publisher`、`Producer` | `KafkaEventProducer` | [rdkafka](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html)の`Producer`と、実装の`FutureProducer`、`ThreadedProducer` |
-| メール送信 | `Mailer`、`EmailSender` | `SmtpMailer` | [lettre](https://docs.rs/lettre/latest/lettre/trait.Transport.html)の`Transport`と、実装の`SmtpTransport`、`FileTransport`、`StubTransport` |
-| 決済 | `PaymentGateway` | `StripePaymentGateway` | [payment_kit](https://docs.rs/payment_kit/latest/payment_kit/)の`PaymentGateway` |
-| 外部サービスのAPI | `Client` | `StripeClient` | [reqwest](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)の`Client`、aws-sdkの各`Client` |
-
-`SystemClockGateway`、`UuidGateway`、`RandomGateway`のように、外部に触れることだけを理由に`Gateway`を付けると、名前から何を提供するのかが分からなくなる。`Clock`、`IdGenerator`、`Rng`のように、供給する対象そのものを名前にする。
+境界と実装の名前は「命名」に従う。
 
 ### 既存モジュールに手を加えずに機能を追加する（Decorator）
 
@@ -266,7 +247,7 @@ Repositoryは、保存と取得を担う永続化の境界に限って使う。�
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 外部接続の命名 | 外部通信やインフラストラクチャの処理を、`api`、`data`、`infrastructure` のような抽象的な技術概念で命名、集約しない。実際の接続先システム、サービス、通信対象を明示する（例: `stripe_payment`、`device_hub`）。 |
-| 外部との境界の命名 | 外部システムや外部資源との境界は、外部に接続することではなく、利用側へ何を提供するかで命名する。責務を表す既存の名前がある場合はそれを使い、`Gateway`のような接続形態を表す語を一律に付けない。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock`、`IdGenerator`、`Rng`、`PaymentGateway` |
+| 外部との境界の命名 | 外部システムや外部資源との境界は、外部に接続することではなく、利用側へ何を提供するかで命名する。責務を表す既存の名前がある場合は「単語」に従ってそれを使い、`Gateway`のような接続形態を表す語を一律に付けない。実装の名前には接続先、方式、供給元を含める。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock` / `SystemClock`、`IdGenerator`、`PaymentGateway` / `StripePaymentGateway` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
@@ -280,85 +261,86 @@ Repositoryは、保存と取得を担う永続化の境界に限って使う。�
 
 ### 単語
 
-| 名前 | 説明 | 例 | 品詞 | タグ |
-| --- | --- | --- | --- | --- |
-| `Error` | エラーを表す型の名前は `Error` で終える。特定の操作や対象に対応する場合は、何に失敗したかが分かる名前にする。 | `ParseError`、`ConnectionError`、`TimeoutError` | 名詞 | エラー |
-| `Guard` | スコープ内でロック、アクセス権、状態変更などを一時的に保持し、破棄時またはスコープ終了時に自動解放、復元する型に使用する。 | `MutexGuard`、`LockGuard` | 名詞 | リソース |
-| `Handle` | 実行中の処理、外部リソース、サービスなどを操作、監視、終了待機するための参照や権限を表す型に使用する。 | `JoinHandle`、`ConnectionHandle` | 名詞 | リソース |
-| `Sender`、`Receiver` | メッセージ経路やチャネルの送信側には `Sender`、受信側には `Receiver` を使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。 | `MessageSender`、`EventReceiver` | 名詞 | 通信 |
-| `Permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | `ConnectionPermit`、`ExecutionPermit` | 名詞 | リソース |
-| `Bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `Bytes` を付ける。整数値そのものや、用途が整数値に限定されないバイト列には付けない。 | `LengthBytes`、`TimestampBytes` | 名詞 | データ |
-| `Frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | `RequestFrame`、`UartFrame` | 名詞 | 通信 |
-| `Packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket` | 名詞 | 通信 |
-| `Tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | `SearchTokenizer` | 名詞 | 解析 |
-| `Lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | `ConfigLexer` | 名詞 | 解析 |
-| `Reader` | ファイル、ストリーム、デバイス、メモリなどの入力元からデータを読み取る型に使用する。読み取り位置、部分読み取り、終端、入力バッファの管理を主な責務とする。 | `FileReader`、`PacketReader` | 名詞 | 入出力 |
-| `Writer` | データをファイル、ストリーム、デバイス、メモリなどの出力先へ書き込む型に使用する。部分書き込み、出力バッファ、`flush` の管理を主な責務とする。 | `FileWriter`、`PacketWriter` | 名詞 | 入出力 |
-| `Parser` | 文字列、バイト列、トークン列を、定義された文法や形式に従った構文構造へ変換する型に使用する。区切り、階層、順序、構文上の妥当性の判断を主な責務とする。 | `FrameParser`、`CommandParser` | 名詞 | 解析 |
-| `Encoder` | 値やPacketを、保存、転送、通信などに使用する符号化表現へ変換する型に使用する。通信ではPacketからFrameを構築する処理や、Frameを送信可能なバイト列へ変換してヘッダー、長さ、区切り、検査値などを付加する処理に使用する。 | `PacketEncoder`、`FrameEncoder` | 名詞 | 変換 |
-| `Decoder` | 符号化された表現を、元の表現または後続処理が利用できる表現へ戻す型に使用する。通信では受信したバイト列からFrameを復元する処理や、Frameの内容を解釈してPacketを生成する処理に使用する。 | `FrameDecoder`、`PacketDecoder` | 名詞 | 変換 |
-| `Serializer` | プログラム内の構造化された値や型付きオブジェクトを、保存または転送できる表現へ変換する型に使用する。 | `JsonSerializer` | 名詞 | 変換 |
-| `Deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。 | `JsonDeserializer` | 名詞 | 変換 |
-| `Record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | `StringRecord`、`ByteRecord` | 名詞 | データ |
-| `Formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter` | 名詞 | 変換 |
-| `Converter` | 特定の型や表現を別の型や表現へ変換する型に使用する。より具体的な `Encoder`、`Decoder`、`Serializer`、`Deserializer`、`Mapper` が適切な場合は使用しない。 | `UnitConverter` | 名詞 | 変換 |
-| `Mapper` | 複数のフィールドを持つ構造を、対応する別の構造へ変換する型に使用する。外部データ型から内部モデルへの変換など、フィールド間の対応付けを主な責務とする。 | `UserMapper` | 名詞 | 変換 |
-| `Validator` | 入力が形式、範囲、不変条件などの制約を満たすか検証する型に使用する。入力の意味を別の意味へ変換する処理は担当しない。 | `RequestValidator` | 名詞 | 解析 |
-| `Loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | `ConfigLoader` | 名詞 | 入出力 |
-| `List` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | `UserList` | 名詞 | 集合 |
-| `Set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | `PermissionSet` | 名詞 | 集合 |
-| `Map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap` | 名詞 | 集合 |
-| `Store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore` | 名詞 | データ |
-| `Registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry` | 名詞 | データ |
-| `Repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する抽象に使用する。インターフェースとして定義し、実装を差し替えられる構造にする。永続化を伴わない外部システムや外部資源の境界には使用しない。 | `OrderRepository`、`PostgresOrderRepository` | 名詞 | データ |
-| `Gateway` | 外部システムへの窓口を指す名称として、その分野で定着している場合に使用する。具体的な接続先を実装の名前に含める。責務を表す既存の名前がある対象へ、外部資源を扱うことだけを理由に付けない。 | `PaymentGateway`、`StripePaymentGateway` | 名詞 | 通信 |
-| `Clock` | 現在時刻または経過時間を供給する抽象に使用する。実装の名前には、供給元と時刻の性質を含める。 | `Clock`、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
-| `Provider` | 利用側が必要とする値を供給する抽象に使用する。何を供給するかを名前に含める。`Repository`、`Loader`、`Clock`など、対象を直接表す名前が適切な場合は使用しない。 | `TimeProvider`、`ConfigProvider` | 名詞 | データ |
-| `Generator` | 識別子など、新しい値を生成する抽象に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator` | 名詞 | 生成 |
-| `Rng` | 乱数を供給する抽象に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | `Rng`、`SeedableRng`、`StdRng` | 名詞 | 生成 |
-| `Client` | 外部サービスのAPIを呼び出す型に使用する。接続先のサービスを名前に含める。 | `StripeClient`、`GitHubClient` | 名詞 | 通信 |
-| `Mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。チャネルの送信側を表す `Sender` とは区別する。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 |
-| `Publisher`、`Producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer` | 名詞 | 通信 |
-| `Pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool` | 名詞 | リソース |
-| `Cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache` | 名詞 | データ |
-| `Buffer` | バイト列や要素を一時的に蓄積する型に使用する。 | `ReceiveBuffer` | 名詞 | データ |
-| `Table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | `RoutingTable` | 名詞 | データ |
-| `Queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `TaskQueue` | 名詞 | 集合 |
-| `Stack` | LIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `UndoStack` | 名詞 | 集合 |
-| `new` | 型を生成する標準的なコンストラクターに使用する。外部リソースの取得など、生成操作を具体的に表す名前が適切な場合は使用しない。 | `Client::new()` | 形容詞 | 生成 |
-| `default` | デフォルト値によって型を生成するコンストラクターに使用する。`new` と両方を提供する場合は、同じ結果になるようにする。 | `Config::default()` | 形容詞 | 生成 |
-| `with` + 設定名 | 追加の初期設定を指定する副コンストラクターに使用する。表記形式は言語の標準規約に従う。 | `Buffer::with_capacity(1024)` | 前置詞 | 生成 |
-| `from` + 入力元 | 既存データの意味や形式を示しながら型を生成する変換コンストラクターに使用する。表記形式は言語の標準規約に従う。 | `Frame::from_bytes(bytes)` | 前置詞 | 生成 |
-| `open` | 既存のファイルやデバイスなどを開き、利用可能な外部リソースを取得する処理に使用する。 | `File::open(path)` | 動詞 | 生成 |
-| `create` | 新しいファイル、ディレクトリ、リソースなどを生成する処理に使用する。 | `File::create(path)` | 動詞 | 生成 |
-| `connect` | リモートの接続先との通信路を確立する処理に使用する。 | `TcpStream::connect(address)` | 動詞 | 生成 |
-| `bind` | ローカルのアドレス、ポート、名前などへリソースを関連付ける処理に使用する。 | `UdpSocket::bind(address)` | 動詞 | 生成 |
-| `as` + 型名 | コストなしで同じデータを別の型として参照する変換に使用する。表記形式は言語の標準規約に従う。 | `as_bytes` | 前置詞 | 変換 |
-| `to` + 型名 | コピー、割り当て、検査、計算などを伴い、新しい値または別表現を生成する変換に使用する。表記形式は言語の標準規約に従う。 | `to_vec`、`to_string` | 前置詞 | 変換 |
-| `into` + 型名 | 元の値の所有権または管理責任を移して別の型へ変換する場合に使用する。所有権の概念がない言語では、元の値を消費する変換に使用する。 | `into_bytes`、`into_inner` | 前置詞 | 変換 |
-| `try` + 操作名 | 通常版と対になり、待機、ブロック、パニックなどを避けて失敗を戻り値として返す代替操作に使用する。単に失敗する可能性があるすべての処理には付けない。 | `try_send`、`try_lock`、`try_reserve` | 動詞 | 制御 |
-| `spawn` | 独立して実行されるスレッド、タスク、プロセスなどを開始する処理に使用する。開始した処理を監視または終了待機する必要がある場合は、`Handle` を返す。 | `spawn_worker`、`task::spawn` | 動詞 | 制御 |
-| `take` | 保持している値を取り出し、元の場所を空の状態または既定値へ置き換える処理に使用する。 | `take_message`、`mem::take` | 動詞 | 制御 |
-| `replace` | 保持している値を新しい値へ置き換え、以前の値を返す処理に使用する。単に削除する処理には使用しない。 | `replace_config`、`mem::replace` | 動詞 | 制御 |
-| `push` | 単一要素を末尾に追加する処理に使用する。 | `push(item)` | 動詞 | 集合 |
-| `push_front` | 順序が重要なコレクションの先頭へ単一要素を追加する処理に使用する。 | `push_front(item)` | 動詞句 | 集合 |
-| `pop` | 末尾の要素を取り出す処理に使用する。 | `pop()` | 動詞 | 集合 |
-| `pop_front` | 順序が重要なコレクションの先頭要素を取り出す処理に使用する。 | `pop_front()` | 動詞句 | 集合 |
-| `front` | 先頭要素への参照を返す処理に使用する。 | `front()` | 名詞 | 集合 |
-| `back` | 末尾要素への参照を返す処理に使用する。 | `back()` | 名詞 | 集合 |
-| `insert` | 指定した位置またはキーへ要素を挿入する処理に使用する。 | `insert(index, item)` | 動詞 | 集合 |
-| `remove` | 指定した位置またはキーの要素を取り出して削除する処理に使用する。 | `remove(index)` | 動詞 | 集合 |
-| `retain` | 条件を満たす要素だけを残す処理に使用する。 | `retain(predicate)` | 動詞 | 集合 |
-| `drain` | 指定範囲または全要素を集合から一括して取り出す処理に使用する。 | `drain(range)` | 動詞 | 集合 |
-| `clear` | 全要素を削除して空にする処理に使用する。 | `clear()` | 動詞 | 集合 |
-| `extend` | イテレーターや別の集合から複数の要素を追加する処理に使用する。 | `extend(items)` | 動詞 | 集合 |
-| `len` | 要素数を返す処理に使用する。 | `len()` | 名詞 | 集合 |
-| `is_empty` | 集合が空かどうかを判定する処理に使用する。 | `is_empty()` | 動詞句 | 集合 |
-| `contains` | 指定した要素またはキーを含むか判定する処理に使用する。 | `contains(item)` | 動詞 | 集合 |
-| `sort` | 要素を規則に従って並べ替える処理に使用する。 | `sort()` | 動詞 | 集合 |
-| `entry` | 指定キーのエントリを返す処理に使用する。存在する場合は既存エントリ、存在しない場合は空エントリを返し、照会と挿入を一度の探索で行えるようにする。 | `entry(key)` | 名詞 | 集合 |
-| `get_or_insert` | 対応する要素が存在する場合はその要素を返し、存在しない場合は指定値を挿入して返す処理に使用する。 | `get_or_insert(value)` | 動詞句 | 集合 |
-| `get_or_default` | 対応する要素が存在する場合はその要素を返し、存在しない場合はデフォルト値を挿入して返す処理に使用する。 | `get_or_default()` | 動詞句 | 集合 |
+| 名前 | 説明 | 例 | 品詞 | タグ | 実例 |
+| --- | --- | --- | --- | --- | --- |
+| `Error` | エラーを表す型の名前は `Error` で終える。特定の操作や対象に対応する場合は、何に失敗したかが分かる名前にする。 | `ParseError`、`ConnectionError`、`TimeoutError` | 名詞 | エラー | [`io::Error`](https://doc.rust-lang.org/std/io/struct.Error.html)、[`ParseIntError`](https://doc.rust-lang.org/std/num/struct.ParseIntError.html) |
+| `Guard` | スコープ内でロック、アクセス権、状態変更などを一時的に保持し、破棄時またはスコープ終了時に自動解放、復元する型に使用する。 | `MutexGuard`、`LockGuard` | 名詞 | リソース | [`MutexGuard`](https://doc.rust-lang.org/std/sync/struct.MutexGuard.html) |
+| `Handle` | 実行中の処理、外部リソース、サービスなどを操作、監視、終了待機するための参照や権限を表す型に使用する。 | `JoinHandle`、`ConnectionHandle` | 名詞 | リソース | [`JoinHandle`](https://docs.rs/tokio/latest/tokio/task/struct.JoinHandle.html) |
+| `Sender`、`Receiver` | メッセージ経路やチャネルの送信側には `Sender`、受信側には `Receiver` を使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。 | `MessageSender`、`EventReceiver` | 名詞 | 通信 | [`mpsc::Sender`](https://doc.rust-lang.org/std/sync/mpsc/struct.Sender.html)、[`mpsc::Receiver`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html) |
+| `Permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | `ConnectionPermit`、`ExecutionPermit` | 名詞 | リソース | [`SemaphorePermit`](https://docs.rs/tokio/latest/tokio/sync/struct.SemaphorePermit.html) |
+| `Bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `Bytes` を付ける。整数値そのものや、用途が整数値に限定されないバイト列には付けない。 | `LengthBytes`、`TimestampBytes` | 名詞 | データ | - |
+| `Frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | `RequestFrame`、`UartFrame` | 名詞 | 通信 | [`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) |
+| `Packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket` | 名詞 | 通信 | - |
+| `Tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | `SearchTokenizer` | 名詞 | 解析 | [`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) |
+| `Lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | `ConfigLexer` | 名詞 | 解析 | [`logos`の`Lexer`](https://docs.rs/logos/latest/logos/struct.Lexer.html) |
+| `Reader` | ファイル、ストリーム、デバイス、メモリなどの入力元からデータを読み取る型に使用する。読み取り位置、部分読み取り、終端、入力バッファの管理を主な責務とする。 | `FileReader`、`PacketReader` | 名詞 | 入出力 | [`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html)、[`csv`の`Reader`](https://docs.rs/csv/latest/csv/struct.Reader.html) |
+| `Writer` | データをファイル、ストリーム、デバイス、メモリなどの出力先へ書き込む型に使用する。部分書き込み、出力バッファ、`flush` の管理を主な責務とする。 | `FileWriter`、`PacketWriter` | 名詞 | 入出力 | [`BufWriter`](https://doc.rust-lang.org/std/io/struct.BufWriter.html)、[`csv`の`Writer`](https://docs.rs/csv/latest/csv/struct.Writer.html) |
+| `Parser` | 文字列、バイト列、トークン列を、定義された文法や形式に従った構文構造へ変換する型に使用する。区切り、階層、順序、構文上の妥当性の判断を主な責務とする。 | `FrameParser`、`CommandParser` | 名詞 | 解析 | [`clap`の`Parser`](https://docs.rs/clap/latest/clap/trait.Parser.html) |
+| `Encoder` | 値やPacketを、保存、転送、通信などに使用する符号化表現へ変換する型に使用する。通信ではPacketからFrameを構築する処理や、Frameを送信可能なバイト列へ変換してヘッダー、長さ、区切り、検査値などを付加する処理に使用する。 | `PacketEncoder`、`FrameEncoder` | 名詞 | 変換 | [`tokio_util::codec`の`Encoder`](https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Encoder.html) |
+| `Decoder` | 符号化された表現を、元の表現または後続処理が利用できる表現へ戻す型に使用する。通信では受信したバイト列からFrameを復元する処理や、Frameの内容を解釈してPacketを生成する処理に使用する。 | `FrameDecoder`、`PacketDecoder` | 名詞 | 変換 | [`tokio_util::codec`の`Decoder`](https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Decoder.html) |
+| `Serializer` | プログラム内の構造化された値や型付きオブジェクトを、保存または転送できる表現へ変換する型に使用する。 | `JsonSerializer` | 名詞 | 変換 | [`serde`の`Serializer`](https://docs.rs/serde/latest/serde/trait.Serializer.html) |
+| `Deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。 | `JsonDeserializer` | 名詞 | 変換 | [`serde`の`Deserializer`](https://docs.rs/serde/latest/serde/trait.Deserializer.html) |
+| `Record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | `StringRecord`、`ByteRecord` | 名詞 | データ | [`csv`の`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) |
+| `Formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter` | 名詞 | 変換 | [`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) |
+| `Converter` | 特定の型や表現を別の型や表現へ変換する型に使用する。より具体的な `Encoder`、`Decoder`、`Serializer`、`Deserializer`、`Mapper` が適切な場合は使用しない。 | `UnitConverter` | 名詞 | 変換 | - |
+| `Mapper` | 複数のフィールドを持つ構造を、対応する別の構造へ変換する型に使用する。外部データ型から内部モデルへの変換など、フィールド間の対応付けを主な責務とする。 | `UserMapper` | 名詞 | 変換 | - |
+| `Validator` | 入力が形式、範囲、不変条件などの制約を満たすか検証する型に使用する。入力の意味を別の意味へ変換する処理は担当しない。 | `RequestValidator` | 名詞 | 解析 | - |
+| `Loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | `ConfigLoader` | 名詞 | 入出力 | - |
+| `List` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | `UserList` | 名詞 | 集合 | [`LinkedList`](https://doc.rust-lang.org/std/collections/struct.LinkedList.html) |
+| `Set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | `PermissionSet` | 名詞 | 集合 | [`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) |
+| `Map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap` | 名詞 | 集合 | [`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) |
+| `Store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore` | 名詞 | データ | [`object_store`の`ObjectStore`](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html)と、実装の`AmazonS3`、`LocalFileSystem` |
+| `Registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry` | 名詞 | データ | [`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) |
+| `Repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。インターフェースとして定義し、実装を差し替えられる構造にする。永続化を伴わない外部システムや外部資源の境界には使用しない。 | `OrderRepository`、`PostgresOrderRepository` | 名詞 | データ | [`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html)、`PersistedEventRepository`、`EventStore` |
+| `Gateway` | 外部システムへの窓口を指す名称として、その分野で定着している場合に使用する。具体的な接続先を実装の名前に含める。責務を表す既存の名前がある対象へ、外部資源を扱うことだけを理由に付けない。 | `PaymentGateway`、`StripePaymentGateway` | 名詞 | 通信 | [`payment_kit`の`PaymentGateway`](https://docs.rs/payment_kit/latest/payment_kit/) |
+| `Connector` | 特定の外部システムやサービスへの接続と、その形式変換をまとめた実装に使用する。接続先を名前に含める。差し替え可能な実装を接続先ごとに並べる場合に使用し、利用側が呼び出す契約の名前には使用しない。 | `StripeConnector`、`SlackConnector` | 名詞 | 通信 | [HyperSwitchの`connectors`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors)（`stripe`、`adyen`、`paypal`など） |
+| `Clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | `Clock`、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース | [`governor`の`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)と、実装の`SystemClock`、`MonotonicClock`、`FakeRelativeClock` |
+| `Provider` | 利用側が必要とする値を供給する型に使用する。何を供給するかを名前に含める。`Repository`、`Loader`、`Clock`など、対象を直接表す名前が適切な場合は使用しない。 | `TimeProvider`、`ConfigProvider` | 名詞 | データ | [`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、[`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html) |
+| `Generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator` | 名詞 | 生成 | [`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/)、[`uuid`の`Uuid::new_v4`](https://docs.rs/uuid/latest/uuid/struct.Uuid.html#method.new_v4) |
+| `Rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | `Rng`、`SeedableRng`、`StdRng` | 名詞 | 生成 | [`rand_core`の`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)（0.10で`RngCore`から改称）、`SeedableRng` |
+| `Client` | 外部サービスのAPIを呼び出す型に使用する。接続先のサービスを名前に含める。 | `StripeClient`、`GitHubClient` | 名詞 | 通信 | [`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)、aws-sdkの各`Client` |
+| `Mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。チャネルの送信側を表す `Sender` とは区別する。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)と、実装の`SmtpTransport`、`FileTransport`、`StubTransport` |
+| `Publisher`、`Producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer` | 名詞 | 通信 | [`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html)と、実装の`FutureProducer`、`ThreadedProducer` |
+| `Pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool` | 名詞 | リソース | [`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) |
+| `Cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache` | 名詞 | データ | [`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) |
+| `Buffer` | バイト列や要素を一時的に蓄積する型に使用する。 | `ReceiveBuffer` | 名詞 | データ | - |
+| `Table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | `RoutingTable` | 名詞 | データ | - |
+| `Queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `TaskQueue` | 名詞 | 集合 | [`crossbeam`の`SegQueue`](https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html) |
+| `Stack` | LIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `UndoStack` | 名詞 | 集合 | - |
+| `new` | 型を生成する標準的なコンストラクターに使用する。外部リソースの取得など、生成操作を具体的に表す名前が適切な場合は使用しない。 | `Client::new()` | 形容詞 | 生成 | [`String::new`](https://doc.rust-lang.org/std/string/struct.String.html#method.new) |
+| `default` | デフォルト値によって型を生成するコンストラクターに使用する。`new` と両方を提供する場合は、同じ結果になるようにする。 | `Config::default()` | 形容詞 | 生成 | [`Default::default`](https://doc.rust-lang.org/std/default/trait.Default.html#tymethod.default) |
+| `with` + 設定名 | 追加の初期設定を指定する副コンストラクターに使用する。表記形式は言語の標準規約に従う。 | `Buffer::with_capacity(1024)` | 前置詞 | 生成 | [`Vec::with_capacity`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) |
+| `from` + 入力元 | 既存データの意味や形式を示しながら型を生成する変換コンストラクターに使用する。表記形式は言語の標準規約に従う。 | `Frame::from_bytes(bytes)` | 前置詞 | 生成 | [`String::from_utf8`](https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8) |
+| `open` | 既存のファイルやデバイスなどを開き、利用可能な外部リソースを取得する処理に使用する。 | `File::open(path)` | 動詞 | 生成 | [`File::open`](https://doc.rust-lang.org/std/fs/struct.File.html#method.open) |
+| `create` | 新しいファイル、ディレクトリ、リソースなどを生成する処理に使用する。 | `File::create(path)` | 動詞 | 生成 | [`File::create`](https://doc.rust-lang.org/std/fs/struct.File.html#method.create) |
+| `connect` | リモートの接続先との通信路を確立する処理に使用する。 | `TcpStream::connect(address)` | 動詞 | 生成 | [`TcpStream::connect`](https://doc.rust-lang.org/std/net/struct.TcpStream.html#method.connect) |
+| `bind` | ローカルのアドレス、ポート、名前などへリソースを関連付ける処理に使用する。 | `UdpSocket::bind(address)` | 動詞 | 生成 | [`UdpSocket::bind`](https://doc.rust-lang.org/std/net/struct.UdpSocket.html#method.bind) |
+| `as` + 型名 | コストなしで同じデータを別の型として参照する変換に使用する。表記形式は言語の標準規約に従う。 | `as_bytes` | 前置詞 | 変換 | [`str::as_bytes`](https://doc.rust-lang.org/std/primitive.str.html#method.as_bytes) |
+| `to` + 型名 | コピー、割り当て、検査、計算などを伴い、新しい値または別表現を生成する変換に使用する。表記形式は言語の標準規約に従う。 | `to_vec`、`to_string` | 前置詞 | 変換 | [`slice::to_vec`](https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec) |
+| `into` + 型名 | 元の値の所有権または管理責任を移して別の型へ変換する場合に使用する。所有権の概念がない言語では、元の値を消費する変換に使用する。 | `into_bytes`、`into_inner` | 前置詞 | 変換 | [`String::into_bytes`](https://doc.rust-lang.org/std/string/struct.String.html#method.into_bytes) |
+| `try` + 操作名 | 通常版と対になり、待機、ブロック、パニックなどを避けて失敗を戻り値として返す代替操作に使用する。単に失敗する可能性があるすべての処理には付けない。 | `try_send`、`try_lock`、`try_reserve` | 動詞 | 制御 | [`Mutex::try_lock`](https://doc.rust-lang.org/std/sync/struct.Mutex.html#method.try_lock) |
+| `spawn` | 独立して実行されるスレッド、タスク、プロセスなどを開始する処理に使用する。開始した処理を監視または終了待機する必要がある場合は、`Handle` を返す。 | `spawn_worker`、`task::spawn` | 動詞 | 制御 | [`thread::spawn`](https://doc.rust-lang.org/std/thread/fn.spawn.html) |
+| `take` | 保持している値を取り出し、元の場所を空の状態または既定値へ置き換える処理に使用する。 | `take_message`、`mem::take` | 動詞 | 制御 | [`mem::take`](https://doc.rust-lang.org/std/mem/fn.take.html) |
+| `replace` | 保持している値を新しい値へ置き換え、以前の値を返す処理に使用する。単に削除する処理には使用しない。 | `replace_config`、`mem::replace` | 動詞 | 制御 | [`mem::replace`](https://doc.rust-lang.org/std/mem/fn.replace.html) |
+| `push` | 単一要素を末尾に追加する処理に使用する。 | `push(item)` | 動詞 | 集合 | [`Vec::push`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push) |
+| `push_front` | 順序が重要なコレクションの先頭へ単一要素を追加する処理に使用する。 | `push_front(item)` | 動詞句 | 集合 | [`VecDeque::push_front`](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#method.push_front) |
+| `pop` | 末尾の要素を取り出す処理に使用する。 | `pop()` | 動詞 | 集合 | [`Vec::pop`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop) |
+| `pop_front` | 順序が重要なコレクションの先頭要素を取り出す処理に使用する。 | `pop_front()` | 動詞句 | 集合 | [`VecDeque::pop_front`](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#method.pop_front) |
+| `front` | 先頭要素への参照を返す処理に使用する。 | `front()` | 名詞 | 集合 | [`VecDeque::front`](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#method.front) |
+| `back` | 末尾要素への参照を返す処理に使用する。 | `back()` | 名詞 | 集合 | [`VecDeque::back`](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#method.back) |
+| `insert` | 指定した位置またはキーへ要素を挿入する処理に使用する。 | `insert(index, item)` | 動詞 | 集合 | [`HashMap::insert`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.insert) |
+| `remove` | 指定した位置またはキーの要素を取り出して削除する処理に使用する。 | `remove(index)` | 動詞 | 集合 | [`HashMap::remove`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.remove) |
+| `retain` | 条件を満たす要素だけを残す処理に使用する。 | `retain(predicate)` | 動詞 | 集合 | [`Vec::retain`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.retain) |
+| `drain` | 指定範囲または全要素を集合から一括して取り出す処理に使用する。 | `drain(range)` | 動詞 | 集合 | [`Vec::drain`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain) |
+| `clear` | 全要素を削除して空にする処理に使用する。 | `clear()` | 動詞 | 集合 | [`Vec::clear`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.clear) |
+| `extend` | イテレーターや別の集合から複数の要素を追加する処理に使用する。 | `extend(items)` | 動詞 | 集合 | [`Extend::extend`](https://doc.rust-lang.org/std/iter/trait.Extend.html#tymethod.extend) |
+| `len` | 要素数を返す処理に使用する。 | `len()` | 名詞 | 集合 | [`Vec::len`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.len) |
+| `is_empty` | 集合が空かどうかを判定する処理に使用する。 | `is_empty()` | 動詞句 | 集合 | [`Vec::is_empty`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.is_empty) |
+| `contains` | 指定した要素またはキーを含むか判定する処理に使用する。 | `contains(item)` | 動詞 | 集合 | [`HashSet::contains`](https://doc.rust-lang.org/std/collections/struct.HashSet.html#method.contains) |
+| `sort` | 要素を規則に従って並べ替える処理に使用する。 | `sort()` | 動詞 | 集合 | [`slice::sort`](https://doc.rust-lang.org/std/primitive.slice.html#method.sort) |
+| `entry` | 指定キーのエントリを返す処理に使用する。存在する場合は既存エントリ、存在しない場合は空エントリを返し、照会と挿入を一度の探索で行えるようにする。 | `entry(key)` | 名詞 | 集合 | [`HashMap::entry`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.entry) |
+| `get_or_insert` | 対応する要素が存在する場合はその要素を返し、存在しない場合は指定値を挿入して返す処理に使用する。 | `get_or_insert(value)` | 動詞句 | 集合 | [`Option::get_or_insert`](https://doc.rust-lang.org/std/option/enum.Option.html#method.get_or_insert) |
+| `get_or_default` | 対応する要素が存在する場合はその要素を返し、存在しない場合はデフォルト値を挿入して返す処理に使用する。 | `get_or_default()` | 動詞句 | 集合 | - |
 
 ---
 
@@ -532,7 +514,6 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |
 | 6. 設計パターン | [Repository](https://martinfowler.com/eaaCatalog/repository.html) | 永続化されたデータを、コレクションのように扱う境界として分離する構造を説明する。 |
 | 6. 設計パターン | [Gateway](https://martinfowler.com/eaaCatalog/gateway.html) | 外部システムや外部資源へのアクセスを1つの型へ包む構造を説明する。 |
-| 7. 命名 | [Naming - Rust API Guidelines](https://rust-lang.github.io/api-guidelines/naming.html) | エコシステムで実際に使われている型、トレイト、関数の命名を確認する。 |
 | 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) | ログの重大度と構造化項目の標準を定義する。 |
 | 10. ログ | [Naming \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/general/naming/) | 属性名とイベント名の命名規則を定義する。 |
 | 10. ログ | [Exception attributes \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/attributes-registry/exception/) | 例外を記録する項目の名称と内容を定義する。 |

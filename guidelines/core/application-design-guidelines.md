@@ -49,7 +49,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | `<source-root>/features/<feature>/presentation/` | `features/auth/presentation` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/handlers/` | `features/auth/handlers` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/repositories/` | `features/checkout/repositories/postgres_order_repository` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。 |
-| `<source-root>/features/<feature>/gateways/` | `features/payment/gateways/stripe_payment_gateway` | 永続化以外の外部システム、外部資源（決済、通知、他サービスのAPI、デバイス、時刻、ID発番など）と通信する契約と、接続先別の実装を配置する。フォルダ名は境界の置き場所を表す。契約の型名は`Gateway`に固定せず、責務を表す名前を使う。 |
+| `<source-root>/features/<feature>/connectors/` | `features/payment/connectors/stripe_payment_gateway` | 永続化以外の外部システム、外部資源（決済、通知、他サービスのAPI、デバイス、時刻、ID発番など）と通信する契約と、接続先別の実装を配置する。フォルダ名は境界の置き場所を表す。契約の型名は`Gateway`に固定せず、責務を表す名前を使う。 |
 | `<source-root>/ui/` | `ui/primary_button` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 | `<source-root>/localization/` | `localization/ja` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
 | `<source-root>/locale_format/` | `locale_format/number_format` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
@@ -63,8 +63,8 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
 | Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`core/`、`ui/` |
 | Feature内の`handlers/` | 同じFeatureの処理と型、`core/` |
-| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
-| `repositories/`、`gateways/`の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
+| Feature内の処理 | 同じFeatureの`repositories/`、`connectors/`の契約と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
+| `repositories/`、`connectors/`の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
 | `ui/` | フレームワークのみに依存し、Featureには依存しない |
 
 ---
