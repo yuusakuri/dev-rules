@@ -14,8 +14,6 @@
 
 本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
-TypeScriptの`strict`と、型情報を使用するlintを有効にする。
-
 ---
 
 ## 2. フォルダ構成
@@ -24,7 +22,7 @@ TypeScriptの`strict`と、型情報を使用するlintを有効にする。
 | --- | --- | --- |
 | `apps/<app-name>/src/` | `apps/myproject-web/src/` | TypeScriptアプリケーションのソースルート。 |
 | `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、実行経路との接続を配置する。 |
-| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/auth.ts` | 依存関係を生成して接続するComposition Rootを配置する。フレームワークにより`app/`に制限や規則がある場合は、`apps/<app-name>/src/bootstrap/`へ配置する。 |
+| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/stripe.ts` | 依存関係を生成して接続するComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダまたはファイルを分ける。フレームワークにより`app/`に制限や規則がある場合は、`apps/<app-name>/src/bootstrap/`へ配置する。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-web/src/infra/sentry/client.ts` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置し、Composition Rootから呼び出す。 |
 | `apps/<app-name>/src/features/<feature>/` | `apps/myproject-web/src/features/auth/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Feature外へ公開する型、関数、Component、Handler、RepositoryとGatewayの契約、各実装の生成関数だけをexportする。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のComponentだけを参照する。 |
@@ -77,6 +75,6 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
 | 1. 概要、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
-| 1. 概要 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
-| 1. 概要、4. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
+| 4. 検証 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
+| 4. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
 | 4. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を確認する。 |
