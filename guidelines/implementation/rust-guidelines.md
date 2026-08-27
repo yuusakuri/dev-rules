@@ -41,8 +41,8 @@
 | `apps/<app-name>/src/features/<feature>/handlers/` | `apps/myproject-cli/src/features/auth/handlers/sign_in_handler.rs` | Handlerの内部モジュールを配置する。 |
 | `apps/<app-name>/src/features/<feature>/repositories.rs` | `apps/myproject-cli/src/features/checkout/repositories.rs` | Featureが所有するデータを永続化ストレージへ保存、取得する契約と実装を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-cli/src/features/checkout/repositories/postgres_order_repository.rs` | 保存先ごとのRepository実装と、保存形式との変換を行う内部モジュールを配置する。 |
-| `apps/<app-name>/src/features/<feature>/connectors.rs` | `apps/myproject-cli/src/features/payment/connectors.rs` | 永続化以外の外部システム、外部資源と通信する契約と実装を所有するモジュール。モジュール名は境界の置き場所を表す。trait名は`Gateway`に固定せず、責務を表す名前を使う。 |
-| `apps/<app-name>/src/features/<feature>/connectors/` | `apps/myproject-cli/src/features/payment/connectors/stripe_payment_gateway.rs` | 接続先別の実装と、外部データ形式との変換を行う内部モジュールを配置する。ファイル名は実装の型名に合わせる（例: `stripe_payment_gateway.rs`、`smtp_mailer.rs`）。 |
+| `apps/<app-name>/src/features/<feature>/connectors.rs` | `apps/myproject-cli/src/features/payment/connectors.rs` | 永続化以外の外部システム、外部資源と通信する契約と実装を所有するモジュール。モジュール名は境界の置き場所を表す。trait名は「共通設計原則」の「命名」に従う。 |
+| `apps/<app-name>/src/features/<feature>/connectors/` | `apps/myproject-cli/src/features/payment/connectors/stripe_payment_client.rs` | 接続先別の実装と、外部データ形式との変換を行う内部モジュールを配置する。ファイル名は実装の型名に合わせる（例: `stripe_payment_client.rs`、`smtp_mailer.rs`）。 |
 | `apps/<app-name>/src/ui.rs` | `apps/myproject-cli/src/ui.rs` | 業務上の判断を持たないUIの公開境界。UIを持つ実行単位だけで使用する。 |
 | `apps/<app-name>/src/ui/` | `apps/myproject-cli/src/ui/primary_button.rs` | UIの内部モジュールを配置する。 |
 | `apps/<app-name>/src/localization.rs` | `apps/myproject-cli/src/localization.rs` | 表示言語の選択と翻訳の取得を定義する。多言語対応がある場合だけ使用する。 |
@@ -83,19 +83,19 @@ trait OrderIdGenerator {
     fn generate(&self) -> OrderId;
 }
 
-// 外部システムへの窓口を指す名称が分野で定着している場合だけ`Gateway`を使う。
-trait PaymentGateway {
+// 外部サービスのAPIを呼び出す契約は、接続先ではなく呼び出す機能で命名する。
+trait PaymentClient {
     async fn authorize(&self, request: &AuthorizationRequest) -> Result<PaymentId, PaymentError>;
 }
 
-struct StripePaymentGateway {
-    client: StripeClient,
+struct StripePaymentClient {
+    http: reqwest::Client,
 }
 ```
 
 ```rust
-// NG: 外部資源へ触れることだけを理由に`Gateway`を付けた契約。
-// 名前が接続形態しか表さず、何を提供するのかが分からない。
+// NG: 外部資源へ触れることを理由に接続形態の語を足した契約。
+// 名前が接続の形しか表さず、何を提供するのかが分からない。
 trait SystemClockGateway {
     fn now(&self) -> DateTime<Utc>;
 }

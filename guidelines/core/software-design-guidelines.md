@@ -53,7 +53,7 @@ DBのレコードや外部APIのレスポンスなど、外部から来るデー
 
 Type、Interface、Class、Functionなどのプログラミング言語上の構成要素を理由に、ファイルを分割、集約しない。
 
-型定義は、それが属するドメイン、責務、機能ごと（例: `user`、`payment_gateway`）のファイルへ分けるか、その型を最も強く所有するロジックと同じモジュールへ置く。
+型定義は、それが属するドメイン、責務、機能ごと（例: `user`、`payment_client`）のファイルへ分けるか、その型を最も強く所有するロジックと同じモジュールへ置く。
 
 ---
 
@@ -247,7 +247,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 外部接続の命名 | 外部通信やインフラストラクチャの処理を、`api`、`data`、`infrastructure` のような抽象的な技術概念で命名、集約しない。実際の接続先システム、サービス、通信対象を明示する（例: `stripe_payment`、`device_hub`）。 |
-| 外部との境界の命名 | 外部システムや外部資源との境界は、外部に接続することではなく、利用側へ何を提供するかで命名する。責務を表す既存の名前がある場合は「単語」に従ってそれを使い、`Gateway`のような接続形態を表す語を一律に付けない。実装の名前には接続先、方式、供給元を含める。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock` / `SystemClock`、`IdGenerator`、`PaymentGateway` / `StripePaymentGateway` |
+| 外部との境界の命名 | 外部システムや外部資源との境界は、外部に接続することではなく、利用側へ何を提供するかで命名する。名前は「単語」から選び、接続形態を表す語を足さない。実装の名前には接続先、方式、供給元を含める。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock` / `SystemClock`、`IdGenerator`、`PaymentClient` / `StripePaymentClient` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
@@ -292,13 +292,12 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `Store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore` | 名詞 | データ | [`object_store`の`ObjectStore`](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html)と、実装の`AmazonS3`、`LocalFileSystem` |
 | `Registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry` | 名詞 | データ | [`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) |
 | `Repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。インターフェースとして定義し、実装を差し替えられる構造にする。永続化を伴わない外部システムや外部資源の境界には使用しない。 | `OrderRepository`、`PostgresOrderRepository` | 名詞 | データ | [`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html)、`PersistedEventRepository`、`EventStore` |
-| `Gateway` | 外部システムへの窓口を指す名称として、その分野で定着している場合に使用する。具体的な接続先を実装の名前に含める。責務を表す既存の名前がある対象へ、外部資源を扱うことだけを理由に付けない。 | `PaymentGateway`、`StripePaymentGateway` | 名詞 | 通信 | [`payment_kit`の`PaymentGateway`](https://docs.rs/payment_kit/latest/payment_kit/) |
 | `Connector` | 特定の外部システムやサービスへの接続と、その形式変換をまとめた実装に使用する。接続先を名前に含める。差し替え可能な実装を接続先ごとに並べる場合に使用し、利用側が呼び出す契約の名前には使用しない。 | `StripeConnector`、`SlackConnector` | 名詞 | 通信 | [HyperSwitchの`connectors`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors)（`stripe`、`adyen`、`paypal`など） |
 | `Clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | `Clock`、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース | [`governor`の`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)と、実装の`SystemClock`、`MonotonicClock`、`FakeRelativeClock` |
 | `Provider` | 利用側が必要とする値を供給する型に使用する。何を供給するかを名前に含める。`Repository`、`Loader`、`Clock`など、対象を直接表す名前が適切な場合は使用しない。 | `TimeProvider`、`ConfigProvider` | 名詞 | データ | [`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、[`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html) |
 | `Generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator` | 名詞 | 生成 | [`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/)、[`uuid`の`Uuid::new_v4`](https://docs.rs/uuid/latest/uuid/struct.Uuid.html#method.new_v4) |
 | `Rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | `Rng`、`SeedableRng`、`StdRng` | 名詞 | 生成 | [`rand_core`の`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)（0.10で`RngCore`から改称）、`SeedableRng` |
-| `Client` | 外部サービスのAPIを呼び出す型に使用する。接続先のサービスを名前に含める。 | `StripeClient`、`GitHubClient` | 名詞 | 通信 | [`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)、aws-sdkの各`Client` |
+| `Client` | 外部システムやサービスのAPIを呼び出す型に使用する。接続先のサービスを名前に含める。呼び出す機能を限定する場合は、その機能を名前に含める。 | `StripeClient`、`GitHubClient`、`StripePaymentClient` | 名詞 | 通信 | [`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)、aws-sdkの各`Client` |
 | `Mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。チャネルの送信側を表す `Sender` とは区別する。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)と、実装の`SmtpTransport`、`FileTransport`、`StubTransport` |
 | `Publisher`、`Producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer` | 名詞 | 通信 | [`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html)と、実装の`FutureProducer`、`ThreadedProducer` |
 | `Pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool` | 名詞 | リソース | [`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) |
