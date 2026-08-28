@@ -245,7 +245,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 外部接続の命名 | 外部通信やインフラストラクチャの処理を、`api`、`data`、`infrastructure` のような抽象的な技術概念で命名、集約しない。実際の接続先システム、サービス、通信対象を明示する（例: `stripe_payment`、`device_hub`）。 |
-| 外部との境界の命名 | 外部システムや外部資源との境界は、外部に接続することではなく、利用側へ何を提供するかで命名する。実装の名前には接続先、方式、供給元を含める。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock` / `SystemClock`、`IdGenerator`、`PaymentClient` / `StripeClient` |
+| 外部との境界の命名 | 外部システムや外部資源との境界は、利用側へ何を提供するかで命名する。実装の名前には接続先、方式、供給元を含める。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock` / `SystemClock`、`IdGenerator`、`PaymentClient` / `StripeClient` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
@@ -281,7 +281,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `stream` | 連続して流れるバイト列または値を、順に読み書きする型に使用する。境界が定められた単位を扱う場合は `frame`、`packet` を使う。 | [`TcpStream`](https://doc.rust-lang.org/std/net/struct.TcpStream.html)、[`futures`の`Stream`](https://docs.rs/futures/latest/futures/stream/trait.Stream.html) | 名詞 | 通信 |
 | `request`、`response` | 外部へ送る要求と、それに対する応答を表す型に使用する。対象の操作を名前に含める。 | [`http`の`Request`](https://docs.rs/http/latest/http/request/struct.Request.html)、[`Response`](https://docs.rs/http/latest/http/response/struct.Response.html) | 名詞 | 通信 |
 | `router` | 受け取った要求を、経路や条件に対応する処理へ振り分ける型に使用する。 | [`axum`の`Router`](https://docs.rs/axum/latest/axum/struct.Router.html) | 名詞 | 通信 |
-| `widget` | 画面へ描画する部品を表す型に使用する。描画する対象を名前に含める。 | `PasswordField`、[`ratatui`の`Widget`](https://docs.rs/ratatui/latest/ratatui/widgets/trait.Widget.html) | 名詞 | 表示 |
+| `widget` | 画面へ描画する部品を表す型に使用する。描画する対象を名前に含める。 | [`ratatui`の`Widget`](https://docs.rs/ratatui/latest/ratatui/widgets/trait.Widget.html) | 名詞 | 表示 |
 | `tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | `SearchTokenizer`、[`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
 | `lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | `ConfigLexer`、[`logos`の`Lexer`](https://docs.rs/logos/latest/logos/struct.Lexer.html) | 名詞 | 解析 |
 | `reader` | ファイル、ストリーム、デバイス、メモリなどの入力元からデータを読み取る型に使用する。読み取り位置、部分読み取り、終端、入力バッファの管理を主な責務とする。 | `FileReader`、`PacketReader`、[`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html)、[`csv`の`Reader`](https://docs.rs/csv/latest/csv/struct.Reader.html) | 名詞 | 入出力 |
@@ -314,7 +314,8 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `mock`、`fake` | テストのために本物の実装を置き換える型に使用する。呼び出しの記録と検証を目的とする場合は `mock`、動作する簡易な代替実装には `fake` を使う。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/)、[`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
 | `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含め、呼び出す機能を限定する場合はその機能も名前に含める。 | `StripeClient`、`GitHubClient`、`PaymentClient`、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 名詞 | 通信 |
 | `gateway` | 同じ外部機能を提供する複数のサービスを一つの操作へまとめ、接続先を差し替えられるようにする型に使用する。利用側が扱う型で操作を定義し、接続先ごとの違いは実装へ閉じ込めて実装の名前で区別する。 | [`payment_kit`の`PaymentGateway`](https://docs.rs/payment_kit/latest/payment_kit/)、`StripePaymentGateway` | 名詞 | 通信 |
-| `mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。チャネルの送信側を表す `sender` とは区別する。 | `Mailer`、`SmtpMailer`、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) | 名詞 | 通信 |
+| `mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。チャネルの送信側を表す `sender` とは区別する。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 |
+| `transport` | メッセージの送信経路と送信手段を表す型に使用する。経路ごとに実装を差し替える場合に使い、送信する内容の組み立ては担当しない。 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)、[`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) | 名詞 | 通信 |
 | `publisher`、`producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
 | `pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool`、[`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
 | `cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache`、[`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
@@ -336,7 +337,9 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `to` + 型名 | コピー、割り当て、検査、計算などを伴い、新しい値または別表現を生成する変換に使用する。表記形式は言語の標準規約に従う。 | [`to_vec`](https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec)、`to_string` | 前置詞 | 変換 |
 | `into` + 型名 | 元の値の所有権または管理責任を移して別の型へ変換する場合に使用する。所有権の概念がない言語では、元の値を消費する変換に使用する。 | [`into_bytes`](https://doc.rust-lang.org/std/string/struct.String.html#method.into_bytes)、`into_inner` | 前置詞 | 変換 |
 | `try` + 操作名 | 通常版と対になり、待機、ブロック、パニックなどを避けて失敗を戻り値として返す代替操作に使用する。単に失敗する可能性があるすべての処理には付けない。 | `try_send`、[`try_lock`](https://doc.rust-lang.org/std/sync/struct.Mutex.html#method.try_lock)、`try_reserve` | 動詞 | 制御 |
-| `checked` + 演算名 | 演算結果が表現できる範囲を超える場合に、失敗を戻り値として返す処理に使用する。上限または下限で止める場合は `saturating`、あふれた分を切り捨てる場合は `wrapping` を使う。 | [`u32::checked_add`](https://doc.rust-lang.org/std/primitive.u32.html#method.checked_add)、`saturating_add`、`wrapping_add` | 動詞句 | 制御 |
+| `checked` + 演算名 | 演算結果が表現できる範囲を超える場合に、失敗を戻り値として返す処理に使用する。 | [`u32::checked_add`](https://doc.rust-lang.org/std/primitive.u32.html#method.checked_add) | 動詞句 | 制御 |
+| `saturating` + 演算名 | 演算結果が表現できる範囲を超える場合に、上限または下限で止めた値を返す処理に使用する。 | [`u32::saturating_add`](https://doc.rust-lang.org/std/primitive.u32.html#method.saturating_add) | 動詞句 | 制御 |
+| `wrapping` + 演算名 | 演算結果が表現できる範囲を超える場合に、あふれた分を切り捨てた値を返す処理に使用する。 | [`u32::wrapping_add`](https://doc.rust-lang.org/std/primitive.u32.html#method.wrapping_add) | 動詞句 | 制御 |
 | `spawn` | 独立して実行されるスレッド、タスク、プロセスなどを開始する処理に使用する。開始した処理を監視または終了待機する必要がある場合は、`handle` を返す。 | `spawn_worker`、[`thread::spawn`](https://doc.rust-lang.org/std/thread/fn.spawn.html) | 動詞 | 制御 |
 | `take` | 保持している値を取り出し、元の場所を空の状態または既定値へ置き換える処理に使用する。 | `take_message`、[`mem::take`](https://doc.rust-lang.org/std/mem/fn.take.html) | 動詞 | 制御 |
 | `replace` | 保持している値を新しい値へ置き換え、以前の値を返す処理に使用する。単に削除する処理には使用しない。 | `replace_config`、[`mem::replace`](https://doc.rust-lang.org/std/mem/fn.replace.html) | 動詞 | 制御 |
@@ -358,8 +361,8 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `contains` | 指定した要素またはキーを含むか判定する処理に使用する。 | [`contains(item)`](https://doc.rust-lang.org/std/collections/struct.HashSet.html#method.contains) | 動詞 | 集合 |
 | `sort` | 要素を規則に従って並べ替える処理に使用する。 | [`sort()`](https://doc.rust-lang.org/std/primitive.slice.html#method.sort) | 動詞 | 集合 |
 | `entry` | 指定キーのエントリを返す処理に使用する。存在する場合は既存エントリ、存在しない場合は空エントリを返し、照会と挿入を一度の探索で行えるようにする。 | [`entry(key)`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.entry) | 名詞 | 集合 |
-| `get_or_insert` | 対応する要素が存在する場合はその要素を返し、存在しない場合は指定値を挿入して返す処理に使用する。 | [`get_or_insert(value)`](https://doc.rust-lang.org/std/option/enum.Option.html#method.get_or_insert) | 動詞句 | 集合 |
-| `or_default` | 対応する要素が存在する場合はその要素を返し、存在しない場合はデフォルト値を挿入して返す処理に使用する。 | [`Entry::or_default`](https://doc.rust-lang.org/std/collections/hash_map/enum.Entry.html#method.or_default)、[`Option::get_or_insert_default`](https://doc.rust-lang.org/std/option/enum.Option.html#method.get_or_insert_default) | 動詞句 | 集合 |
+| `get_or_insert` | 対応する要素が存在する場合はその要素を返し、存在しない場合は指定値を挿入して返す処理に使用する。 | [`get_or_insert(value)`](https://doc.rust-lang.org/std/option/enum.Option.html#method.get_or_insert)、[`Option::get_or_insert_default`](https://doc.rust-lang.org/std/option/enum.Option.html#method.get_or_insert_default) | 動詞句 | 集合 |
+| `or_default` | 対応する要素が存在する場合はその要素を返し、存在しない場合はデフォルト値を挿入して返す処理に使用する。 | [`Entry::or_default`](https://doc.rust-lang.org/std/collections/hash_map/enum.Entry.html#method.or_default) | 動詞句 | 集合 |
 
 ---
 
