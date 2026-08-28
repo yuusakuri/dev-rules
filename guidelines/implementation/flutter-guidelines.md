@@ -42,6 +42,7 @@
 | `apps/<app-name>/lib/l10n/` | `apps/myproject-client/lib/l10n/app_ja.arb` | ARB形式の翻訳データだけを配置する。生成コードは置かない。文言へ埋め込む数値、日付の書式は、プレースホルダーの`format`で指定する。 |
 | `apps/<app-name>/lib/generated/l10n/` | `apps/myproject-client/lib/generated/l10n/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。`l10n.yaml`の`output-dir`で出力先を`lib/l10n/`の外へ指定する。手動では編集しない。 |
 | `apps/<app-name>/lib/locale_format/` | `apps/myproject-client/lib/locale_format/currency_format.dart` | 文言の外側で使う数値、日付、通貨などの書式処理を`intl`パッケージで定義する。 |
+| `apps/<app-name>/lib/core/<capability>/` | `apps/myproject-client/lib/core/clock/clock.dart` | 通信を伴わずに実行環境から得る値（時刻、識別子の発番、乱数など）の契約と実装を配置する。 |
 | `apps/<app-name>/lib/infra/` | `apps/myproject-client/lib/infra/sentry/client.dart` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置する。呼び出すのはComposition Root（`app/bootstrap/`）と、そこから呼ばれる構成単位、テストに限る。Featureの業務処理からは呼び出さない。 |
 | `apps/<app-name>/lib/ui/` | `apps/myproject-client/lib/ui/ui.dart`、`apps/myproject-client/lib/ui/button/primary_button.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品を役割ごとのサブフォルダへ配置する。公開するUI部品は`ui.dart`から`export`する。 |
 | `apps/<app-name>/lib/features/<feature>/<feature>.dart` | `apps/myproject-client/lib/features/auth/auth.dart` | Feature外へ公開する型、処理、Screen、Widget、BLoC、Handler、Repositoryと外部システム境界の契約、各実装の生成関数だけを`export`する。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のWidgetだけを参照する。 |
@@ -55,7 +56,7 @@
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_repository.dart` | `apps/myproject-client/lib/features/checkout/repositories/cart_repository.dart` | Featureが必要とするデータ操作をRepositoryの契約として定義する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<storage>_<resource>_repository.dart` | `apps/myproject-client/lib/features/checkout/repositories/sqlite_cart_repository.dart` | データベース、ファイル、端末ストレージなど、永続化先別のRepository実装を定義する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<storage>_<resource>_record.dart` | `apps/myproject-client/lib/features/checkout/repositories/sqlite_cart_record.dart` | データベース、ファイル、端末ストレージへ保存する形式とFeature内の型との変換を定義する。 |
-| `apps/<app-name>/lib/features/<feature>/connectors/` | `apps/myproject-client/lib/features/payment/connectors/payment_client.dart` | 外部資源（外部システム、通知、デバイス、時刻など）を利用する契約、接続先別の実装、外部データ形式との変換を配置する。 |
+| `apps/<app-name>/lib/features/<feature>/connectors/` | `apps/myproject-client/lib/features/payment/connectors/payment_client.dart` | ネットワーク越しの外部サービスを利用する契約、接続先別の実装、外部データ形式との変換を配置する。 |
 | `apps/<app-name>/lib/features/<feature>/connectors/<capability>.dart` | `apps/myproject-client/lib/features/payment/connectors/payment_client.dart` | Featureが必要とする外部資源の操作を契約として定義する（例: `PaymentClient`、`Mailer`、`Clock`）。ファイル名は型名に合わせる。 |
 | `apps/<app-name>/lib/features/<feature>/connectors/<system>_<capability>.dart` | `apps/myproject-client/lib/features/payment/connectors/stripe_client.dart` | 接続先のシステムまたはサービスごとの実装を定義する。 |
 | `apps/<app-name>/lib/features/<feature>/connectors/<system>_<operation>_request.dart` | `apps/myproject-client/lib/features/payment/connectors/stripe_create_payment_request.dart` | 外部システムへ送るデータ形式とFeature内の型からの変換を定義する。 |

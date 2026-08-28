@@ -4,7 +4,7 @@
 
 1. [概要](#1-概要)
 2. [フォルダ構成](#2-フォルダ構成)
-3. [Repository、外部システム境界の実装](#3-repository外部システム境界の実装)
+3. [契約と実装の受け渡し](#3-契約と実装の受け渡し)
 4. [検証](#4-検証)
 5. [参考資料](#5-参考資料)
 
@@ -27,6 +27,8 @@
 | `apps/<app-name>/src/app/` | `apps/myproject-cli/src/app/commands.rs` | 起動と実行経路との接続を担う内部モジュールを配置する。 |
 | `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-cli/src/app/bootstrap/mod.rs`、`apps/myproject-cli/src/app/bootstrap/postgres.rs` | 依存関係を生成して接続するComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにモジュールを分ける。 |
 | `apps/<app-name>/src/app/state.rs` | `apps/myproject-api/src/app/state.rs` | Webフレームワークへ登録する共有状態を一つの型へまとめる場合だけ使用する。 |
+| `apps/<app-name>/src/core.rs` | `apps/myproject-cli/src/core.rs` | 複数のFeatureが共有する基盤のモジュールを宣言する。 |
+| `apps/<app-name>/src/core/<capability>/` | `apps/myproject-cli/src/core/clock.rs`、`apps/myproject-cli/src/core/clock/system_clock.rs` | 通信を伴わずに実行環境から得る値（時刻、識別子の発番、乱数など）の契約と実装を配置する。 |
 | `apps/<app-name>/src/infra.rs` | `apps/myproject-cli/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-cli/src/infra/postgres.rs`、`apps/myproject-cli/src/infra/postgres/connection_pool.rs` | 外部資源ごとのサブモジュールを宣言し、その内部モジュールを配置する。 |
 | `apps/<app-name>/src/features.rs` | `apps/myproject-cli/src/features.rs` | Featureモジュールを宣言する。 |
@@ -41,7 +43,7 @@
 | `apps/<app-name>/src/features/<feature>/handlers/` | `apps/myproject-cli/src/features/auth/handlers/sign_in_handler.rs` | Handlerの内部モジュールを配置する。 |
 | `apps/<app-name>/src/features/<feature>/repositories.rs` | `apps/myproject-cli/src/features/checkout/repositories.rs` | Featureが所有するデータを永続化ストレージへ保存、取得する契約と実装を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-cli/src/features/checkout/repositories/postgres_order_repository.rs` | 保存先ごとのRepository実装と、保存形式との変換を行う内部モジュールを配置する。 |
-| `apps/<app-name>/src/features/<feature>/connectors.rs` | `apps/myproject-cli/src/features/payment/connectors.rs` | 外部資源（外部システム、通知、デバイス、時刻など）を利用する契約と実装を所有するモジュール。 |
+| `apps/<app-name>/src/features/<feature>/connectors.rs` | `apps/myproject-cli/src/features/payment/connectors.rs` | ネットワーク越しの外部サービスを利用する契約と実装を所有するモジュール。 |
 | `apps/<app-name>/src/features/<feature>/connectors/` | `apps/myproject-cli/src/features/payment/connectors/stripe_client.rs` | 接続先別の実装と、外部データ形式との変換を行う内部モジュールを配置する。ファイル名は実装の型名に合わせる（例: `stripe_client.rs`、`smtp_mailer.rs`）。 |
 | `apps/<app-name>/src/ui.rs` | `apps/myproject-cli/src/ui.rs` | 業務上の判断を持たないUIの公開境界。UIを持つ実行単位だけで使用する。 |
 | `apps/<app-name>/src/ui/` | `apps/myproject-cli/src/ui/primary_button.rs` | UIの内部モジュールを配置する。 |
@@ -58,67 +60,13 @@
 
 ---
 
-## 3. Repository、外部システム境界の実装
+## 3. 契約と実装の受け渡し
 
-永続化と、永続化以外の外部システムとの境界の契約はtraitとして定義する。実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
+永続化と外部資源の境界の契約はtraitとして定義する。契約と実装の置き場所は、[外部依存の配置規則](../core/external-dependency-guidelines.md)に従う。
 
-traitの名前は、[共通設計原則](../core/software-design-guidelines.md)の「命名」に従い、外部に接続することではなく、利用側へ何を提供するかで決める。実装の型名には接続先、方式、供給元を含める。
+実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
 
-```rust
-// 責務を表す既存の名前を使う。`TimeProvider`、`Clock`と同じ形。
-trait Clock {
-    fn now(&self) -> DateTime<Utc>;
-}
-
-struct SystemClock;
-
-impl Clock for SystemClock {
-    fn now(&self) -> DateTime<Utc> {
-        Utc::now()
-    }
-}
-
-// `Generator`と同じく、生成する対象を名前にする。
-trait OrderIdGenerator {
-    fn generate(&self) -> OrderId;
-}
-
-// 外部サービスのAPIを呼び出す契約は、接続先ではなく呼び出す機能で命名する。
-trait PaymentClient {
-    async fn authorize(&self, request: &AuthorizationRequest) -> Result<PaymentId, PaymentError>;
-}
-
-struct StripeClient {
-    http: reqwest::Client,
-}
-```
-
-```rust
-// NG: 外部資源へ触れることを理由に接続形態の語を足した契約。
-// 名前が接続の形しか表さず、何を提供するのかが分からない。
-trait SystemClockGateway {
-    fn now(&self) -> DateTime<Utc>;
-}
-
-trait UuidGateway {
-    fn generate(&self) -> Uuid;
-}
-```
-
-契約を受け取る側は、ジェネリクスとトレイト境界（型パラメータまたは`impl Trait`）で受け取り、静的ディスパッチで解決することを基本とする。
-
-```rust
-// 基本形：静的ディスパッチ。実装はコンパイル時に1つに決まる。
-struct OrderService<R: OrderRepository, C: Clock> {
-    repository: R,
-    clock: C,
-}
-
-// 実行時に複数の実装を切り替える必要がある場合だけ動的ディスパッチを使う。
-struct NotificationDispatcher {
-    notifiers: Vec<Box<dyn Notifier>>,
-}
-```
+契約を受け取る側は、型パラメータまたは`impl Trait`のトレイト境界で受け取り、静的ディスパッチで解決する。実行時に複数の実装を切り替える必要がある場合だけ、`Box<dyn Trait>`による動的ディスパッチを使う。
 
 ---
 

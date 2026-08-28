@@ -16,6 +16,8 @@
 
 本書は、アプリケーションの設計規則を定義する。本書は、[共通設計原則](software-design-guidelines.md)を前提とする。
 
+外部システムと実行環境に依存する処理の置き場所は、[外部依存の配置規則](external-dependency-guidelines.md)に従う。
+
 ---
 
 ## 2. フォルダ構成
@@ -43,13 +45,14 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | `<source-root>/app/` | `app/router` | 起動、ルーティング、実行経路との接続を配置する。 |
 | `<source-root>/app/bootstrap/` | `app/bootstrap/postgres`、`app/bootstrap/stripe` | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
 | `<source-root>/core/` | `core/errors/` | 複数のFeatureが共有する基盤を配置する。 |
+| `<source-root>/core/<capability>/` | `core/clock`、`core/id` | 通信を伴わずに実行環境から得る値（時刻、識別子の発番、乱数など）の契約と実装を配置する。`<capability>`には供給する対象を表す名前を使う。 |
 | `<source-root>/infra/` | `infra/logger` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置し、Composition Rootから呼び出す。 |
 | `<source-root>/infra/<resource>/` | `infra/postgres/connection_pool`、`infra/sentry/client` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryや外部システム境界の実装は置かない。 |
 | `<source-root>/features/<feature>/` | `features/auth` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | `features/auth/presentation` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/handlers/` | `features/auth/handlers` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/repositories/` | `features/checkout/repositories/postgres_order_repository` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。 |
-| `<source-root>/features/<feature>/connectors/` | `features/payment/connectors/stripe_client` | 外部資源（外部システム、通知、デバイス、時刻など）を利用する契約と、接続先別の実装を配置する。 |
+| `<source-root>/features/<feature>/connectors/` | `features/payment/connectors/stripe_client` | ネットワーク越しの外部サービスを利用する契約と、接続先別の実装を配置する。 |
 | `<source-root>/ui/` | `ui/primary_button` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 | `<source-root>/localization/` | `localization/ja` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
 | `<source-root>/locale_format/` | `locale_format/number_format` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
