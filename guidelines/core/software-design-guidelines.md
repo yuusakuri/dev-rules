@@ -262,7 +262,7 @@ let mut dispatcher = RequestDispatcher {
 };
 dispatcher
     .on_sync_mut::<lsp_ext::ReloadWorkspaceRequest>(handlers::handle_workspace_reload)
-    .on::<NO_RETRY, lsp_types::DefinitionRequest>(handlers::handle_goto_definition)
+    .on::<RETRY, lsp_ext::ViewFileTextRequest>(handlers::handle_view_file_text)
     // ...
 ```
 
@@ -273,11 +273,12 @@ pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow:
     // ...
 }
 
-pub(crate) fn handle_goto_definition(
+pub(crate) fn handle_view_file_text(
     snap: GlobalStateSnapshot,
-    params: lsp_types::DefinitionParams,
-) -> anyhow::Result<Option<lsp_types::DefinitionResponse>> {
-    // ...
+    params: lsp_types::TextDocumentIdentifier,
+) -> anyhow::Result<String> {
+    let file_id = try_default!(from_proto::file_id(&snap, &params.uri)?);
+    Ok(snap.analysis.file_text(file_id)?.to_string())
 }
 ```
 
@@ -297,6 +298,23 @@ async fn handle_create_user(
     state.user_repository.save_user(&user);
 
     Json(user)
+}
+```
+
+処理が状態の一部しか使わない場合は、その部分だけを受け取る。次の例は、共有状態からRepositoryだけを取り出してハンドラーへ渡している。
+
+```rust
+impl FromRef<AppState> for Arc<dyn UserRepository> {
+    fn from_ref(app_state: &AppState) -> Arc<dyn UserRepository> {
+        app_state.user_repository.clone()
+    }
+}
+
+async fn handle_get_user(
+    State(user_repository): State<Arc<dyn UserRepository>>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<User>, StatusCode> {
+    // ...
 }
 ```
 
@@ -719,7 +737,9 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::run`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L177-L218) | 同じコード例の抜粋元。状態を所有する型自身がイベントループを回す箇所。掲載時に起動時の登録処理と終了通知の判定を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。読み取りだけの処理へ渡す読み取り専用の型を作る箇所。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::handle_request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L1323-L1396) | 所有した状態を処理へ渡すコード例の抜粋元。状態を変更する処理は`on_sync_mut`、読み取りだけの処理は`on`で登録する。 |
-| 3. 依存関係の管理 | [rust-analyzer `handlers::request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 状態を受け取る処理のコード例の抜粋元。`&mut GlobalState`と`GlobalStateSnapshot`の2通りの受け取り方。 |
+| 3. 依存関係の管理 | [rust-analyzer `handle_workspace_reload`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 状態を変更する処理のコード例の抜粋元。`&mut GlobalState`を受け取る。 |
+| 3. 依存関係の管理 | [rust-analyzer `handle_view_file_text`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L200-L206) | 読み取りだけの処理のコード例の抜粋元。`GlobalStateSnapshot`からファイルの内容を読む。 |
+| 3. 依存関係の管理 | [axum `State`のSubstates](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/axum/src/extract/state.rs#L169-L215) | 部分状態を受け取るコード例の抜粋元。`FromRef`で共有状態から必要な値だけを取り出す。 |
 | 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「静的に決まる依存関係と実行時に選ぶ依存関係で受け取り方を変える」「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時にログの初期化と、trait objectとジェネリクスの両方を`nest`で同時に公開する構成を削っている。 |
 | 3. 依存関係の管理 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | フレームワークが要求する共有状態の設定方法と、必要な部分状態を`FromRef`で取り出す方法を説明する。 |
 | 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
