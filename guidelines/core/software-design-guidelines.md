@@ -294,7 +294,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。 | `JsonDeserializer`、[`serde`の`Deserializer`](https://docs.rs/serde/latest/serde/trait.Deserializer.html) | 名詞 | 変換 |
 | `record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | [`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) | 名詞 | データ |
 | `id` | 識別子を表す型の名前は `id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | `UserId`、[`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
-| `event` | すでに起きた出来事を表す型に使用する。名前は過去形にし、生成後は変更しない。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html)、[`cqrs-es`の`DomainEvent`](https://docs.rs/cqrs-es/latest/cqrs_es/trait.DomainEvent.html) | 名詞 | データ |
+| `event` | すでに起きた出来事を表す型に使用する。名前は過去形にする。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html)、[`cqrs-es`の`DomainEvent`](https://docs.rs/cqrs-es/latest/cqrs_es/trait.DomainEvent.html) | 名詞 | データ |
 | `config` | 実行時に読み込む設定値の集合を表す型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html) | 名詞 | データ |
 | `formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter`、[`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
 | `validate` | 入力が形式、範囲、不変条件などの制約を満たすか検証する操作に使用する。検証専用の型を作らず、検証対象の型へ実装する。 | [`validator`の`Validate`](https://docs.rs/validator/latest/validator/trait.Validate.html) | 動詞 | 解析 |
@@ -308,7 +308,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
 | `connector` | 特定の外部システムやサービスへの接続と、その形式変換をまとめた実装に使用する。接続先を名前に含める。差し替え可能な実装を接続先ごとに並べる場合に使用する。 | `StripeConnector`、`SlackConnector`、[HyperSwitchの`connectors`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors) | 名詞 | 通信 |
 | `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
-| `provider` | 利用側が必要とする値を供給する型に使用する。何を供給するかを名前に含める。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、`ConfigProvider` | 名詞 | データ |
+| `provider` | 値そのものではなく、要求された値や機能を取得または生成して供給する役割に使用する。何を供給するかを名前に含め、役割をより具体的に表せる名前があるときはその名前を優先する。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、`ConfigProvider` | 名詞 | データ |
 | `generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator`、[`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/) | 名詞 | 生成 |
 | `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
 | `mock`、`fake` | テストのために本物の実装を置き換える型に使用する。呼び出しの記録と検証を目的とする場合は `mock`、動作する簡易な代替実装には `fake` を使う。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/)、[`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
