@@ -221,7 +221,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ### 外部システムとの境界を分離する
 
-決済、通知、他サービスのAPI、外部ライブラリ、デバイス、時刻、ID発番、乱数など、永続化以外の外部システムや外部資源を利用する場合は、利用側の目的に沿った操作だけを公開する境界を定義し、外部APIの呼び出し、外部形式との変換、外部SDKの型とエラーを実装内へ閉じ込める。引数、戻り値、エラーは利用側が扱う型で定義し、業務上の判断は利用側で行う。
+外部資源（通知、他サービスのAPI、デバイス、時刻、乱数など）を利用する場合は、利用側の目的に沿った操作を公開する境界を定義し、外部APIの呼び出し、外部形式との変換、外部SDKの型とエラーを実装内へ閉じ込める。引数、戻り値、エラーは利用側が扱う型で定義し、業務上の判断は利用側で行う。
 
 ### 既存モジュールに手を加えずに機能を追加する（Decorator）
 
@@ -245,7 +245,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 外部接続の命名 | 外部通信やインフラストラクチャの処理を、`api`、`data`、`infrastructure` のような抽象的な技術概念で命名、集約しない。実際の接続先システム、サービス、通信対象を明示する（例: `stripe_payment`、`device_hub`）。 |
-| 外部との境界の命名 | 外部システムや外部資源との境界は、外部に接続することではなく、利用側へ何を提供するかで命名する。名前は「単語」から選び、接続形態を表す語を足さない。実装の名前には接続先、方式、供給元を含める。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock` / `SystemClock`、`IdGenerator`、`PaymentClient` / `StripePaymentClient` |
+| 外部との境界の命名 | 外部システムや外部資源との境界は、外部に接続することではなく、利用側へ何を提供するかで命名する。実装の名前には接続先、方式、供給元を含める。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock` / `SystemClock`、`IdGenerator`、`PaymentClient` / `StripeClient` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
@@ -312,7 +312,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator`、[`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/) | 名詞 | 生成 |
 | `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
 | `mock`、`fake` | テストのために本物の実装を置き換える型に使用する。呼び出しの記録と検証を目的とする場合は `mock`、動作する簡易な代替実装には `fake` を使う。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/)、[`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
-| `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含め、呼び出す機能を限定する場合はその機能も名前に含める。 | `StripeClient`、`GitHubClient`、`StripePaymentClient`、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 名詞 | 通信 |
+| `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含め、呼び出す機能を限定する場合はその機能も名前に含める。 | `StripeClient`、`GitHubClient`、`PaymentClient`、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 名詞 | 通信 |
 | `gateway` | 同じ外部機能を提供する複数のサービスを一つの操作へまとめ、接続先を差し替えられるようにする型に使用する。利用側が扱う型で操作を定義し、接続先ごとの違いは実装へ閉じ込めて実装の名前で区別する。 | [`payment_kit`の`PaymentGateway`](https://docs.rs/payment_kit/latest/payment_kit/)、`StripePaymentGateway` | 名詞 | 通信 |
 | `mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。チャネルの送信側を表す `sender` とは区別する。 | `Mailer`、`SmtpMailer`、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) | 名詞 | 通信 |
 | `publisher`、`producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
