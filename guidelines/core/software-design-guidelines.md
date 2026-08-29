@@ -151,16 +151,7 @@ let using_generic = Router::new()
 
 構成には通常のコンストラクターと関数呼び出しを使用する。DIコンテナーを使用する場合も参照箇所は起動点に限定し、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出する。業務処理を担う型や関数はコンテナーへ依存させない。
 
-次の起動点は、受け取った設定と通信路から実行主体を生成し、そのまま実行を開始する。起動点が持つ処理は構成だけで、業務上の判断は実行主体の側にある。
-
-```rust
-pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
-    // ...
-    GlobalState::new(connection.sender, config).run(connection.receiver)
-}
-```
-
-フレームワークを使う場合も、実装の選択は起動点だけで行う。次の起動点は、Repositoryの実装を生成して共有状態へ入れ、ルーティングと受け口を組み立ててから実行を開始する。
+次の起動点は、Repositoryの実装を生成して共有状態へ入れ、ルーティングと受け口を組み立ててから実行を開始する。起動点が持つ処理は構成だけで、業務上の判断は渡された先にある。
 
 ```rust
 #[tokio::main]
@@ -205,9 +196,7 @@ fn search_preprocessor(&mut self, path: &Path) -> io::Result<SearchResult> {
 
 フレームワークが一つの状態型を要求する場合や、イベントループなどの実行主体が複数の状態と資源を同じ期間所有する場合は、利用範囲とライフサイクルが一致する値を専用の型へまとめてよい。複数の値を持つ`State`や`Context`であっても、その型自身が実行状態を管理する責務を持つなら、依存関係を検索するためだけの型とは区別する。型名は、`State`、`Context`、`Dependencies`などの定型で決めず、その型が表す責務に合わせる。
 
-共有状態には、型名や文字列から任意の依存関係を検索する機能を持たせない。HTTPハンドラーなどのフレームワーク境界は、フレームワークの仕組みに従って共有状態全体または必要な部分状態を受け取ってよい。境界から独立した業務処理を呼び出すときは、その処理が必要とする依存関係を個別に渡す。
-
-読み取りだけを行う処理へは、状態全体ではなく、必要な値を写した読み取り専用の型を渡してよい。
+共有状態には、型名や文字列から任意の依存関係を検索する機能を持たせない。HTTPハンドラーなどのフレームワーク境界は、フレームワークの仕組みに従って共有状態を受け取ってよい。処理が状態の一部しか使わない場合は、その部分だけを渡す。
 
 イベントループや状態機械など、共有状態そのものが処理の実行主体である場合は、その型が必要な状態と資源を所有してよい。実際の責務が一つである型を、フィールド数だけを理由に分割しない。
 
@@ -242,47 +231,10 @@ impl GlobalState {
         }
         // ...
     }
-
-    pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
-        GlobalStateSnapshot {
-            config: Arc::clone(&self.config),
-            analysis: self.analysis_host.analysis(),
-            // ...
-        }
-    }
 }
 ```
 
-所有した状態は、利用側に検索させず、処理へ引数として渡す。次の振り分けでは、状態を変更する処理には`&mut GlobalState`を、別スレッドで動く読み取りだけの処理にはスナップショットを渡している。
-
-```rust
-let mut dispatcher = RequestDispatcher {
-    req: Some(req),
-    global_state: self,
-};
-dispatcher
-    .on_sync_mut::<lsp_ext::ReloadWorkspaceRequest>(handlers::handle_workspace_reload)
-    .on::<RETRY, lsp_ext::ViewFileTextRequest>(handlers::handle_view_file_text)
-    // ...
-```
-
-```rust
-pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    state.proc_macro_clients = Arc::from_iter([]);
-    state.build_deps_changed = false;
-    // ...
-}
-
-pub(crate) fn handle_view_file_text(
-    snap: GlobalStateSnapshot,
-    params: lsp_types::TextDocumentIdentifier,
-) -> anyhow::Result<String> {
-    let file_id = try_default!(from_proto::file_id(&snap, &params.uri)?);
-    Ok(snap.analysis.file_text(file_id)?.to_string())
-}
-```
-
-フレームワークが一つの状態型を要求する場合は、その状態を受け取る境界をハンドラーにとどめ、業務処理には必要な依存関係だけを渡す。
+フレームワークが一つの状態型を要求する場合は、その状態を受け取る境界をハンドラーにとどめる。状態全体を使う処理は状態のまま受け取り、一部しか使わない処理はその部分だけを受け取る。
 
 ```rust
 #[derive(Clone)]
@@ -299,11 +251,7 @@ async fn handle_create_user(
 
     Json(user)
 }
-```
 
-処理が状態の一部しか使わない場合は、その部分だけを受け取る。次の例は、共有状態からRepositoryだけを取り出してハンドラーへ渡している。
-
-```rust
 impl FromRef<AppState> for Arc<dyn UserRepository> {
     fn from_ref(app_state: &AppState) -> Arc<dyn UserRepository> {
         app_state.user_repository.clone()
@@ -730,15 +678,8 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [Cargo `main`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/bin/cargo/main.rs#L17-L58) | 起動点で`GlobalContext`を生成し、CLIの実行処理へ渡す実装。 |
 | 3. 依存関係の管理 | [ripgrep `search`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L113-L141) | 「依存関係を明示的に受け渡す」のコード例の抜粋元。掲載時に統計と打ち切り、エラーの分岐を削っている。 |
 | 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の抜粋元。掲載時にエラーへの文脈付与（`map_err`）を削っている。 |
-| 3. 依存関係の管理 | [rust-analyzer `run_server`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L184-L198) | 「起動点で依存関係を構成する」の通信路を開くコード例の抜粋元。 |
-| 3. 依存関係の管理 | [rust-analyzer `run_session`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/session.rs#L105-L169) | 同じコード例の抜粋元。設定を組み立てて`main_loop`へ渡し、終了時にIOスレッドを待ち合わせる箇所。掲載時に両方のエラーを報告する`match`を`?`へ削っている。 |
-| 3. 依存関係の管理 | [rust-analyzer `main_loop`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L41-L72) | 「起動点で依存関係を構成する」の実行主体を生成するコード例の抜粋元。掲載時にプロファイラとスレッド優先度の設定を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L338) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時に約40あるフィールドと、その生成のうち4つ以外を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::run`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L177-L218) | 同じコード例の抜粋元。状態を所有する型自身がイベントループを回す箇所。掲載時に起動時の登録処理と終了通知の判定を削っている。 |
-| 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。読み取りだけの処理へ渡す読み取り専用の型を作る箇所。 |
-| 3. 依存関係の管理 | [rust-analyzer `GlobalState::handle_request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L1323-L1396) | 所有した状態を処理へ渡すコード例の抜粋元。状態を変更する処理は`on_sync_mut`、読み取りだけの処理は`on`で登録する。 |
-| 3. 依存関係の管理 | [rust-analyzer `handle_workspace_reload`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 状態を変更する処理のコード例の抜粋元。`&mut GlobalState`を受け取る。 |
-| 3. 依存関係の管理 | [rust-analyzer `handle_view_file_text`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L200-L206) | 読み取りだけの処理のコード例の抜粋元。`GlobalStateSnapshot`からファイルの内容を読む。 |
 | 3. 依存関係の管理 | [axum `State`のSubstates](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/axum/src/extract/state.rs#L169-L215) | 部分状態を受け取るコード例の抜粋元。`FromRef`で共有状態から必要な値だけを取り出す。 |
 | 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「静的に決まる依存関係と実行時に選ぶ依存関係で受け取り方を変える」「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時にログの初期化と、trait objectとジェネリクスの両方を`nest`で同時に公開する構成を削っている。 |
 | 3. 依存関係の管理 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | フレームワークが要求する共有状態の設定方法と、必要な部分状態を`FromRef`で取り出す方法を説明する。 |
