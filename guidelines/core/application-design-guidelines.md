@@ -42,8 +42,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | --- | --- | --- |
 | `<source-root>/app/` | `app/router` | 起動、ルーティング、実行経路との接続を配置する。 |
 | `<source-root>/app/bootstrap/` | `app/bootstrap/postgres`、`app/bootstrap/stripe` | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
-| `<source-root>/core/` | `core/errors/` | 複数のFeatureが共有する基盤を配置する。 |
-| `<source-root>/core/<capability>/` | `core/clock`、`core/id` | 通信を伴わずに実行環境から得る値（時刻、識別子の発番、乱数など）の契約と実装を配置する。`<capability>`には供給する対象を表す名前を使う。 |
+| `<source-root>/core/<name>/` | `core/errors`、`core/clock` | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。 |
 | `<source-root>/infra/` | `infra/logger` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置し、Composition Rootから呼び出す。 |
 | `<source-root>/infra/<resource>/` | `infra/postgres/connection_pool`、`infra/sentry/client` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryや外部システム境界の実装は置かない。 |
 | `<source-root>/features/<feature>/` | `features/auth` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
@@ -57,45 +56,44 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 ### 外部依存の配置
 
-外部システムと実行環境に依存する処理は、依存先の性質で置き場所を決める。契約と実装は同じフォルダへ置き、実装の名前で接続先、保存先、供給元を区別する。テストで使う代替実装も同じフォルダへ置く。
+外部システムや実行環境に依存する処理は、依存先の性質で置き場所を決める。契約と実装は同じ場所へ置き、実装の名前で接続先や供給元を区別する。テストで使う代替実装も同じ場所へ置く。
 
-| 依存先 | 契約と実装の置き場所 |
+| 依存先 | 置き場所 |
 | --- | --- |
 | 自分が所有するデータの保存先 | `features/<feature>/repositories/` |
-| ネットワーク越しの他者のシステム | `features/<feature>/connectors/` |
-| 通信を伴わずに実行環境から得る値 | `core/<capability>/` |
-| カメラ、位置情報、通知の表示など、端末とOSの機能 | 使うFeatureが一つなら`features/<feature>/connectors/`、複数のFeatureが使うなら`core/<capability>/` |
+| ネットワーク越しの外部サービス | `features/<feature>/connectors/` |
+| 時刻、乱数、識別子の発番など、通信を伴わない供給 | 使うFeatureが一つならそのFeature、複数のFeatureが使うなら`core/<name>/` |
+| カメラ、位置情報、通知の表示など、端末とOSの機能 | 同じ基準で、使うFeatureの数によって決める |
 
-`core/<capability>/`の`<capability>`には、供給する対象を表す名前を入れる。時刻を表す`clock`はその一例であり、対象ごとに同じ形でフォルダを作る。次の表は網羅ではない。
+外部サービスは接続先ごとに実装を分ける。ファイルが増えたら接続先ごとのフォルダへ移し、接続処理と送受信するデータ形式の変換を別のファイルへ分ける。
 
-| `<capability>` | 供給する対象 | 実在する配置 |
-| --- | --- | --- |
-| `clock` | 現在時刻、経過時間 | [zedの`crates/clock/src`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)<br>[bevyの`crates/bevy_time/src`](https://github.com/bevyengine/bevy/tree/main/crates/bevy_time/src)<br>[tokioの`tokio/src/time`](https://github.com/tokio-rs/tokio/tree/master/tokio/src/time) |
-| `id` | 識別子の発番と対応付け | [qdrantの`lib/segment/src/id_tracker`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker)<br>[hyperswitchの`crates/common_utils/src/id_type`](https://github.com/juspay/hyperswitch/tree/main/crates/common_utils/src/id_type)<br>[bevyの`crates/bevy_ecs/src/entity`](https://github.com/bevyengine/bevy/tree/main/crates/bevy_ecs/src/entity) |
-| `random` | 乱数 | [randの`src/rngs`](https://github.com/rust-random/rand/tree/master/src/rngs) |
-| `config` | 設定値、環境変数 | [hyperswitchの`crates/router_env/src`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src) |
-| `secret` | APIキーなどの機密情報の取得 | [hyperswitchの`crates/hyperswitch_interfaces/src`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_interfaces/src) |
-| `crypto` | 署名、ハッシュ、暗号化 | [hyperswitchの`crates/common_utils/src`](https://github.com/juspay/hyperswitch/tree/main/crates/common_utils/src) |
+判断がつかない場合は、その処理を使うFeatureの中に置いて始め、共有する必要が出た時点で`core/<name>/`へ移す。実在するプロジェクトでの配置は「参考資料」に挙げる。
 
-外部サービスは接続先ごとに実装を分ける。関連するファイルが一つで収まるうちは`connectors/<system>_client`のファイルとし、設定と形式変換でファイルが増えたら`connectors/<system>/`のフォルダへ移して、接続処理と形式変換を別のファイルへ分ける。
+### 分割の単位
 
-| 規模 | 配置 | 実在する配置 |
-| --- | --- | --- |
-| ファイル一つ | `connectors/<system>_client` | [zero-to-productionの`src/email_client.rs`](https://github.com/LukeMathWalker/zero-to-production/blob/main/src/email_client.rs) |
-| 複数ファイル | `connectors/<system>/` | [vectorの`src/sinks/clickhouse`](https://github.com/vectordotdev/vector/tree/master/src/sinks/clickhouse)<br>[hyperswitchの`crates/hyperswitch_connectors/src/connectors/stripe`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors/stripe) |
+処理が増えて一つのファイルで追いにくくなったら、対象ごとのモジュールへ分ける。複数の実行単位から使うようになったら、パッケージとして切り出し、実行単位はそのパッケージに依存する。呼び方は言語によって異なるため、次の対応で読み替える。
 
-### 依存方向
+| 単位 | Rust | TypeScript | Dart |
+| --- | --- | --- | --- |
+| ファイル内をまとめる単位 | module | module | library |
+| 依存関係として宣言する単位 | crate | package | package |
+| 一つのリポジトリでまとめる単位 | workspace | workspace | workspace |
 
-| 依存元 | 依存先 |
+切り出したパッケージは、リポジトリの`crates/`や`packages/`など、言語の慣習に沿ったフォルダへ置く。
+
+### 依存の向き
+
+依存の向きは、フォルダではなく役割の間で定める。フォルダはその役割の置き場所であり、言語がモジュールやパッケージの公開範囲を持つ場合は、その仕組みで向きを守らせる。
+
+| 役割 | 依存してよい相手 |
 | --- | --- |
-| `app/`、例外時の`bootstrap/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
-| `core/` | 標準ライブラリと基盤の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
-| `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
-| Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`core/`、`ui/` |
-| Feature内の`handlers/` | 同じFeatureの処理と型、`core/` |
-| Feature内の処理 | 同じFeatureの`repositories/`、`connectors/`の契約と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
-| `repositories/`、`connectors/`の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
-| `ui/` | フレームワークのみに依存し、Featureには依存しない |
+| 起動と構成 | 各Featureの公開API、共有基盤、技術基盤、共有UI部品 |
+| Featureの表示と受け口 | 同じFeatureの処理と型、別Featureの公開API、共有基盤、共有UI部品 |
+| Featureの処理 | 同じFeatureの外部依存の契約と型、別Featureの公開API、共有基盤 |
+| Featureの外部依存の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
+| 共有基盤 | 標準ライブラリと、基盤の表現に必要な外部パッケージのみ |
+| 技術基盤 | 技術基盤の外部SDKとライブラリのみ |
+| 共有UI部品 | UIフレームワークのみ |
 
 ---
 
@@ -163,10 +161,19 @@ Shell スクリプト以外の CLI に適用する。
 
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
-| 2. フォルダ構成 | [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) | 外部との境界をPortとAdapterへ分ける構造を確認する。 |
 | 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を確認する。 |
 | 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を確認する。 |
 | 2. フォルダ構成 | [Designing the infrastructure persistence layer](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design) | 契約を利用側へ置き、実装を差し替え可能にする構成を確認する。 |
+| 2. フォルダ構成 | [zedの`crates/clock/src`](https://github.com/zed-industries/zed/tree/main/crates/clock/src) | 時刻の契約、実装、テスト用の実装を同じ場所へ置く例を確認する。 |
+| 2. フォルダ構成 | [qdrantの`lib/segment/src/id_tracker`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 識別子の契約と、保持方式ごとの実装を並べる例を確認する。 |
+| 2. フォルダ構成 | [vectorの`src/sinks/clickhouse`](https://github.com/vectordotdev/vector/tree/master/src/sinks/clickhouse) | 接続先ごとにフォルダを分け、設定と送信処理をファイルへ分ける例を確認する。 |
+| 2. フォルダ構成 | [hyperswitchの`connectors/stripe`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors/stripe) | 接続先ごとのフォルダで、形式変換を別ファイルへ分ける例を確認する。 |
+| 2. フォルダ構成 | [zero-to-productionの`src`](https://github.com/LukeMathWalker/zero-to-production/tree/main/src) | 接続先が一つのときにファイル一つで持たせる例を確認する。 |
+| 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | モジュールへ分ける時期と、パッケージへ切り出す時期を確認する。 |
+| 2. フォルダ構成 | [Workspaces \| The Cargo Book](https://doc.rust-lang.org/cargo/reference/workspaces.html) | 複数のパッケージを一つのリポジトリでまとめる仕組みを確認する。 |
+| 2. フォルダ構成 | [Pub workspaces \| Dart](https://dart.dev/tools/pub/workspaces) | Dartで複数のパッケージを一つのリポジトリでまとめる仕組みを確認する。 |
+| 2. フォルダ構成 | [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) | 依存の向きを内側へそろえる規則を確認する。 |
+| 2. フォルダ構成 | [Guide to app architecture \| Android Developers](https://developer.android.com/topic/architecture) | 層の間で依存の向きを一方向に保つ構成を確認する。 |
 | 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みを分離する条件と構成を確認する。 |
 | 4. セキュリティ | [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) | 外部入力を受け取る境界で検証する項目と方法を確認する。 |
 | 4. セキュリティ | [Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | 機密情報の保存、利用、記録を安全に扱う方法を確認する。 |

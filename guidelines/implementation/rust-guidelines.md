@@ -27,8 +27,8 @@
 | `apps/<app-name>/src/app/` | `apps/myproject-cli/src/app/commands.rs` | 起動と実行経路との接続を担う内部モジュールを配置する。 |
 | `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-cli/src/app/bootstrap/mod.rs`、`apps/myproject-cli/src/app/bootstrap/postgres.rs` | 依存関係を生成して接続するComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにモジュールを分ける。 |
 | `apps/<app-name>/src/app/state.rs` | `apps/myproject-api/src/app/state.rs` | Webフレームワークへ登録する共有状態を一つの型へまとめる場合だけ使用する。 |
-| `apps/<app-name>/src/core.rs` | `apps/myproject-cli/src/core.rs` | 複数のFeatureが共有する基盤のモジュールを宣言する。 |
-| `apps/<app-name>/src/core/<capability>/` | `apps/myproject-cli/src/core/clock.rs`、`apps/myproject-cli/src/core/clock/system_clock.rs` | 通信を伴わずに実行環境から得る値（時刻、識別子の発番、乱数など）の契約と実装を配置する。 |
+| `apps/<app-name>/src/core.rs` | `apps/myproject-cli/src/core.rs` | 共有する基盤のモジュールを宣言する。 |
+| `apps/<app-name>/src/core/<name>/` | `apps/myproject-cli/src/core/errors.rs`、`apps/myproject-cli/src/core/clock/system_clock.rs` | 複数のFeatureが共有する基盤を、対象ごとの内部モジュールへ配置する。 |
 | `apps/<app-name>/src/infra.rs` | `apps/myproject-cli/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。 |
 | `apps/<app-name>/src/infra/` | `apps/myproject-cli/src/infra/postgres.rs`、`apps/myproject-cli/src/infra/postgres/connection_pool.rs` | 外部資源ごとのサブモジュールを宣言し、その内部モジュールを配置する。 |
 | `apps/<app-name>/src/features.rs` | `apps/myproject-cli/src/features.rs` | Featureモジュールを宣言する。 |
