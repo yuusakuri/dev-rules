@@ -16,8 +16,6 @@
 
 本書は、アプリケーションの設計規則を定義する。本書は、[共通設計原則](software-design-guidelines.md)を前提とする。
 
-外部システムと実行環境に依存する処理の置き場所は、[外部依存の配置規則](external-dependency-guidelines.md)に従う。
-
 ---
 
 ## 2. フォルダ構成
@@ -56,6 +54,35 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | `<source-root>/ui/` | `ui/primary_button` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 | `<source-root>/localization/` | `localization/ja` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
 | `<source-root>/locale_format/` | `locale_format/number_format` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
+
+### 外部依存の配置
+
+外部システムと実行環境に依存する処理は、依存先の性質で置き場所を決める。契約と実装は同じフォルダへ置き、実装の名前で接続先、保存先、供給元を区別する。テストで使う代替実装も同じフォルダへ置く。
+
+| 依存先 | 契約と実装の置き場所 |
+| --- | --- |
+| 自分が所有するデータの保存先 | `features/<feature>/repositories/` |
+| ネットワーク越しの他者のシステム | `features/<feature>/connectors/` |
+| 通信を伴わずに実行環境から得る値 | `core/<capability>/` |
+| カメラ、位置情報、通知の表示など、端末とOSの機能 | 使うFeatureが一つなら`features/<feature>/connectors/`、複数のFeatureが使うなら`core/<capability>/` |
+
+`core/<capability>/`の`<capability>`には、供給する対象を表す名前を入れる。時刻を表す`clock`はその一例であり、対象ごとに同じ形でフォルダを作る。次の表は網羅ではない。
+
+| `<capability>` | 供給する対象 | 実在する配置 |
+| --- | --- | --- |
+| `clock` | 現在時刻、経過時間 | [zedの`crates/clock/src`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)<br>[bevyの`crates/bevy_time/src`](https://github.com/bevyengine/bevy/tree/main/crates/bevy_time/src)<br>[tokioの`tokio/src/time`](https://github.com/tokio-rs/tokio/tree/master/tokio/src/time) |
+| `id` | 識別子の発番と対応付け | [qdrantの`lib/segment/src/id_tracker`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker)<br>[hyperswitchの`crates/common_utils/src/id_type`](https://github.com/juspay/hyperswitch/tree/main/crates/common_utils/src/id_type)<br>[bevyの`crates/bevy_ecs/src/entity`](https://github.com/bevyengine/bevy/tree/main/crates/bevy_ecs/src/entity) |
+| `random` | 乱数 | [randの`src/rngs`](https://github.com/rust-random/rand/tree/master/src/rngs) |
+| `config` | 設定値、環境変数 | [hyperswitchの`crates/router_env/src`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src) |
+| `secret` | APIキーなどの機密情報の取得 | [hyperswitchの`crates/hyperswitch_interfaces/src`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_interfaces/src) |
+| `crypto` | 署名、ハッシュ、暗号化 | [hyperswitchの`crates/common_utils/src`](https://github.com/juspay/hyperswitch/tree/main/crates/common_utils/src) |
+
+外部サービスは接続先ごとに実装を分ける。関連するファイルが一つで収まるうちは`connectors/<system>_client`のファイルとし、設定と形式変換でファイルが増えたら`connectors/<system>/`のフォルダへ移して、接続処理と形式変換を別のファイルへ分ける。
+
+| 規模 | 配置 | 実在する配置 |
+| --- | --- | --- |
+| ファイル一つ | `connectors/<system>_client` | [zero-to-productionの`src/email_client.rs`](https://github.com/LukeMathWalker/zero-to-production/blob/main/src/email_client.rs) |
+| 複数ファイル | `connectors/<system>/` | [vectorの`src/sinks/clickhouse`](https://github.com/vectordotdev/vector/tree/master/src/sinks/clickhouse)<br>[hyperswitchの`crates/hyperswitch_connectors/src/connectors/stripe`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors/stripe) |
 
 ### 依存方向
 
@@ -136,6 +163,10 @@ Shell スクリプト以外の CLI に適用する。
 
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
+| 2. フォルダ構成 | [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) | 外部との境界をPortとAdapterへ分ける構造を確認する。 |
+| 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を確認する。 |
+| 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を確認する。 |
+| 2. フォルダ構成 | [Designing the infrastructure persistence layer](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design) | 契約を利用側へ置き、実装を差し替え可能にする構成を確認する。 |
 | 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みを分離する条件と構成を確認する。 |
 | 4. セキュリティ | [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) | 外部入力を受け取る境界で検証する項目と方法を確認する。 |
 | 4. セキュリティ | [Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | 機密情報の保存、利用、記録を安全に扱う方法を確認する。 |

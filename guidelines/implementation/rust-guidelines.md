@@ -62,7 +62,7 @@
 
 ## 3. 契約と実装の受け渡し
 
-永続化と外部資源の境界の契約はtraitとして定義する。契約と実装の置き場所は、[外部依存の配置規則](../core/external-dependency-guidelines.md)に従う。
+永続化と外部資源の境界の契約はtraitとして定義する。契約と実装の置き場所は、[アプリケーション設計規則](../core/application-design-guidelines.md)の「外部依存の配置」に従う。
 
 実行単位ごとに使用する実装は`app/bootstrap/`のComposition Rootで決定し、具体型として構築してFeatureへ渡す。
 
