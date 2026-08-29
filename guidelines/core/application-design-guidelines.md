@@ -38,34 +38,38 @@
 
 Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
 
-外部システムや実行環境に依存する処理は、契約と実装を同じ場所へ置き、実装の名前で接続先や供給元を区別する。テストで使う代替実装も同じ場所へ置く。使うFeatureが一つのうちはそのFeatureへ置き、複数のFeatureが使うようになったら`core/<name>/`へ移す。
+外部システムや実行環境に依存する処理は、契約と実装を同じ場所へ置き、実装の名前で接続先や供給元を区別する。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `<source-root>/app/` | `app/router` | 起動、ルーティング、実行経路との接続を配置する。 |
 | `<source-root>/app/bootstrap/` | `app/bootstrap/postgres`、`app/bootstrap/stripe` | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
 | `<source-root>/core/<name>/` | [`core/errors`](https://github.com/juspay/hyperswitch/blob/main/crates/common_utils/src/errors.rs)、[`core/clock`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)、[`core/id`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。時刻、乱数、識別子の発番のように通信を伴わない供給は、契約と実装をここへ置く。 |
-| `<source-root>/infra/<technology>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool) | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、Composition Rootから呼び出す。Feature固有のRepositoryや外部サービスの実装は置かない。 |
+| `<source-root>/infra/<technology>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool) | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、Composition Rootから呼び出す。 |
 | `<source-root>/features/<feature>/` | `features/auth` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | `features/auth/presentation` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/handlers/` | `features/auth/handlers` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/repositories/` | `features/checkout/repositories/postgres_order_repository` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と、保存先別の実装を配置する。 |
-| `<source-root>/features/<feature>/connectors/` | [`features/notification/connectors/email_client`](https://github.com/LukeMathWalker/zero-to-production/blob/main/src/email_client.rs)、[`features/payment/connectors/stripe/`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors/stripe)、[`features/observability/connectors/clickhouse/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/clickhouse) | ネットワーク越しの外部サービスを利用する契約と、接続先別の実装を配置する。ファイルが増えた接続先はフォルダへまとめ、接続処理とデータ形式の変換を分ける。 |
+| `<source-root>/features/<feature>/connectors/` | [`features/notification/connectors/email_client`](https://github.com/LukeMathWalker/zero-to-production/blob/main/src/email_client.rs)、[`features/payment/connectors/stripe/`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors/stripe)、[`features/observability/connectors/clickhouse/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/clickhouse) | ネットワーク越しの外部サービスを利用する契約と、接続先別の実装を配置する。 |
 | `<source-root>/ui/` | `ui/primary_button` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
-| `<source-root>/<localization>/` | `l10n`、`localization` | 言語ごとの翻訳データと表示言語の選択を配置する。フォルダ名は言語またはフレームワークの慣習に従う。翻訳データ以外のコードと生成物を混在させない。 |
+| `<source-root>/<localization>/` | `l10n`、`localization` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
 | `<source-root>/locale_format/` | `locale_format/number_format` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
 
 例のリンク先は、そのフォルダ名を実際に使っているプロジェクトを示す。
 
 ### 分割の単位
 
-処理が増えて一つのファイルで追いにくくなったら、対象ごとのモジュールへ分ける。複数の実行単位から使うようになったら、パッケージとして切り出し、実行単位はそのパッケージに依存する。呼び方は言語によって異なるため、次の対応で読み替える。
+処理が増えて一つのファイルで追いにくくなったら、対象ごとのモジュールへ分ける。複数の実行単位から使うようになったら、パッケージとして切り出し、実行単位はそのパッケージを依存関係として宣言する。
+
+呼び方は言語によって異なるため、次の対応で読み替える。
 
 | 単位 | Rust | TypeScript | Dart |
 | --- | --- | --- | --- |
-| ファイル内をまとめる単位 | module | module | library |
-| 依存関係として宣言する単位 | crate | package | package |
-| 一つのリポジトリでまとめる単位 | workspace | workspace | workspace |
+| モジュール | module | module | library |
+| パッケージ | package（`Cargo.toml`） | package（`package.json`） | package（`pubspec.yaml`） |
+| ワークスペース | workspace | workspace | workspace |
+
+Rustのパッケージは一つ以上のcrateを含み、crateはコンパイラーが一度に扱う単位を指す。依存関係として宣言する相手はcrateではなくパッケージになる。
 
 切り出したパッケージは、リポジトリの`crates/`や`packages/`など、言語の慣習に沿ったフォルダへ置く。
 
