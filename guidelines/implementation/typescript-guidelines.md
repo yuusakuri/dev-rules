@@ -24,7 +24,7 @@
 | `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、実行経路との接続を配置する。 |
 | `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/stripe.ts` | 依存関係を生成して接続するComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダまたはファイルを分ける。フレームワークにより`app/`に制限や規則がある場合は、`apps/<app-name>/src/bootstrap/`へ配置する。 |
 | `apps/<app-name>/src/core/<name>/` | `apps/myproject-web/src/core/errors/`、`apps/myproject-web/src/core/clock/clock.ts` | 複数のFeatureが共有する基盤を、対象ごとに配置する。 |
-| `apps/<app-name>/src/infra/` | `apps/myproject-web/src/infra/sentry/client.ts` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置し、Composition Rootから呼び出す。 |
+| `apps/<app-name>/src/infra/<technology>/` | `apps/myproject-web/src/infra/logger/`、`apps/myproject-web/src/infra/sentry/client.ts` | 技術基盤の構築処理を、採用した技術ごとに配置し、Composition Rootから呼び出す。 |
 | `apps/<app-name>/src/features/<feature>/` | `apps/myproject-web/src/features/auth/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
 | `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Feature外へ公開する型、関数、Component、Handler、Repositoryと外部システム境界の契約、各実装の生成関数だけをexportする。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のComponentだけを参照する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/screens/` | `apps/myproject-web/src/features/auth/presentation/screens/sign_in_screen.tsx` | ルーティングの遷移先となるScreen Componentを配置する。UIを持つアプリケーションで使用する。 |

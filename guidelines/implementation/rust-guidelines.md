@@ -29,8 +29,8 @@
 | `apps/<app-name>/src/app/state.rs` | `apps/myproject-api/src/app/state.rs` | Webフレームワークへ登録する共有状態を一つの型へまとめる場合だけ使用する。 |
 | `apps/<app-name>/src/core.rs` | `apps/myproject-cli/src/core.rs` | 共有する基盤のモジュールを宣言する。 |
 | `apps/<app-name>/src/core/<name>/` | `apps/myproject-cli/src/core/errors.rs`、`apps/myproject-cli/src/core/clock/system_clock.rs` | 複数のFeatureが共有する基盤を、対象ごとの内部モジュールへ配置する。 |
-| `apps/<app-name>/src/infra.rs` | `apps/myproject-cli/src/infra.rs` | 業務ロジックを持たない技術基盤（DB接続プール、ロガーなど）の構築処理を公開するモジュール。 |
-| `apps/<app-name>/src/infra/` | `apps/myproject-cli/src/infra/postgres.rs`、`apps/myproject-cli/src/infra/postgres/connection_pool.rs` | 外部資源ごとのサブモジュールを宣言し、その内部モジュールを配置する。 |
+| `apps/<app-name>/src/infra.rs` | `apps/myproject-cli/src/infra.rs` | 技術基盤のモジュールを宣言する。 |
+| `apps/<app-name>/src/infra/<technology>/` | `apps/myproject-cli/src/infra/logger.rs`、`apps/myproject-cli/src/infra/postgres/connection_pool.rs` | 技術基盤の構築処理を、採用した技術ごとの内部モジュールへ配置する。 |
 | `apps/<app-name>/src/features.rs` | `apps/myproject-cli/src/features.rs` | Featureモジュールを宣言する。 |
 | `apps/<app-name>/src/features/<feature>.rs` | `apps/myproject-cli/src/features/auth.rs` | Featureのルートモジュール。Feature外へ公開する型、関数、UI部品を定義または再公開する。別Featureは、このモジュールが公開する業務型、処理とその呼び出し契約、再利用用のUI部品だけを参照する。 |
 | `apps/<app-name>/src/features/<feature>/` | `apps/myproject-cli/src/features/auth/` | Featureの内部モジュールを配置する。 |

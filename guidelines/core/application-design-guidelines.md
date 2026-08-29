@@ -38,36 +38,24 @@
 
 Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
 
+外部システムや実行環境に依存する処理は、契約と実装を同じ場所へ置き、実装の名前で接続先や供給元を区別する。テストで使う代替実装も同じ場所へ置く。使うFeatureが一つのうちはそのFeatureへ置き、複数のFeatureが使うようになったら`core/<name>/`へ移す。
+
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `<source-root>/app/` | `app/router` | 起動、ルーティング、実行経路との接続を配置する。 |
 | `<source-root>/app/bootstrap/` | `app/bootstrap/postgres`、`app/bootstrap/stripe` | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
-| `<source-root>/core/<name>/` | `core/errors`、`core/clock` | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。 |
-| `<source-root>/infra/` | `infra/logger` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。関連するファイルが一つだけの場合は直下へ配置し、Composition Rootから呼び出す。 |
-| `<source-root>/infra/<resource>/` | `infra/postgres/connection_pool`、`infra/sentry/client` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryや外部システム境界の実装は置かない。 |
+| `<source-root>/core/<name>/` | `core/errors`、`core/clock` | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。時刻、乱数、識別子の発番のように通信を伴わない供給は、契約と実装をここへ置く。 |
+| `<source-root>/infra/<technology>/` | `infra/logger`、`infra/postgres/connection_pool`、`infra/sentry/client` | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、Composition Rootから呼び出す。Feature固有のRepositoryや外部サービスの実装は置かない。 |
 | `<source-root>/features/<feature>/` | `features/auth` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | `features/auth/presentation` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/handlers/` | `features/auth/handlers` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/repositories/` | `features/checkout/repositories/postgres_order_repository` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。 |
-| `<source-root>/features/<feature>/connectors/` | `features/payment/connectors/stripe_client` | ネットワーク越しの外部サービスを利用する契約と、接続先別の実装を配置する。 |
+| `<source-root>/features/<feature>/repositories/` | `features/checkout/repositories/postgres_order_repository` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と、保存先別の実装を配置する。 |
+| `<source-root>/features/<feature>/connectors/` | `features/payment/connectors/stripe_client`、`features/payment/connectors/stripe/` | ネットワーク越しの外部サービスを利用する契約と、接続先別の実装を配置する。ファイルが増えた接続先はフォルダへまとめ、接続処理とデータ形式の変換を分ける。 |
 | `<source-root>/ui/` | `ui/primary_button` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
-| `<source-root>/localization/` | `localization/ja` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
+| `<source-root>/<localization>/` | `l10n`、`localization` | 言語ごとの翻訳データと表示言語の選択を配置する。フォルダ名は言語またはフレームワークの慣習に従う。翻訳データ以外のコードと生成物を混在させない。 |
 | `<source-root>/locale_format/` | `locale_format/number_format` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
 
-### 外部依存の配置
-
-外部システムや実行環境に依存する処理は、依存先の性質で置き場所を決める。契約と実装は同じ場所へ置き、実装の名前で接続先や供給元を区別する。テストで使う代替実装も同じ場所へ置く。
-
-| 依存先 | 置き場所 |
-| --- | --- |
-| 自分が所有するデータの保存先 | `features/<feature>/repositories/` |
-| ネットワーク越しの外部サービス | `features/<feature>/connectors/` |
-| 時刻、乱数、識別子の発番など、通信を伴わない供給 | 使うFeatureが一つならそのFeature、複数のFeatureが使うなら`core/<name>/` |
-| カメラ、位置情報、通知の表示など、端末とOSの機能 | 同じ基準で、使うFeatureの数によって決める |
-
-外部サービスは接続先ごとに実装を分ける。ファイルが増えたら接続先ごとのフォルダへ移し、接続処理と送受信するデータ形式の変換を別のファイルへ分ける。
-
-判断がつかない場合は、その処理を使うFeatureの中に置いて始め、共有する必要が出た時点で`core/<name>/`へ移す。実在するプロジェクトでの配置は「参考資料」に挙げる。
+実在するプロジェクトでの配置は「参考資料」に挙げる。
 
 ### 分割の単位
 
@@ -83,7 +71,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 ### 依存の向き
 
-依存の向きは、フォルダではなく役割の間で定める。フォルダはその役割の置き場所であり、言語がモジュールやパッケージの公開範囲を持つ場合は、その仕組みで向きを守らせる。
+依存の向きは役割の間で定める。言語がモジュールやパッケージの公開範囲を持つ場合は、その仕組みで向きを守らせる。
 
 | 役割 | 依存してよい相手 |
 | --- | --- |
