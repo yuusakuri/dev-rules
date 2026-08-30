@@ -18,29 +18,17 @@
 
 ## 2. フォルダ構成
 
+ソースルートは`src/`とし、「アプリケーション設計規則」のフォルダ構成をその下へ置く。TypeScript固有の配置を次に示す。
+
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `apps/<app-name>/src/` | `apps/myproject-web/src/` | TypeScriptアプリケーションのソースルート。 |
-| `apps/<app-name>/src/app/` | `apps/myproject-web/src/app/` | 起動、ルーティング、実行経路との接続を配置する。 |
-| `apps/<app-name>/src/app/bootstrap/` | `apps/myproject-web/src/app/bootstrap/stripe.ts` | 依存関係を生成して接続するComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダまたはファイルを分ける。フレームワークにより`app/`に制限や規則がある場合は、`apps/<app-name>/src/bootstrap/`へ配置する。 |
-| `apps/<app-name>/src/infra/` | `apps/myproject-web/src/infra/sentry/client.ts` | 業務ロジックを持たない技術基盤（DB接続プール、ロガー、Crash Reportingなど）の構築処理を配置し、Composition Rootから呼び出す。 |
-| `apps/<app-name>/src/features/<feature>/` | `apps/myproject-web/src/features/auth/` | Featureが所有する型、処理、境界、外部接続を配置する。 |
-| `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Feature外へ公開する型、関数、Component、Handler、RepositoryとGatewayの契約、各実装の生成関数だけをexportする。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のComponentだけを参照する。 |
-| `apps/<app-name>/src/features/<feature>/presentation/screens/` | `apps/myproject-web/src/features/auth/presentation/screens/sign_in_screen.tsx` | ルーティングの遷移先となるScreen Componentを配置する。UIを持つアプリケーションで使用する。 |
+| `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Featureの公開境界。Feature外へ公開する型、関数、Component、Handler、契約、各実装の生成関数だけをexportする。 |
+| `apps/<app-name>/src/features/<feature>/presentation/screens/` | `apps/myproject-web/src/features/auth/presentation/screens/sign_in_screen.tsx` | ルーティングの遷移先となるScreen Componentを配置する。 |
 | `apps/<app-name>/src/features/<feature>/presentation/components/` | `apps/myproject-web/src/features/auth/presentation/components/password_field.tsx` | Featureが所有する表示で再利用するComponentを配置する。別Featureでも再利用するComponentは、`index.ts`から明示的にexportする。 |
 | `apps/<app-name>/src/features/<feature>/presentation/state/` | `apps/myproject-web/src/features/auth/presentation/state/sign_in_store.ts` | Signal、Store、Contextと表示状態の操作を配置する。 |
-| `apps/<app-name>/src/features/<feature>/handlers/` | `apps/myproject-web/src/features/auth/handlers/sign_in_handler.ts` | UIを介さず外部からの要求を受け取る境界（HTTPルートハンドラー、RPC、メッセージキューの購読など）を配置する。業務ロジックは持たせず、Feature内の処理へ委譲する。 |
-| `apps/<app-name>/src/features/<feature>/repositories/` | `apps/myproject-web/src/features/checkout/repositories/indexed_db_cart_repository.ts` | Featureが所有するデータを永続化ストレージへ保存、取得する契約、接続先別の実装、保存形式との変換を配置する。 |
-| `apps/<app-name>/src/features/<feature>/gateways/` | `apps/myproject-web/src/features/payment/gateways/stripe_payment_gateway.ts` | 永続化以外の外部システム、外部サービスと通信する契約、接続先別の実装、外部データ形式との変換を配置する。 |
-| `apps/<app-name>/src/ui/` | `apps/myproject-web/src/ui/primary_button.tsx` | 複数のFeatureで使用する、業務上の判断を持たないComponentとデザイン定義を配置する。UIを持つアプリケーションで使用する。 |
-| `apps/<app-name>/src/localization/` | `apps/myproject-web/src/localization/ja.json` | 表示言語の選択と翻訳データを配置する。 |
-| `apps/<app-name>/src/locale_format/` | `apps/myproject-web/src/locale_format/number_format.ts` | `Intl`による数値、日付、通貨などの書式処理を配置する。翻訳データとは分けて配置する。 |
-| `apps/<app-name>/src/features/<feature>/<path>/<file>.test.ts` | `apps/myproject-web/src/features/auth/sign_in_validator.test.ts` | ロジックの単体テストを実装ファイルと同じフォルダへ配置する。 |
-| `apps/<app-name>/src/features/<feature>/presentation/screens/<screen>.test.tsx` | `apps/myproject-web/src/features/auth/presentation/screens/sign_in_screen.test.tsx` | Screen Componentの表示と操作を実装ファイルと同じフォルダで検証する。 |
-| `apps/<app-name>/src/features/<feature>/presentation/components/<component>.test.tsx` | `apps/myproject-web/src/features/auth/presentation/components/password_field.test.tsx` | Componentテストを実装ファイルと同じフォルダへ配置する。 |
+| `<file>.test.ts`、`<component>.test.tsx` | `apps/myproject-web/src/features/auth/sign_in_validator.test.ts` | 単体テストとComponentテストを、実装ファイルと同じフォルダへ配置する。 |
 | `apps/<app-name>/tests/integration/<feature>.test.ts` | `apps/myproject-web/tests/integration/auth.test.ts` | Feature間またはFeatureと外部I/Oとの結合を検証するテストを配置する。 |
 | `apps/<app-name>/tests/e2e/<flow>.test.ts` | `apps/myproject-web/tests/e2e/sign_in.test.ts` | E2Eテスト。 |
-| `packages/<name>/` | `packages/design-tokens/` | 複数の実行単位から共有するTypeScriptパッケージ。 |
 
 ---
 
