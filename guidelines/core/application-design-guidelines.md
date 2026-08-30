@@ -28,9 +28,9 @@
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `apps/<app-name>/` | `apps/myproject-api/` | 実行単位ごとのアプリケーション。`<app-name>`は任意のアプリ名を指定する。`<project-name>-<responsibility>`を推奨する。 |
-| `apps/<app-name>/config/` | `apps/myproject-api/config/application.yaml` | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
-| `apps/<app-name>/<generated-dir>/` | `apps/myproject-web/dist/` | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
+| `apps/<app-name>/` | [`app/`](https://github.com/android/nowinandroid/tree/main/app) | 実行単位ごとのアプリケーション。`<app-name>`は任意のアプリ名を指定する。`<project-name>-<responsibility>`を推奨する。 |
+| `apps/<app-name>/config/` | [`config/`](https://github.com/juspay/hyperswitch/tree/main/config) | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
+| `apps/<app-name>/<generated-dir>/` | [`target/`](https://doc.rust-lang.org/cargo/guide/build-cache.html) | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
 
 ### ソース構成
 
@@ -38,33 +38,38 @@
 
 Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
 
+外部システムや実行環境に依存する処理は、契約と実装を同じ場所へ置き、実装の名前で接続先や供給元を区別する。
+
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `<source-root>/app/` | `app/router` | ルーティングと実行経路との接続を配置する。言語やフレームワークが起動点の配置を定めている場合は、その配置を優先する。 |
-| `<source-root>/core/` | `core/errors/` | 複数のFeatureが共有する基盤を配置する。 |
-| `<source-root>/infra/` | `infra/logger` | Featureの型や業務ルールに依存しない技術基盤（DB接続プール、ロガーなど）の構築処理を配置する。 |
-| `<source-root>/infra/<resource>/` | `infra/postgres/connection_pool`、`infra/sentry/client` | 関連するファイルが複数ある場合に、構築する外部資源または製品ごとにまとめる。Feature固有のRepositoryやGatewayの実装は置かない。 |
-| `<source-root>/features/<feature>/` | `features/auth` | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
-| `<source-root>/features/<feature>/presentation/` | `features/auth/presentation` | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/handlers/` | `features/auth/handlers` | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/repositories/` | `features/checkout/repositories/postgres_order_repository` | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と接続先別の実装を配置する。 |
-| `<source-root>/features/<feature>/gateways/` | `features/payment/gateways/stripe_payment_gateway` | 永続化以外の外部システム、外部サービス（決済、通知、他サービスのAPI、デバイスなど）と通信する契約と接続先別の実装を配置する。 |
-| `<source-root>/ui/` | `ui/primary_button` | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
-| `<source-root>/localization/` | `localization/ja` | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
-| `<source-root>/locale_format/` | `locale_format/number_format` | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
+| `<source-root>/app/` | [`routing/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | 起動、ルーティング、実行経路との接続を配置する。 |
+| `<source-root>/app/bootstrap/` | [`config/dependencies.dart`](https://github.com/flutter/samples/blob/main/compass_app/app/lib/config/dependencies.dart)、[`di/`](https://github.com/android/nowinandroid/tree/main/core/data/src/main/kotlin/com/google/samples/apps/nowinandroid/core/data/di) | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
+| `<source-root>/core/<name>/` | [`core/errors`](https://github.com/juspay/hyperswitch/blob/main/crates/common_utils/src/errors.rs)、[`core/clock`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)、[`core/id`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。時刻、乱数、識別子の発番のように通信を伴わない供給は、契約と実装をここへ置く。 |
+| `<source-root>/infra/<technology>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool) | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、Composition Rootから呼び出す。 |
+| `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
+| `<source-root>/features/<feature>/presentation/` | [`presentation`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
+| `<source-root>/features/<feature>/handlers/` | [`handler`](https://docs.rs/axum/latest/axum/handler/index.html) | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
+| `<source-root>/features/<feature>/repositories/` | [`data/repositories/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/data/repositories) | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と、保存先別の実装を配置する。 |
+| `<source-root>/features/<feature>/connectors/` | [`features/notification/connectors/email_client`](https://github.com/LukeMathWalker/zero-to-production/blob/main/src/email_client.rs)、[`features/payment/connectors/stripe/`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors/stripe)、[`features/observability/connectors/clickhouse/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/clickhouse) | ネットワーク越しの外部サービスを利用する契約と、接続先別の実装を配置する。 |
+| `<source-root>/ui/` | [`ui/`](https://docs.flutter.dev/app-architecture/case-study) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
+| `<source-root>/<localization>/` | [`l10n`](https://docs.flutter.dev/ui/internationalization) | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
+| `<source-root>/locale_format/` | [`NumberFormat`](https://developer.android.com/reference/android/icu/text/NumberFormat) | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
 
-### 依存方向
+### 分割の単位
 
-| 依存元 | 依存先 |
+処理が増えて一つのファイルで追いにくくなったら、対象ごとのモジュールへ分ける。複数の実行単位から使うようになったら、パッケージとして切り出す。
+
+### 依存の向き
+
+| 役割 | 依存してよい相手 |
 | --- | --- |
-| 起動点、`app/` | 各Featureの公開API、`core/`、`infra/`、`ui/` |
-| `core/` | 標準ライブラリと基盤の表現に必要な外部パッケージのみ。Feature、`infra/`、フレームワーク、外部システムのSDKには依存しない |
-| `infra/` | 技術基盤の外部SDK、ライブラリのみ。Feature、業務型には依存しない |
-| Feature内の`presentation/` | 同じFeatureの処理と型、別Featureが公開する業務型、処理とその呼び出し契約、再利用用のUIコンポーネント、`core/`、`ui/` |
-| Feature内の`handlers/` | 同じFeatureの処理と型、`core/` |
-| Feature内の処理 | 同じFeatureの`repositories/`、`gateways/`の契約と型、別Featureが公開する業務型、処理とその呼び出し契約、`core/` |
-| `repositories/`、`gateways/`の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
-| `ui/` | フレームワークのみに依存し、Featureには依存しない |
+| 起動と構成 | 各Featureの公開API、共有基盤、技術基盤、共有UI部品 |
+| Featureの表示と受け口 | 同じFeatureの処理と型、別Featureの公開API、共有基盤、共有UI部品 |
+| Featureの処理 | 同じFeatureの外部依存の契約と型、別Featureの公開API、共有基盤 |
+| Featureの外部依存の実装 | 対応する契約、同じFeatureの型、外部SDK、外部データ形式 |
+| 共有基盤 | 標準ライブラリと、基盤の表現に必要な外部パッケージのみ |
+| 技術基盤 | 技術基盤の外部SDKとライブラリのみ |
+| 共有UI部品 | UIフレームワークのみ |
 
 ---
 
@@ -132,6 +137,11 @@ Shell スクリプト以外の CLI に適用する。
 
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
+| 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を確認する。 |
+| 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を確認する。 |
+| 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | モジュールへ分ける時期と、パッケージへ切り出す時期を確認する。 |
+| 2. フォルダ構成 | [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) | 依存の向きを内側へそろえる規則を確認する。 |
+| 2. フォルダ構成 | [Guide to app architecture \| Android Developers](https://developer.android.com/topic/architecture) | 層の間で依存の向きを一方向に保つ構成を確認する。 |
 | 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みを分離する条件と構成を確認する。 |
 | 4. セキュリティ | [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) | 外部入力を受け取る境界で検証する項目と方法を確認する。 |
 | 4. セキュリティ | [Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | 機密情報の保存、利用、記録を安全に扱う方法を確認する。 |
