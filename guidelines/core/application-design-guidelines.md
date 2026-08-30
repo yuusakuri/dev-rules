@@ -28,9 +28,9 @@
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `apps/<app-name>/` | [`apps/`](https://turborepo.dev/docs/crafting-your-repository/structuring-a-repository) | 実行単位ごとのアプリケーション。`<app-name>`は任意のアプリ名を指定する。`<project-name>-<responsibility>`を推奨する。 |
-| `apps/<app-name>/config/` | [`config/`](https://laravel.com/docs/12.x/structure#the-config-directory) | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
-| `apps/<app-name>/<generated-dir>/` | [`dist/`](https://vite.dev/config/build-options.html) | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
+| `apps/<app-name>/` | [`app/`](https://github.com/android/nowinandroid/tree/main/app) | 実行単位ごとのアプリケーション。`<app-name>`は任意のアプリ名を指定する。`<project-name>-<responsibility>`を推奨する。 |
+| `apps/<app-name>/config/` | [`config/`](https://github.com/juspay/hyperswitch/tree/main/config) | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
+| `apps/<app-name>/<generated-dir>/` | [`target/`](https://doc.rust-lang.org/cargo/guide/build-cache.html) | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
 
 ### ソース構成
 
@@ -42,18 +42,18 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `<source-root>/app/` | [`app/`](https://laravel.com/docs/12.x/structure#the-root-app-directory) | 起動、ルーティング、実行経路との接続を配置する。 |
-| `<source-root>/app/bootstrap/` | [`bootstrap/`](https://laravel.com/docs/12.x/structure#the-bootstrap-directory) | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
+| `<source-root>/app/` | [`routing/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | 起動、ルーティング、実行経路との接続を配置する。 |
+| `<source-root>/app/bootstrap/` | [`config/dependencies.dart`](https://github.com/flutter/samples/blob/main/compass_app/app/lib/config/dependencies.dart)、[`di/`](https://github.com/android/nowinandroid/tree/main/core/data/src/main/kotlin/com/google/samples/apps/nowinandroid/core/data/di) | 依存関係の実装、設定、生成、接続を決めるComposition Rootを配置する。接続先、外部資源、依存先が扱う領域ごとにフォルダを分ける。フレームワークにより`app/`に制限や規則がある場合は`bootstrap/`へ配置する。 |
 | `<source-root>/core/<name>/` | [`core/errors`](https://github.com/juspay/hyperswitch/blob/main/crates/common_utils/src/errors.rs)、[`core/clock`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)、[`core/id`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。時刻、乱数、識別子の発番のように通信を伴わない供給は、契約と実装をここへ置く。 |
 | `<source-root>/infra/<technology>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool) | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、Composition Rootから呼び出す。 |
 | `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | [`presentation`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/handlers/` | [`handler`](https://docs.rs/axum/latest/axum/handler/index.html) | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/repositories/` | [`Repositories`](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design) | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と、保存先別の実装を配置する。 |
+| `<source-root>/features/<feature>/repositories/` | [`data/repositories/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/data/repositories) | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と、保存先別の実装を配置する。 |
 | `<source-root>/features/<feature>/connectors/` | [`features/notification/connectors/email_client`](https://github.com/LukeMathWalker/zero-to-production/blob/main/src/email_client.rs)、[`features/payment/connectors/stripe/`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors/stripe)、[`features/observability/connectors/clickhouse/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/clickhouse) | ネットワーク越しの外部サービスを利用する契約と、接続先別の実装を配置する。 |
 | `<source-root>/ui/` | [`ui/`](https://docs.flutter.dev/app-architecture/case-study) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 | `<source-root>/<localization>/` | [`l10n`](https://docs.flutter.dev/ui/internationalization) | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
-| `<source-root>/locale_format/` | [`NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat) | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
+| `<source-root>/locale_format/` | [`NumberFormat`](https://developer.android.com/reference/android/icu/text/NumberFormat) | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
 
 ### 分割の単位
 
@@ -139,7 +139,6 @@ Shell スクリプト以外の CLI に適用する。
 | --- | --- | --- |
 | 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を確認する。 |
 | 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を確認する。 |
-| 2. フォルダ構成 | [Designing the infrastructure persistence layer](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design) | 契約を利用側へ置き、実装を差し替え可能にする構成を確認する。 |
 | 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | モジュールへ分ける時期と、パッケージへ切り出す時期を確認する。 |
 | 2. フォルダ構成 | [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) | 依存の向きを内側へそろえる規則を確認する。 |
 | 2. フォルダ構成 | [Guide to app architecture \| Android Developers](https://developer.android.com/topic/architecture) | 層の間で依存の向きを一方向に保つ構成を確認する。 |
