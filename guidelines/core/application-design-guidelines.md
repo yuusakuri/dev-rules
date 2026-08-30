@@ -42,7 +42,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `<source-root>/app/` | [`routing/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | 起動、ルーティング、実行経路との接続を配置する。使用する実装の選択と生成も、この起動点で行う。構成のために専用のフォルダを設けない。 |
+| `<source-root>/app/` | [`routing/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | ルーティングと、アプリケーション全体の実行経路との接続を配置する。依存関係を構成するための専用のフォルダは設けない。 |
 | `<source-root>/core/<name>/` | [`core/errors`](https://github.com/juspay/hyperswitch/blob/main/crates/common_utils/src/errors.rs)、[`core/clock`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)、[`core/id`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。時刻、乱数、識別子の発番のように通信を伴わない供給は、契約と実装をここへ置く。 |
 | `<source-root>/infra/<technology>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool) | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、起動点から呼び出す。 |
 | `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
