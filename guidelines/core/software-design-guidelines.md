@@ -61,7 +61,7 @@ Type、Interface、Class、Functionなどのプログラミング言語上の構
 
 ## 3. 依存関係の管理
 
-### 上位の方針を下位の実装詳細から分離する（Dependency Inversion）
+### 使う側が必要とする操作を契約にする（Dependency Inversion）
 
 業務上の方針などの上位モジュールを、DB、外部API、フレームワークなどの下位モジュールから独立させる必要がある場合は、上位モジュールが必要とする操作を契約として定義し、下位モジュールにその契約を実装させる。契約には上位モジュールが使う操作だけを含め、外部SDKなどの提供側が持つAPIをそのまま写さない。
 
@@ -112,7 +112,7 @@ for haystack in haystacks {
 }
 ```
 
-### 静的に決まる依存関係と実行時に選ぶ依存関係で受け取り方を変える
+### 実装をいつ決めるかで受け取り方を選ぶ
 
 型パラメーターによる指定（ジェネリクス、テンプレート）と、動的ディスパッチ（インターフェース、trait object、仮想関数）の両方を持つ言語では、次の基準で受け取り方を選ぶ。
 
@@ -147,7 +147,7 @@ let using_generic = Router::new()
 
 ### 起動点で依存関係を構成する
 
-実行可能なアプリケーションは、`main`などの起動点で設定を読み、プロセス内で共有する外部資源と依存関係の実装を生成し、最上位の実行対象を組み立ててから実行を開始する。この構成箇所をComposition Rootと呼ぶ。配置は「アプリケーション設計規則」のフォルダ構成に従う。ライブラリはComposition Rootを持たず、利用するアプリケーションが構成できるコンストラクターまたは生成関数を公開する。
+実行可能なアプリケーションは、`main`などの起動点で設定を読み、プロセス内で共有する外部資源と依存関係の実装を生成し、最上位の実行対象を組み立ててから実行を開始する。この構成箇所をComposition Rootと呼ぶ。構成のために専用のファイルやフォルダを設けることは求めず、起動点の配置は言語やフレームワークの標準に従う。ライブラリはComposition Rootを持たず、利用するアプリケーションが構成できるコンストラクターまたは生成関数を公開する。
 
 構成には通常のコンストラクターと関数呼び出しを使用する。DIコンテナーを使用する場合も参照箇所は起動点に限定し、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出する。業務処理を担う型や関数はコンテナーへ依存させない。
 
@@ -231,7 +231,28 @@ impl GlobalState {
         }
         // ...
     }
+
+    pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
+        GlobalStateSnapshot {
+            config: Arc::clone(&self.config),
+            analysis: self.analysis_host.analysis(),
+            // ...
+        }
+    }
 }
+```
+
+所有した値は、必要な処理へ取り出して渡す。次の処理は、所有するタスクプールへ、状態から作った読み取り用の値を渡して別スレッドで実行する。読み取りだけを行う処理へ状態そのものを渡さないため、渡す値は状態から必要な分だけ写す。
+
+```rust
+self.task_pool
+    .handle
+    .spawn(ThreadIntent::LatencySensitive, {
+        let snapshot = self.snapshot();
+        move || {
+            // ...
+        }
+    });
 ```
 
 フレームワークが一つの状態型を要求する場合は、その状態を受け取る境界をハンドラーにとどめる。状態全体を使う処理は状態のまま受け取り、一部しか使わない処理はその部分だけを受け取る。
@@ -713,6 +734,8 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の抜粋元。掲載時にエラーへの文脈付与（`map_err`）を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L338) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時に約40あるフィールドと、その生成のうち4つ以外を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::run`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L177-L218) | 同じコード例の抜粋元。状態を所有する型自身がイベントループを回す箇所。掲載時に起動時の登録処理と終了通知の判定を削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。状態から読み取り用の値を写す箇所。掲載時に写す12フィールドのうち2つ以外を削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::update_tests`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L792-L800) | 所有した値を取り出して使うコード例の抜粋元。タスクプールへ、状態から作った読み取り用の値を渡して実行する。 |
 | 3. 依存関係の管理 | [axum `State`のSubstates](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/axum/src/extract/state.rs#L169-L215) | 部分状態を受け取るコード例の抜粋元。`FromRef`で共有状態から必要な値だけを取り出す。 |
 | 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「静的に決まる依存関係と実行時に選ぶ依存関係で受け取り方を変える」「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時にログの初期化と、trait objectとジェネリクスの両方を`nest`で同時に公開する構成を削っている。 |
 | 3. 依存関係の管理 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | フレームワークが要求する共有状態の設定方法と、必要な部分状態を`FromRef`で取り出す方法を説明する。 |

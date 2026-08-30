@@ -36,7 +36,7 @@
 | `apps/<app-name>/macos/` | `apps/myproject-client/macos/Runner/Info.plist` | macOS固有の設定とネイティブコードを配置する。macOSへ配信する場合に使用する。 |
 | `apps/<app-name>/linux/` | `apps/myproject-client/linux/runner/main.cc` | Linux固有の設定とネイティブコードを配置する。Linuxへ配信する場合に使用する。 |
 | `apps/<app-name>/windows/` | `apps/myproject-client/windows/runner/main.cpp` | Windows固有の設定とネイティブコードを配置する。Windowsへ配信する場合に使用する。 |
-| `apps/<app-name>/lib/main.dart` | `apps/myproject-client/lib/main.dart` | エントリーポイント。`app/bootstrap/`の初期化処理を呼び出し、`runApp`を実行する。 |
+| `apps/<app-name>/lib/main.dart` | `apps/myproject-client/lib/main.dart` | エントリーポイント。設定を読み、外部SDKのクライアントとRepository、外部システム境界の実装を生成してアプリケーションへ渡し、`runApp`を実行する。 |
 | `apps/<app-name>/lib/app/app.dart` | `apps/myproject-client/lib/app/app.dart` | `MaterialApp`、アプリケーション全体で共有する`RepositoryProvider`と`BlocProvider`、ルーター、テーマ、多言語対応を接続する。 |
 | `apps/<app-name>/lib/app/router/` | `apps/myproject-client/lib/app/router/app_router.dart` | ルーティングと、ルートまたは共通の親が所有するBLoCの生成、接続を定義する。各Featureの公開APIだけを参照する。 |
 | `apps/<app-name>/lib/app/theme/` | `apps/myproject-client/lib/app/theme/app_theme.dart` | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
@@ -80,7 +80,7 @@
 | BLoC | 同じFeatureの処理と型 |
 | `ui/` | Flutter SDKのみ |
 
-外部SDKのクライアント、Repository、外部システム境界の実装は`app/bootstrap/`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、Repositoryと外部システム境界の契約はFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
+外部SDKのクライアント、Repository、外部システム境界の実装は`main.dart`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、Repositoryと外部システム境界の契約はFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
 
 ---
 
