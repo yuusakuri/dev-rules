@@ -52,10 +52,7 @@
 | `apps/<app-name>/lib/features/<feature>/presentation/bloc/` | `apps/myproject-client/lib/features/auth/presentation/bloc/sign_in_bloc.dart` | Featureの表示状態を管理するEvent、State、BLoCを配置する。 |
 | `apps/<app-name>/lib/features/<feature>/repositories/<resource>_repository.dart` | `apps/myproject-client/lib/features/checkout/repositories/cart_repository.dart` | Featureが必要とするデータ操作をRepositoryの契約として定義する。 |
 | `apps/<app-name>/lib/features/<feature>/<capability>.dart` | `apps/myproject-client/lib/features/payment/payment_client.dart` | Featureが必要とする外部システムの操作を契約として定義する。ファイル名は型名に合わせる。 |
-| `apps/<app-name>/lib/features/<feature>/<external-system>/` | `apps/myproject-client/lib/features/payment/stripe/stripe_client.dart`、`apps/myproject-client/lib/features/checkout/sqlite/sqlite_cart_repository.dart` | 接続先ごとの実装と外部データ形式を配置する。ディレクトリには、外部システム、サービス、データストアの名前を使用する。 |
-| `apps/<app-name>/lib/features/<feature>/<external-system>/<operation>_request.dart` | `apps/myproject-client/lib/features/payment/stripe/create_payment_request.dart` | 外部システムへ送るデータ形式とFeature内の型からの変換を定義する。 |
-| `apps/<app-name>/lib/features/<feature>/<external-system>/<operation>_response.dart` | `apps/myproject-client/lib/features/payment/stripe/create_payment_response.dart` | 外部システムから受け取るデータ形式とFeature内の型への変換を定義する。 |
-| `apps/<app-name>/lib/features/<feature>/<external-system>/<resource>_record.dart` | `apps/myproject-client/lib/features/checkout/sqlite/cart_record.dart` | データベース、ファイル、端末ストレージへ保存する形式とFeature内の型との変換を定義する。 |
+| `apps/<app-name>/lib/features/<feature>/<external-system>/` | `apps/myproject-client/lib/features/payment/stripe/stripe_client.dart`、`apps/myproject-client/lib/features/checkout/sqlite/sqlite_cart_repository.dart` | 接続先ごとの実装と外部データ形式を配置する。 |
 | `apps/<app-name>/test/ui/` | `apps/myproject-client/test/ui/button/primary_button_test.dart` | `lib/ui/`に配置したUI部品のWidgetテストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<feature>_test.dart` | `apps/myproject-client/test/features/auth/auth_test.dart` | Featureが所有する型の値、状態、識別子、制約を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<responsibility>/` | `apps/myproject-client/test/features/auth/sign_in/` | Feature内の責務に対応する単体テストを配置する。 |

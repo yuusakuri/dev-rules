@@ -108,39 +108,6 @@ for haystack in haystacks {
 }
 ```
 
-### 静的ディスパッチと動的ディスパッチを使い分ける
-
-呼び出し先をコンパイル時に決める静的ディスパッチ（ジェネリクス、テンプレート）と、実行時に決める動的ディスパッチ（インターフェース、trait object、仮想関数）は、次の順で判断する。
-
-- 実行時に実装を選ぶ場合、異なる実装を同じ型として一つのコレクションへ入れる場合、または具体型を利用側の定義へ波及させたくない場合は、動的ディスパッチ。
-- いずれにも当てはまらない場合は、静的ディスパッチ。
-
-次は、共有状態を型パラメーターで受け取った場合に、その型パラメーターが利用側へ広がる様子を示す例である。`AppStateGeneric<T>`が実装の型をそのまま保持するため、状態を受け取る`handle_get_user`にも同じ型パラメーターと境界が必要になり、ルートの登録でも`handle_get_user::<InMemoryUserRepository>`と具体型を書くことになる。ハンドラーが増えれば、この指定も増える。この波及を避けたい場合は、`Arc<dyn UserRepository>`で受け取って利用側の型を単純に保つ。波及しても問題がなく、具体型のまま扱いたい場合は、この形で呼び出しの間接参照を無くせる。
-
-```rust
-#[derive(Clone)]
-struct AppStateGeneric<T> {
-    user_repository: T,
-}
-
-async fn handle_get_user<T>(
-    State(state): State<AppStateGeneric<T>>,
-    Path(id): Path<Uuid>,
-) -> Result<Json<User>, StatusCode>
-where
-    T: UserRepository,
-{
-    // ...
-}
-
-let using_generic = Router::new()
-    .route(
-        "/users/{id}",
-        get(handle_get_user::<InMemoryUserRepository>),
-    )
-    .with_state(AppStateGeneric { user_repository });
-```
-
 ### 起動点で依存関係を構成する
 
 実行可能なアプリケーションは、`main`などの起動点で設定を読み、複数の処理で共有する外部資源と依存関係の実装を生成し、最上位の実行対象を組み立ててから実行を開始する。この構成箇所をComposition Rootと呼ぶ。一回の操作の間だけ使う資源は、起動点ではなく、その操作を担う処理の内部で生成する。
@@ -726,7 +693,7 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。状態から読み取り用の値を写す箇所。掲載時に写す12フィールドのうち2つ以外を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::update_tests`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L792-L800) | 所有した値を取り出して使うコード例の抜粋元。タスクプールへ、状態から作った読み取り用の値を渡して実行する。 |
 | 3. 依存関係の管理 | [axum `State`のSubstates](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/axum/src/extract/state.rs#L169-L215) | 部分状態を受け取るコード例の抜粋元。`FromRef`で共有状態から必要な値だけを取り出す。 |
-| 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「静的ディスパッチと動的ディスパッチを使い分ける」「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時にログの初期化と、trait objectとジェネリクスの両方を`nest`で同時に公開する構成を削っている。 |
+| 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時にログの初期化と、ジェネリクスで構成したルーターを削っている。 |
 | 3. 依存関係の管理 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | フレームワークが要求する共有状態の設定方法と、必要な部分状態を`FromRef`で取り出す方法を説明する。 |
 | 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
 | 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「永続化処理をRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体を削っている。 |
