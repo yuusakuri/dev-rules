@@ -38,7 +38,7 @@
 
 Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
 
-外部システムや実行環境に依存する処理を抽象化する場合は、契約を利用側のFeatureに置き、実装と外部データ形式を接続先ごとのディレクトリへ置く。抽象化しない場合も接続先ごとに分け、どの外部システムに依存するかを配置から判別できるようにする。
+外部システムや実行環境に依存する処理を抽象化する場合は、契約を利用側のFeature内でその契約を所有する責務へ置き、実装と外部データ形式を接続先ごとのディレクトリへ置く。抽象化しない場合も接続先ごとに分け、どの外部システムに依存するかを配置から判別できるようにする。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | [`presentation`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/handlers/` | [`handler`](https://docs.rs/axum/latest/axum/handler/index.html) | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/repositories/` | [`data/repositories/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/data/repositories) | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約を配置する。保存先別の実装は、接続先ごとのディレクトリへ置く。 |
+| `<source-root>/features/<feature>/repositories/` | [gitoxideの`repository/`](https://github.com/GitoxideLabs/gitoxide/tree/main/gix/src/repository)、[Jujutsuの`repo.rs`](https://github.com/jj-vcs/jj/blob/main/lib/src/repo.rs) | Featureの永続化境界をまとめる必要がある場合に使用する。Repositoryの契約、対応する実装、外部データ形式を同じ責務として配置し、契約だけのフォルダにはしない。実装を複数持つ場合は保存先ごとに分ける。 |
 | `<source-root>/features/<feature>/<external-system>/` | [OpenDALの`github/`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql/`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`postgresql/`](https://github.com/apache/opendal/tree/main/core/services/postgresql)、[`s3/`](https://github.com/apache/opendal/tree/main/core/services/s3)、[Vectorの`postgres/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/postgres)、[`aws_s3/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/aws_s3) | 外部システム、サービス、データストアに依存する実装と外部データ形式を配置する。ディレクトリには、`github`、`jira`、`slack`、`postgres`、`mysql`、`s3`のように実際の接続先または外部資源を表す名前を使用する。複数のFeatureから使う場合も、最も強く所有するFeatureへ置き、他のFeatureはそのFeatureの公開APIを通じて参照する。 |
 | `<source-root>/ui/` | [`ui/`](https://docs.flutter.dev/app-architecture/case-study) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 | `<source-root>/<localization>/` | [`l10n`](https://docs.flutter.dev/ui/internationalization) | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |

@@ -50,13 +50,13 @@
 | `apps/<app-name>/lib/features/<feature>/presentation/screens/` | `apps/myproject-client/lib/features/auth/presentation/screens/sign_in_screen.dart` | ルーティングの遷移先となるScreenを配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/widgets/` | `apps/myproject-client/lib/features/auth/presentation/widgets/password_field.dart` | Featureが所有する表示で再利用するWidgetを配置する。別Featureでも再利用するWidgetは、`<feature>.dart`から明示的に`export`する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/bloc/` | `apps/myproject-client/lib/features/auth/presentation/bloc/sign_in_bloc.dart` | Featureの表示状態を管理するEvent、State、BLoCを配置する。 |
-| `apps/<app-name>/lib/features/<feature>/repositories/<resource>_repository.dart` | `apps/myproject-client/lib/features/checkout/repositories/cart_repository.dart` | Featureが必要とするデータ操作をRepositoryの契約として定義する。 |
+| `apps/<app-name>/lib/features/<feature>/repositories/` | `apps/myproject-client/lib/features/checkout/repositories/cart_repository.dart`、`apps/myproject-client/lib/features/checkout/repositories/sqlite/sqlite_cart_repository.dart` | Featureが必要とする永続化操作の契約と、保存先別の実装を配置する。実装を複数持つ場合は保存先ごとに分ける。 |
 | `apps/<app-name>/lib/features/<feature>/<capability>.dart` | `apps/myproject-client/lib/features/payment/payment_client.dart` | Featureが必要とする外部システムの操作を契約として定義する。ファイル名は型名に合わせる。 |
-| `apps/<app-name>/lib/features/<feature>/<external-system>/` | `apps/myproject-client/lib/features/payment/stripe/stripe_client.dart`、`apps/myproject-client/lib/features/checkout/sqlite/sqlite_cart_repository.dart` | 接続先ごとの実装と外部データ形式を配置する。 |
+| `apps/<app-name>/lib/features/<feature>/<external-system>/` | `apps/myproject-client/lib/features/payment/stripe/stripe_client.dart` | Repositoryとして表さない外部境界の実装と外部データ形式を、接続先ごとに配置する。 |
 | `apps/<app-name>/test/ui/` | `apps/myproject-client/test/ui/button/primary_button_test.dart` | `lib/ui/`に配置したUI部品のWidgetテストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<feature>_test.dart` | `apps/myproject-client/test/features/auth/auth_test.dart` | Featureが所有する型の値、状態、識別子、制約を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<responsibility>/` | `apps/myproject-client/test/features/auth/sign_in/` | Feature内の責務に対応する単体テストを配置する。 |
-| `apps/<app-name>/test/features/<feature>/repositories/` | `apps/myproject-client/test/features/checkout/repositories/sqlite_cart_repository_test.dart` | Repositoryの変換、キャッシュ、エラー処理を検証する単体テストを配置する。 |
+| `apps/<app-name>/test/features/<feature>/repositories/` | `apps/myproject-client/test/features/checkout/repositories/sqlite/sqlite_cart_repository_test.dart` | Repositoryの変換、キャッシュ、エラー処理を検証する単体テストを保存先ごとに配置する。 |
 | `apps/<app-name>/test/features/<feature>/<external-system>/` | `apps/myproject-client/test/features/payment/stripe/stripe_client_test.dart` | 外部境界の変換、エラー処理を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/bloc/<bloc>_test.dart` | `apps/myproject-client/test/features/auth/presentation/bloc/sign_in_bloc_test.dart` | BLoCのEvent処理と状態遷移を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/screens/<screen>_test.dart` | `apps/myproject-client/test/features/auth/presentation/screens/sign_in_screen_test.dart` | Screenの表示と操作を検証するWidgetテストを配置する。 |
