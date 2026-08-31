@@ -153,6 +153,14 @@ fn search_preprocessor(&mut self, path: &Path) -> io::Result<SearchResult> {
 }
 ```
 
+### 通信の共通処理をサービスごとのClientから分離する
+
+外部サービスや機能ごとの`Client`は、その対象に固有の操作と、接続先など対象ごとに異なる設定を担当する。認証、リトライ、タイムアウト、共通ヘッダー、通信エラーの変換など、複数の`Client`に共通する通信処理は下位の通信層へ分離し、各`Client`から必要な設定を渡す。サービスごとに異なる設定まで一つの共通`Client`へ集約しない。
+
+### 共有可能な通信資源を再利用する
+
+複数の`Client`が同じ認証情報や接続プールなどの通信資源を利用できる場合は、それらを`Client`ごとに生成せず共有する。接続管理を実行環境が提供する場合は、共有だけを目的とした独自の`HTTP Client`を設けない。
+
 ### 共有状態は実行責務とライフサイクルでまとめる
 
 フレームワークが一つの状態型を要求する場合や、イベントループなどの実行主体が複数の状態と資源を同じ期間所有する場合は、利用範囲とライフサイクルが一致する値を専用の型へまとめてよい。利用側が共有状態の一部しか使わない場合は、その部分だけを渡す。新しく定義する共有状態の型名には、`AppState`または`GlobalState`を優先して使用する。フレームワークが別の名前を定めている場合は、その規約に従う。
@@ -688,6 +696,9 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [Cargo `main`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/bin/cargo/main.rs#L17-L58) | 起動点で`GlobalContext`を生成し、CLIの実行処理へ渡す実装。 |
 | 3. 依存関係の管理 | [ripgrep `search`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L113-L141) | 「依存関係を明示的に受け渡す」のコード例の抜粋元。掲載時に統計と打ち切り、エラーの分岐を削っている。 |
 | 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の抜粋元。掲載時にエラーへの文脈付与（`map_err`）を削っている。 |
+| 3. 依存関係の管理 | [Google Cloud Rust Storage `ClientBuilder`](https://github.com/googleapis/google-cloud-rust/blob/714e6ba9c814bdd97b19db014aeae7900f5639e1/src/storage/src/storage/client.rs#L388-L608) | Storage固有のClientが、接続先、認証情報、リトライなどの設定を共通の`ClientConfig`へ渡し、GAXのHTTPおよびgRPC通信層を構成する実装。 |
+| 3. 依存関係の管理 | [Google Cloud Rust GAX `ClientBuilder`](https://github.com/googleapis/google-cloud-rust/blob/714e6ba9c814bdd97b19db014aeae7900f5639e1/src/gax/src/client_builder.rs#L145-L425) | サービスごとのClientBuilderに共通する接続先、認証情報、リトライ、タイムアウトの設定機構を提供する実装。 |
+| 3. 依存関係の管理 | [reqwest `Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 内部に接続プールを持つClientを生成し直さず、複製または共有して再利用する方法を説明する。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L338) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時に約40あるフィールドと、その生成のうち4つ以外を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::run`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L177-L218) | 同じコード例の抜粋元。状態を所有する型自身がイベントループを回す箇所。掲載時に起動時の登録処理と終了通知の判定を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。状態から読み取り用の値を写す箇所。掲載時に写す12フィールドのうち2つ以外を削っている。 |
