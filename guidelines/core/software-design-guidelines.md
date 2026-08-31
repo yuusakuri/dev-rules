@@ -428,7 +428,8 @@ struct InMemoryUserRepository {
 | ルール | 内容 |
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
-| 外部境界の命名 | 外部との境界は提供する機能や通信モデルで命名する。`Client`、`Repository`、`Store`、`Provider`、`Clock`、`Connection`、`Endpoint`、`Stream`、`Publisher`、`Listener`、`Transport`など既存の用語を使用する。`Connector`および`Gateway`は型名として使用しない。 |
+| 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、`github`、`jira`、`slack`、`postgres`、`mysql`、`s3`のように、実際の接続先または外部資源で命名する。`connectors`、`clients`、`gateways`のように型の役割だけを表す共通の配置名は使用しない。 |
+| 外部境界の型名 | 外部との境界を表す型は、提供する機能や通信モデルで命名する。`Client`、`Repository`、`Store`、`Provider`、`Clock`、`Connection`、`Endpoint`、`Stream`、`Publisher`、`Listener`、`Transport`、`Gateway`など既存の用語を使用し、複数の実装を区別する場合は具体型に接続先または供給元を含める。`Connector`は型の役割を表す名前として使用しない。 |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
@@ -495,6 +496,7 @@ struct InMemoryUserRepository {
 | `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
 | `mock`、`fake` | テストのために本物の実装を置き換える型に使用する。呼び出しの記録と検証を目的とする場合は `mock`、動作する簡易な代替実装には `fake` を使う。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/)、[`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
 | `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含め、呼び出す機能を限定する場合はその機能も名前に含める。 | `StripeClient`、`GitHubClient`、`PaymentClient`、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 名詞 | 通信 |
+| `gateway` | 同じ外部機能を提供する複数のサービスを一つの操作へまとめ、接続先を差し替えられるようにする型に使用する。利用側が扱う型で操作を定義し、接続先ごとの違いは実装へ閉じ込めて実装の名前で区別する。 | [`payment_kit`の`PaymentGateway`](https://docs.rs/payment_kit/latest/payment_kit/)、`StripePaymentGateway` | 名詞 | 通信 |
 | `mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 |
 | `transport` | メッセージの送信経路と送信手段を表す型に使用する。経路ごとに実装を差し替えられる構造にする。 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)、[`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) | 名詞 | 通信 |
 | `publisher`、`producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
@@ -734,6 +736,7 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |
 | 6. 設計パターン | [Repository](https://martinfowler.com/eaaCatalog/repository.html) | 永続化されたデータを、コレクションのように扱う境界として分離する構造を説明する。 |
+| 6. 設計パターン | [Gateway](https://martinfowler.com/eaaCatalog/gateway.html) | 外部システムや外部資源へのアクセスを1つの型へ包む構造を説明する。 |
 | 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) | ログの重大度と構造化項目の標準を定義する。 |
 | 10. ログ | [Naming \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/general/naming/) | 属性名とイベント名の命名規則を定義する。 |
 | 10. ログ | [Exception attributes \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/attributes-registry/exception/) | 例外を記録する項目の名称と内容を定義する。 |
