@@ -425,7 +425,7 @@ struct InMemoryUserRepository {
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: `github`、`jira`、`slack`、`postgres`、`mysql`、`s3` |
-| 外部境界の型名 | 外部との境界を表す型は、提供する機能や通信モデルで命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`StripeConnector`、OK: `Client`、`Repository`、`Store`、`Provider`、`Clock`、`Connection`、`Endpoint`、`Stream`、`Publisher`、`Listener`、`Transport`、`Gateway` / `StripeClient`、`PostgresOrderRepository` |
+| 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。役割に対応する語は「単語」から選び、外部境界だからという理由で境界を表す名詞を機械的に付けない。より具体的に役割を表せる名前があるときは、その名前を優先する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: `PaymentClient` / `StripeClient`、`ConnectivityWatcher` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
@@ -453,8 +453,9 @@ struct InMemoryUserRepository {
 | `frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | `RequestFrame`、`UartFrame`、[`smoltcp`の`EthernetFrame`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.EthernetFrame.html)、[`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) | 名詞 | 通信 |
 | `packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket`、[`smoltcp`の`TcpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.TcpPacket.html)、[`UdpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.UdpPacket.html)、[`Ipv4Packet`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.Ipv4Packet.html) | 名詞 | 通信 |
 | `datagram` | 送達確認と順序保証を持たない単位で送受信する通信データを表す型に使用する。 | `SensorDatagram`、[`quinn`の`Datagram`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.Datagram.html) | 名詞 | 通信 |
-| `endpoint` | 通信の受け口となる、待ち受けまたは接続の起点を表す型に使用する。 | [`quinn`の`Endpoint`](https://docs.rs/quinn/latest/quinn/struct.Endpoint.html) | 名詞 | 通信 |
-| `listener` | 接続要求を待ち受け、確立した通信路を受け取る型に使用する。 | [`TcpListener`](https://doc.rust-lang.org/std/net/struct.TcpListener.html)、[`tokio`の`TcpListener`](https://docs.rs/tokio/latest/tokio/net/struct.TcpListener.html) | 名詞 | 通信 |
+| `endpoint` | プロトコルが定める通信の端点を表す型に使用する。外部との境界一般には使わない。 | [`quinn`の`Endpoint`](https://docs.rs/quinn/latest/quinn/struct.Endpoint.html) | 名詞 | 通信 |
+| `listener` | 接続要求を待ち受け、確立した通信路を受け取る型に使用する。資源や状態の変化を監視する型には使わない。 | [`TcpListener`](https://doc.rust-lang.org/std/net/struct.TcpListener.html)、[`tokio`の`TcpListener`](https://docs.rs/tokio/latest/tokio/net/struct.TcpListener.html) | 名詞 | 通信 |
+| `watcher` | 既存の資源や状態の変化を監視し、変化を通知する型に使用する。監視する対象を名前に含める。接続要求を受け入れる型には`listener`を使う。 | [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、`ConnectivityWatcher` | 名詞 | 通信 |
 | `socket` | OSが提供する通信端点をそのまま扱う型に使用する。 | [`UdpSocket`](https://doc.rust-lang.org/std/net/struct.UdpSocket.html) | 名詞 | 通信 |
 | `connection` | 確立済みの通信路を表す型に使用する。接続先または方式を実装の名前に含める。 | [`quinn`の`Connection`](https://docs.rs/quinn/latest/quinn/struct.Connection.html)、`PgConnection` | 名詞 | 通信 |
 | `stream` | 連続して流れるバイト列または値を、順に読み書きする型に使用する。境界が定められた単位を扱う場合は `frame`、`packet` を使う。 | [`TcpStream`](https://doc.rust-lang.org/std/net/struct.TcpStream.html)、[`futures`の`Stream`](https://docs.rs/futures/latest/futures/stream/trait.Stream.html) | 名詞 | 通信 |
@@ -490,10 +491,9 @@ struct InMemoryUserRepository {
 | `generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator`、[`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/) | 名詞 | 生成 |
 | `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
 | `mock`、`fake` | テストのために本物の実装を置き換える型に使用する。呼び出しの記録と検証を目的とする場合は `mock`、動作する簡易な代替実装には `fake` を使う。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/)、[`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
-| `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含め、呼び出す機能を限定する場合はその機能も名前に含める。 | `StripeClient`、`GitHubClient`、`PaymentClient`、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 名詞 | 通信 |
-| `gateway` | 同じ外部機能を提供する複数のサービスを一つの操作へまとめ、接続先を差し替えられるようにする型に使用する。利用側が扱う型で操作を定義し、接続先ごとの違いは実装へ閉じ込めて実装の名前で区別する。 | [`payment_kit`の`PaymentGateway`](https://docs.rs/payment_kit/latest/payment_kit/)、`StripePaymentGateway` | 名詞 | 通信 |
+| `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含める。接続先が同じであれば、利用する機能ごとに分割せず一つにまとめる。 | `StripeClient`、`GitHubClient`、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)、[`kube`の`Client`](https://docs.rs/kube/latest/kube/struct.Client.html) | 名詞 | 通信 |
 | `mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 |
-| `transport` | メッセージの送信経路と送信手段を表す型に使用する。経路ごとに実装を差し替えられる構造にする。 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)、[`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) | 名詞 | 通信 |
+| `transport` | メッセージの送信経路と送信手段を表す型に使用する。経路ごとに実装を差し替えられる場合に使い、送信手段が一つしかない場合は`client`を使う。 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)、[`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) | 名詞 | 通信 |
 | `publisher`、`producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
 | `pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool`、[`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
 | `cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache`、[`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
@@ -733,6 +733,9 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
 | 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「永続化処理をRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体を削っている。 |
 | 6. 設計パターン | [Repository（PoEAA）](https://martinfowler.com/eaaCatalog/repository.html) | 抜粋元の`UserRepo`を`UserRepository`へ改名した際の、名前の出典。 |
+| 7. 命名 | [kube `Client`と`Connection`](https://github.com/kube-rs/kube/blob/7a4641d4cc2f693b2dee97b9fc15fadb96d7f62e/kube-client/src/client/mod.rs#L87-L102) | 外部サービス全体を呼ぶ型に`Client`、成立した通信路に`Connection`を使う区別を確認する。Kubernetes APIは機能が多いが、機能ごとにClientを分けていない。 |
+| 7. 命名 | [notify `Watcher`](https://github.com/notify-rs/notify/blob/dae9f3f559863ee5f06c3b315c3190f9cdd3a8b5/notify/src/lib.rs#L372-L400) | 資源や状態の変化を監視する型に`Watcher`を使う例を確認する。 |
+| 7. 命名 | [reqwest `Client`](https://github.com/seanmonstar/reqwest/blob/9f06fd28abe53e5ff84a091825ea5ce8984b51e0/src/async_impl/client.rs#L93-L95) | 接続プールを持つHTTP通信の共有オブジェクトでも、名前が`Transport`ではなく`Client`であることを確認する。 |
 | 7. 命名 | [rust-analyzer `handlers::request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L77) | 抜粋元の`create_user_dyn`などを`handle_create_user`へ改名した際の、`handle_`で始める書き方の出典。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
