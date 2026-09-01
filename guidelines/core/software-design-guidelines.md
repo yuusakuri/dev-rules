@@ -186,6 +186,31 @@ fn search_preprocessor(&mut self, path: &Path) -> io::Result<SearchResult> {
 }
 ```
 
+### 共有できる設定と接続資源は一つにまとめて渡す
+
+複数のClientが同じ資格情報、接続先の解決、再試行、タイムアウト、通信路を使う場合は、それらを一つの設定型へまとめ、各Clientへ渡す。Clientごとに組み立てると、資格情報の解決と接続の構築が重複し、再試行やタイムアウトの方針もClientごとにずれる。一つのClientでしか使わない設定は、共有する設定へ入れず、そのClientが持つ。
+
+次は、サービスごとのClientが共有する設定をまとめた型である。資格情報の供給元、接続先のリージョンとURL、再試行とタイムアウトの方針、HTTP通信の実装を一つの型が持つ。`credentials_provider`と`http_client`が示すとおり、共有するのは設定値だけではなく、値を供給する仕組みと接続に使う資源も含む。
+
+```rust
+pub struct SdkConfig {
+    credentials_provider: Option<SharedCredentialsProvider>,
+    region: Option<Region>,
+    endpoint_url: Option<String>,
+    retry_config: Option<RetryConfig>,
+    timeout_config: Option<TimeoutConfig>,
+    http_client: Option<SharedHttpClient>,
+    // ...
+}
+```
+
+次は、その設定を作ってClientへ渡す側である。`load_defaults`が環境変数、共有設定ファイル、実行環境のメタデータなどを順に探索して設定を一度だけ組み立て、各サービスのClientは`Client::new(&config)`で同じ設定を受け取る。扱うサービスが増えても、資格情報とリージョンの解決はやり直されず、再試行の方針もClient間でそろう。
+
+```rust
+let config = aws_config::load_defaults(BehaviorVersion::v2023_11_09()).await;
+let client = aws_sdk_dynamodb::Client::new(&config);
+```
+
 ### 共有状態は実行責務とライフサイクルでまとめる
 
 フレームワークが一つの状態型を要求する場合や、イベントループなどの実行主体が複数の状態と資源を同じ期間所有する場合は、利用範囲とライフサイクルが一致する値を専用の型へまとめてよい。利用側が共有状態の一部しか使わない場合は、その部分だけを渡す。
@@ -435,7 +460,7 @@ struct InMemoryUserRepository {
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
 | データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: `Message`、`Frame` |
 | 真偽値 | `is` / `has` / `can` / `should` プレフィックス |
-| 関数名 | 動詞で始める |
+| 関数名 | 動詞で始める。ただし、`new`、`with_*`、`as_*`、`to_*`、`into_*`のように、言語やAPIの慣例が定める形がある場合はそれに従う。 |
 | 要求と完了イベントの名前 | 処理の実行を求める型名は`Request`で終える。完了した出来事を表すイベントの名前には過去形を使用する。例：`InitRequest`、`Initialized` |
 | イベント待受属性名 | 要求またはイベントの発生を待ち受ける属性名は`on_`で始め、その後に対応するイベント名を続ける。例：`on_init_request`、`on_initialized` |
 | イベント処理関数名 | 要求またはイベントを受け取って処理する関数名は`handle_`で始め、その後に対応するイベント名を続ける。例：`handle_init_request`、`handle_initialized` |
@@ -479,10 +504,10 @@ struct InMemoryUserRepository {
 | `record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | [`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) | 名詞 | データ |
 | `id` | 識別子を表す型の名前は `id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | `UserId`、[`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
 | `event` | すでに起きた出来事を表す型に使用する。名前は過去形にする。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html)、[`cqrs-es`の`DomainEvent`](https://docs.rs/cqrs-es/latest/cqrs_es/trait.DomainEvent.html) | 名詞 | データ |
-| `config` | 実行時に読み込む設定値の集合を表す型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html) | 名詞 | データ |
+| `config` | 動作を決める設定値と、使用する実装の指定をまとめる型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html)、[AWS SDK for Rustの`SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137)、[`quinn`の`ClientConfig`](https://docs.rs/quinn/latest/quinn/struct.ClientConfig.html) | 名詞 | データ |
 | `formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter`、[`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
 | `validate` | 入力が形式、範囲、不変条件などの制約を満たすか検証する操作に使用する。検証専用の型を作らず、検証対象の型へ実装する。 | [`validator`の`Validate`](https://docs.rs/validator/latest/validator/trait.Validate.html) | 動詞 | 解析 |
-| `loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | `ConfigLoader`、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
+| `loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | [AWS SDK for Rustの`ConfigLoader`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L280)、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
 | `list` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | `UserList`、[`LinkedList`](https://doc.rust-lang.org/std/collections/struct.LinkedList.html) | 名詞 | 集合 |
 | `set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | `PermissionSet`、[`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) | 名詞 | 集合 |
 | `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap`、[`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
@@ -492,7 +517,7 @@ struct InMemoryUserRepository {
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
 | `connector` | 特定の外部システムやサービスへの接続と、その形式変換をまとめた実装に使用する。接続先を名前に含める。差し替え可能な実装を接続先ごとに並べる場合に使用する。 | `StripeConnector`、`SlackConnector`、[HyperSwitchの`connectors`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors) | 名詞 | 通信 |
 | `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
-| `provider` | 値そのものではなく、要求された値や機能を取得または生成して供給する役割に使用する。何を供給するかを名前に含め、役割をより具体的に表せる名前があるときはその名前を優先する。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、`ConfigProvider` | 名詞 | データ |
+| `provider` | 値そのものではなく、要求された値や機能を取得または生成して供給する役割に使用する。何を供給するかを名前に含め、役割をより具体的に表せる名前があるときはその名前を優先する。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、[AWS SDK for Rustの`SharedCredentialsProvider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-credential-types/src/provider.rs#L79) | 名詞 | データ |
 | `generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator`、[`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/) | 名詞 | 生成 |
 | `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
 | `mock`、`fake` | テストのために本物の実装を置き換える型に使用する。呼び出しの記録と検証を目的とする場合は `mock`、動作する簡易な代替実装には `fake` を使う。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/)、[`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
@@ -729,6 +754,10 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [axum `State`のSubstates](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/axum/src/extract/state.rs#L169-L215) | 部分状態を受け取るコード例の抜粋元。`FromRef`で共有状態から必要な値だけを取り出す。 |
 | 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「静的ディスパッチと動的ディスパッチを使い分ける」「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時にログの初期化と、trait objectとジェネリクスの両方を`nest`で同時に公開する構成を削っている。 |
 | 3. 依存関係の管理 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | フレームワークが要求する共有状態の設定方法と、必要な部分状態を`FromRef`で取り出す方法を説明する。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137) | 「共有できる設定と接続資源は一つにまとめて渡す」のコード例の抜粋元。掲載時に26あるフィールドのうち6つ以外を削っている。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `load_defaults`の実行例](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L40-L41) | 同じ規則のコード例の抜粋元。組み立てた設定をサービスのClientへ渡す箇所。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `CredentialsProviderChain`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/credentials.rs#L189-L193) | 資格情報を環境変数、プロファイル、実行環境のメタデータの順に解決する構成を確認する。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `region::default_provider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/region.rs#L19-L21) | 接続先リージョンの探索元と順序を確認する。 |
 | 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
 | 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「永続化処理をRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体を削っている。 |
 | 6. 設計パターン | [Repository（PoEAA）](https://martinfowler.com/eaaCatalog/repository.html) | 抜粋元の`UserRepo`を`UserRepository`へ改名した際の、名前の出典。 |
