@@ -36,7 +36,7 @@
 | `apps/<app-name>/macos/` | `apps/myproject-client/macos/Runner/Info.plist` | macOS固有の設定とネイティブコードを配置する。macOSへ配信する場合に使用する。 |
 | `apps/<app-name>/linux/` | `apps/myproject-client/linux/runner/main.cc` | Linux固有の設定とネイティブコードを配置する。Linuxへ配信する場合に使用する。 |
 | `apps/<app-name>/windows/` | `apps/myproject-client/windows/runner/main.cpp` | Windows固有の設定とネイティブコードを配置する。Windowsへ配信する場合に使用する。 |
-| `apps/<app-name>/lib/main.dart` | `apps/myproject-client/lib/main.dart` | エントリーポイント。設定を読み、外部SDKのクライアントとRepository、外部システム境界の実装を生成してアプリケーションへ渡し、`runApp`を実行する。 |
+| `apps/<app-name>/lib/main.dart` | `apps/myproject-client/lib/main.dart` | エントリーポイント。設定を読み、外部境界の実装を生成してアプリケーションへ渡し、`runApp`を実行する。 |
 | `apps/<app-name>/lib/app/app.dart` | `apps/myproject-client/lib/app/app.dart` | `MaterialApp`、アプリケーション全体で共有する`RepositoryProvider`と`BlocProvider`、ルーター、テーマ、多言語対応を接続する。 |
 | `apps/<app-name>/lib/app/router/` | `apps/myproject-client/lib/app/router/app_router.dart` | ルーティングと、ルートまたは共通の親が所有するBLoCの生成、接続を定義する。各Featureの公開APIだけを参照する。 |
 | `apps/<app-name>/lib/app/theme/` | `apps/myproject-client/lib/app/theme/app_theme.dart` | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
@@ -44,24 +44,20 @@
 | `apps/<app-name>/lib/generated/l10n/` | `apps/myproject-client/lib/generated/l10n/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。`l10n.yaml`の`output-dir`で出力先を`lib/l10n/`の外へ指定する。手動では編集しない。 |
 | `apps/<app-name>/lib/locale_format/` | `apps/myproject-client/lib/locale_format/currency_format.dart` | 文言の外側で使う数値、日付、通貨などの書式処理を`intl`パッケージで定義する。 |
 | `apps/<app-name>/lib/ui/` | `apps/myproject-client/lib/ui/ui.dart`、`apps/myproject-client/lib/ui/button/primary_button.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品を役割ごとのサブフォルダへ配置する。公開するUI部品は`ui.dart`から`export`する。 |
-| `apps/<app-name>/lib/features/<feature>/<feature>.dart` | `apps/myproject-client/lib/features/auth/auth.dart` | Feature外へ公開する型、処理、Screen、Widget、BLoC、Handler、Repositoryと外部システム境界の契約、各実装の生成関数だけを`export`する。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のWidgetだけを参照する。 |
+| `apps/<app-name>/lib/features/<feature>/<feature>.dart` | `apps/myproject-client/lib/features/auth/auth.dart` | Feature外へ公開する型、処理、Screen、Widget、BLoC、Handler、外部境界の契約、各実装の生成関数だけを`export`する。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のWidgetだけを参照する。 |
 | `apps/<app-name>/lib/features/<feature>/<concept>.dart` | `apps/myproject-client/lib/features/auth/auth_session.dart` | Featureが所有する一つの業務概念について、値、状態、識別子、制約を型として定義する。 |
 | `apps/<app-name>/lib/features/<feature>/<responsibility>/` | `apps/myproject-client/lib/features/auth/sign_in/` | Feature内の一つの責務に属する型と処理を配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/screens/` | `apps/myproject-client/lib/features/auth/presentation/screens/sign_in_screen.dart` | ルーティングの遷移先となるScreenを配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/widgets/` | `apps/myproject-client/lib/features/auth/presentation/widgets/password_field.dart` | Featureが所有する表示で再利用するWidgetを配置する。別Featureでも再利用するWidgetは、`<feature>.dart`から明示的に`export`する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/bloc/` | `apps/myproject-client/lib/features/auth/presentation/bloc/sign_in_bloc.dart` | Featureの表示状態を管理するEvent、State、BLoCを配置する。 |
-| `apps/<app-name>/lib/features/<feature>/repositories/<resource>_repository.dart` | `apps/myproject-client/lib/features/checkout/repositories/cart_repository.dart` | Featureが必要とするデータ操作をRepositoryの契約として定義する。 |
-| `apps/<app-name>/lib/features/<feature>/repositories/<storage>_<resource>_repository.dart` | `apps/myproject-client/lib/features/checkout/repositories/sqlite_cart_repository.dart` | データベース、ファイル、端末ストレージなど、永続化先別のRepository実装を定義する。 |
-| `apps/<app-name>/lib/features/<feature>/repositories/<storage>_<resource>_record.dart` | `apps/myproject-client/lib/features/checkout/repositories/sqlite_cart_record.dart` | データベース、ファイル、端末ストレージへ保存する形式とFeature内の型との変換を定義する。 |
-| `apps/<app-name>/lib/features/<feature>/connectors/<capability>.dart` | `apps/myproject-client/lib/features/payment/connectors/payment_client.dart` | Featureが必要とする外部資源の操作を契約として定義する（例: `PaymentClient`、`Mailer`、`Clock`）。ファイル名は型名に合わせる。 |
-| `apps/<app-name>/lib/features/<feature>/connectors/<system>_<capability>.dart` | `apps/myproject-client/lib/features/payment/connectors/stripe_client.dart` | 接続先のシステムまたはサービスごとの実装を定義する。 |
-| `apps/<app-name>/lib/features/<feature>/connectors/<system>_<operation>_request.dart` | `apps/myproject-client/lib/features/payment/connectors/stripe_create_payment_request.dart` | 外部システムへ送るデータ形式とFeature内の型からの変換を定義する。 |
-| `apps/<app-name>/lib/features/<feature>/connectors/<system>_<operation>_response.dart` | `apps/myproject-client/lib/features/payment/connectors/stripe_create_payment_response.dart` | 外部システムから受け取るデータ形式とFeature内の型への変換を定義する。 |
+| `apps/<app-name>/lib/features/<feature>/repositories/` | `apps/myproject-client/lib/features/checkout/repositories/cart_repository.dart`、`apps/myproject-client/lib/features/checkout/repositories/sqlite/sqlite_cart_repository.dart` | Featureが必要とする永続化操作の契約と、保存先別の実装を配置する。実装を複数持つ場合は保存先ごとに分ける。 |
+| `apps/<app-name>/lib/features/<feature>/<capability>.dart` | `apps/myproject-client/lib/features/payment/payment_client.dart` | Featureが必要とする外部システムの操作を契約として定義する。ファイル名は型名に合わせる。 |
+| `apps/<app-name>/lib/features/<feature>/<external-system>/` | `apps/myproject-client/lib/features/payment/stripe/stripe_client.dart` | Repositoryとして表さない外部境界の実装と外部データ形式を、接続先ごとに配置する。 |
 | `apps/<app-name>/test/ui/` | `apps/myproject-client/test/ui/button/primary_button_test.dart` | `lib/ui/`に配置したUI部品のWidgetテストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<feature>_test.dart` | `apps/myproject-client/test/features/auth/auth_test.dart` | Featureが所有する型の値、状態、識別子、制約を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/<responsibility>/` | `apps/myproject-client/test/features/auth/sign_in/` | Feature内の責務に対応する単体テストを配置する。 |
-| `apps/<app-name>/test/features/<feature>/repositories/` | `apps/myproject-client/test/features/checkout/repositories/sqlite_cart_repository_test.dart` | Repositoryの変換、キャッシュ、エラー処理を検証する単体テストを配置する。 |
-| `apps/<app-name>/test/features/<feature>/connectors/` | `apps/myproject-client/test/features/payment/connectors/stripe_client_test.dart` | 外部システムとの境界の変換、エラー処理を検証する単体テストを配置する。 |
+| `apps/<app-name>/test/features/<feature>/repositories/` | `apps/myproject-client/test/features/checkout/repositories/sqlite/sqlite_cart_repository_test.dart` | Repositoryの変換、キャッシュ、エラー処理を検証する単体テストを保存先ごとに配置する。 |
+| `apps/<app-name>/test/features/<feature>/<external-system>/` | `apps/myproject-client/test/features/payment/stripe/stripe_client_test.dart` | 外部境界の変換、エラー処理を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/bloc/<bloc>_test.dart` | `apps/myproject-client/test/features/auth/presentation/bloc/sign_in_bloc_test.dart` | BLoCのEvent処理と状態遷移を検証する単体テストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/screens/<screen>_test.dart` | `apps/myproject-client/test/features/auth/presentation/screens/sign_in_screen_test.dart` | Screenの表示と操作を検証するWidgetテストを配置する。 |
 | `apps/<app-name>/test/features/<feature>/presentation/widgets/<widget>_test.dart` | `apps/myproject-client/test/features/auth/presentation/widgets/password_field_test.dart` | Feature内で再利用するWidgetの表示と操作を検証するWidgetテストを配置する。 |
@@ -80,7 +76,7 @@
 | BLoC | 同じFeatureの処理と型 |
 | `ui/` | Flutter SDKのみ |
 
-外部SDKのクライアント、Repository、外部システム境界の実装は`main.dart`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、Repositoryと外部システム境界の契約はFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
+外部境界の実装は`main.dart`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、外部境界の契約はFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
 
 ---
 

@@ -20,7 +20,7 @@
 
 ## 2. フォルダ構成
 
-本書と各実装規則のフォルダ構成表は、複数の実行単位を持つモノレポの構成を示す。表のパスはリポジトリルートを基準とする。言語またはフレームワークによる配置の制限や規則がある場合は、この表よりそちらを優先する。
+本書と各実装規則のフォルダ構成表では、複数の実行単位を持つモノレポを例として示す。表のパスはリポジトリルートを基準とする。言語またはフレームワークによる配置の制限や規則がある場合は、この表よりそちらを優先する。
 
 各種ファイルとディレクトリは実際に必要な場合のみ作る。
 
@@ -34,22 +34,20 @@
 
 ### ソース構成
 
-アプリケーションのソースは、Feature単位でまとめるFeature First構成とする。Featureは、一つの利用者目的または業務能力を表す。
+アプリケーションのソース構成の例として、Feature単位でまとめるFeature First構成を示す。Featureは、一つの利用者目的または業務能力を表す。
 
 Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
 
-外部システムや実行環境に依存する処理は、契約と実装を同じ場所へ置き、実装の名前で接続先や供給元を区別する。
-
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `<source-root>/app/` | [`routing/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | ルーティングと、アプリケーション全体の実行経路との接続を配置する。依存関係を構成するための専用のフォルダは設けない。 |
+| `<source-root>/app/` | [`routing/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | ルーティングと、アプリケーション全体の実行経路との接続を配置する。 |
 | `<source-root>/core/<name>/` | [`core/errors`](https://github.com/juspay/hyperswitch/blob/main/crates/common_utils/src/errors.rs)、[`core/clock`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)、[`core/id`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。時刻、乱数、識別子の発番のように通信を伴わない供給は、契約と実装をここへ置く。 |
-| `<source-root>/infra/<technology>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool) | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、起動点から呼び出す。ネットワーク越しの供給であっても、業務上の意味を持たないものはここへ置く。同じ技術で接続先が複数ある場合もフォルダは技術ごとに一つとし、接続先は役割を表す名前で区別して、起動点でそれぞれの設定から生成する。 |
+| `<source-root>/infra/<technical-resource>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool)、`infra/supabase` | ロガーやDB接続プールのように、Featureや業務ルールに依存しない構築処理を技術資源ごとに配置し、起動点から呼び出す。ディレクトリ名には postgres、supabase、sentry などの製品・サービス・プロトコル名、または logging のような技術機能名を使用する。 |
 | `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | [`presentation`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/handlers/` | [`handler`](https://docs.rs/axum/latest/axum/handler/index.html) | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/repositories/` | [`data/repositories/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/data/repositories) | Featureが所有するデータを永続化ストレージ（DB、ファイル、端末ストレージなど）へ保存、取得する契約と、保存先別の実装を配置する。 |
-| `<source-root>/features/<feature>/connectors/` | [`features/notification/connectors/email_client`](https://github.com/LukeMathWalker/zero-to-production/blob/main/src/email_client.rs)、[`features/payment/connectors/stripe/`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors/stripe)、[`features/observability/connectors/clickhouse/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/clickhouse) | ネットワーク越しの外部サービスを利用する契約と、接続先別の実装を配置する。複数のFeatureから使う場合も、最も強く所有するFeatureへ置き、他のFeatureはそのFeatureの公開APIを通じて参照する。 |
+| `<source-root>/features/<feature>/repositories/` | [gitoxideの`repository/`](https://github.com/GitoxideLabs/gitoxide/tree/main/gix/src/repository)、[Jujutsuの`repo.rs`](https://github.com/jj-vcs/jj/blob/main/lib/src/repo.rs) | Featureの永続化境界をまとめる場合に使用する。Repositoryの契約、対応する実装、外部データ形式を配置する。実装を複数持つ場合は保存先ごとに分ける。 |
+| `<source-root>/features/<feature>/<external-system>/` | [OpenDALの`github/`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql/`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`postgresql/`](https://github.com/apache/opendal/tree/main/core/services/postgresql)、[`s3/`](https://github.com/apache/opendal/tree/main/core/services/s3)、[Vectorの`postgres/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/postgres)、[`aws_s3/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/aws_s3) | 外部システム、サービス、データストアに依存する実装と外部データ形式を配置する。ディレクトリには、`github`、`jira`、`slack`、`postgres`、`mysql`、`s3`のように実際の接続先または外部資源を表す名前を使用する。複数のFeatureから使う場合も、最も強く所有するFeatureへ置き、他のFeatureはそのFeatureの公開APIを通じて参照する。 |
 | `<source-root>/ui/` | [`ui/`](https://docs.flutter.dev/app-architecture/case-study) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 | `<source-root>/<localization>/` | [`l10n`](https://docs.flutter.dev/ui/internationalization) | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
 | `<source-root>/locale_format/` | [`NumberFormat`](https://developer.android.com/reference/android/icu/text/NumberFormat) | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
@@ -138,8 +136,6 @@ Shell スクリプト以外の CLI に適用する。
 | --- | --- | --- |
 | 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を確認する。 |
 | 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を確認する。 |
-| 2. フォルダ構成 | [hyperswitch `Store` / `ReplicaStore`](https://github.com/juspay/hyperswitch/blob/83c7c809d3a0e81d524a3788576541a79505fd74/crates/storage_impl/src/database/store.rs#L69-L196) | 同じ技術で接続先が複数ある場合の扱いを確認する。4つのPostgreSQL接続先を、フォルダではなく`master_pool`、`replica_pool`などの名前で区別し、生成関数は共通で接続先ごとの設定を受け取る。 |
-| 2. フォルダ構成 | [vector `src/sinks/`](https://github.com/vectordotdev/vector/tree/1f7f0a70af1a3562625a95bc441545fa2dd4eef8/src/sinks) | 外部サービスごとの実装を技術名のフォルダへ分ける構成を確認する。同じ技術の接続先を複数使う場合は、フォルダを増やさず設定で識別子を与える。 |
 | 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | モジュールへ分ける時期と、パッケージへ切り出す時期を確認する。 |
 | 2. フォルダ構成 | [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) | 依存の向きを内側へそろえる規則を確認する。 |
 | 2. フォルダ構成 | [Guide to app architecture \| Android Developers](https://developer.android.com/topic/architecture) | 層の間で依存の向きを一方向に保つ構成を確認する。 |
