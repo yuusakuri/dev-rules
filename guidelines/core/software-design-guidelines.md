@@ -425,7 +425,7 @@ struct InMemoryUserRepository {
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: `github`、`jira`、`slack`、`postgres`、`mysql`、`s3` |
-| 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。役割に対応する語は「単語」から選び、外部境界だからという理由で境界を表す名詞を機械的に付けない。より具体的に役割を表せる名前があるときは、その名前を優先する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: `PaymentClient` / `StripeClient`、`ConnectivityWatcher` |
+| 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: `PaymentClient` / `StripeClient`、`ConnectivityWatcher` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
@@ -459,7 +459,9 @@ struct InMemoryUserRepository {
 | `socket` | OSが提供する通信端点をそのまま扱う型に使用する。 | [`UdpSocket`](https://doc.rust-lang.org/std/net/struct.UdpSocket.html) | 名詞 | 通信 |
 | `connection` | 確立済みの通信路を表す型に使用する。接続先または方式を実装の名前に含める。 | [`quinn`の`Connection`](https://docs.rs/quinn/latest/quinn/struct.Connection.html)、`PgConnection` | 名詞 | 通信 |
 | `stream` | 連続して流れるバイト列または値を、順に読み書きする型に使用する。境界が定められた単位を扱う場合は `frame`、`packet` を使う。 | [`TcpStream`](https://doc.rust-lang.org/std/net/struct.TcpStream.html)、[`futures`の`Stream`](https://docs.rs/futures/latest/futures/stream/trait.Stream.html) | 名詞 | 通信 |
+| `sink` | 連続して流れる値を順に受け取り、送り先へ渡す型に使用する。`stream`と対で使い、送り先を名前に含める。 | [`futures`の`Sink`](https://docs.rs/futures/latest/futures/sink/trait.Sink.html)、`MetricsSink` | 名詞 | 通信 |
 | `request`、`response` | 外部へ送る要求と、それに対する応答を表す型に使用する。対象の操作を名前に含める。 | [`http`の`Request`](https://docs.rs/http/latest/http/request/struct.Request.html)、[`Response`](https://docs.rs/http/latest/http/response/struct.Response.html) | 名詞 | 通信 |
+| `service` | 要求を受け取って応答を返す処理を、要求と応答の型で表した抽象に使用する。中間処理を重ねて合成する場合に使う。業務処理をまとめただけの型の名前には使わない。 | [`tower`の`Service`](https://docs.rs/tower/latest/tower/trait.Service.html) | 名詞 | 通信 |
 | `router` | 受け取った要求を、経路や条件に対応する処理へ振り分ける型に使用する。 | [`axum`の`Router`](https://docs.rs/axum/latest/axum/struct.Router.html) | 名詞 | 通信 |
 | `widget` | 画面へ描画する部品を表す型に使用する。描画する対象を名前に含める。 | [`ratatui`の`Widget`](https://docs.rs/ratatui/latest/ratatui/widgets/trait.Widget.html) | 名詞 | 表示 |
 | `tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | `SearchTokenizer`、[`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
@@ -473,6 +475,7 @@ struct InMemoryUserRepository {
 | `serializer` | プログラム内の構造化された値や型付きオブジェクトを、保存または転送できる表現へ変換する型に使用する。 | `JsonSerializer`、[`serde`の`Serializer`](https://docs.rs/serde/latest/serde/trait.Serializer.html) | 名詞 | 変換 |
 | `deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。 | `JsonDeserializer`、[`serde`の`Deserializer`](https://docs.rs/serde/latest/serde/trait.Deserializer.html) | 名詞 | 変換 |
 | `record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | [`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) | 名詞 | データ |
+| `snapshot` | ある時点の状態を写した読み取り専用の値を表す型に使用する。写した後は、元の状態の変化に影響されない。 | [rust-analyzerの`GlobalStateSnapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L214-L228)、`ConfigSnapshot` | 名詞 | データ |
 | `id` | 識別子を表す型の名前は `id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | `UserId`、[`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
 | `event` | すでに起きた出来事を表す型に使用する。名前は過去形にする。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html)、[`cqrs-es`の`DomainEvent`](https://docs.rs/cqrs-es/latest/cqrs_es/trait.DomainEvent.html) | 名詞 | データ |
 | `config` | 動作を決める設定値と、使用する実装の指定をまとめる型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html)、[AWS SDK for Rustの`SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137)、[`quinn`の`ClientConfig`](https://docs.rs/quinn/latest/quinn/struct.ClientConfig.html) | 名詞 | データ |
@@ -495,6 +498,7 @@ struct InMemoryUserRepository {
 | `mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 |
 | `transport` | メッセージの送信経路と送信手段を表す型に使用する。経路ごとに実装を差し替えられる場合に使い、送信手段が一つしかない場合は`client`を使う。 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)、[`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) | 名詞 | 通信 |
 | `publisher`、`producer` | メッセージをトピック、ブローカー、購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。 | `EventPublisher`、`KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
+| `subscriber`、`consumer` | トピック、ブローカー、キューからメッセージを受け取って処理する型に使用する。取得元の方式を実装の名前に含める。 | `EventSubscriber`、[`rdkafka`の`Consumer`](https://docs.rs/rdkafka/latest/rdkafka/consumer/trait.Consumer.html) | 名詞 | 通信 |
 | `pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool`、[`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
 | `cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache`、[`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
 | `buffer`、`buf` | バイト列や要素を一時的に蓄積する型に使用する。短縮形の `buf` も同じ意味で使用する。 | `ReceiveBuffer`、[`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html)、[`tokio`の`ReadBuf`](https://docs.rs/tokio/latest/tokio/io/struct.ReadBuf.html)、[`bytes`の`BufMut`](https://docs.rs/bytes/latest/bytes/buf/trait.BufMut.html) | 名詞 | データ |
