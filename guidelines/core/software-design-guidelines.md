@@ -23,6 +23,8 @@
 
 本書の原則は、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
+本書のコード例は、規則の形を示す目的でRustを用いる。例は実在するOSSの実装からの抜粋で、規則に関係しない部分は削るか`// ...`、`/* ... */`で省略する。複数の型や引数を独自の型へまとめるなどの書き換えは行わない。
+
 ---
 
 ## 2. 責務の分離
@@ -59,11 +61,25 @@ Type、Interface、Class、Functionなどのプログラミング言語上の構
 
 ## 3. 依存関係の管理
 
-### 具体ではなく抽象に依存する（Dependency Inversion）
+### 具体的な実装に直接依存せず、抽象に依存する（Dependency Inversion）
 
-上位モジュールを外部技術などの下位モジュールから分離する必要がある場合は、上位モジュールが必要とする契約を定義し、両者をその契約に依存させる。依存の向きを利用側の要求へ向けることで、具体的な実装の変更が上位の業務処理へ波及しない。
+業務ロジックを、外部I/O、永続化、時刻、ID生成、乱数などの外部技術から分離する必要がある場合は、必要とする契約を定義し、その契約に依存させる。依存の向きを利用側の要求へ向けることで、具体的な実装の変更が業務処理へ波及しない。
 
-抽象を導入するのは、実装の交換、外部技術との分離、複数実装の切り替えが必要な場合に限る。純粋な計算、値変換、内部データ構造、交換する必要のない実装には、将来必要になる可能性やテスト用のモックだけを理由に抽象を追加しない。抽象がなければ、実装と処理の流れをそのまま追える。
+抽象を導入するのは、実装の交換、外部技術との分離、複数実装の切り替えが必要な場合に限る。交換する必要のない実装には、抽象を追加しない。
+
+次は、ビルドの実行方法だけを差し替えられるようにした例である。`compile`はコンパイル処理全体を担うが、コンパイラーを実際に起動する部分だけを`Executor`という契約へ切り出している。既定の呼び出し元は`DefaultExecutor`を渡し、ビルドの進行を観測したい呼び出し元は別の実装を渡す。`compile`は`exec`の中身を知らないため、実行方法が変わってもビルドの手順には影響しない。契約にしたのは差し替えたい一点だけで、コンパイル処理の他の部分は抽象化していない。
+
+```rust
+pub trait Executor: Send + Sync + 'static {
+    fn exec(&self, cmd: &ProcessBuilder, id: PackageId /* ... */) -> CargoResult<()>;
+    // ...
+}
+
+pub fn compile<'a>(ws: &Workspace<'a>, options: &CompileOptions) -> CargoResult<Compilation<'a>> {
+    let exec: Arc<dyn Executor> = Arc::new(DefaultExecutor);
+    compile_with_exec(ws, options, &exec)
+}
+```
 
 ### 差し替えても壊れないようにする（Liskov Substitution）
 
@@ -73,39 +89,189 @@ Type、Interface、Class、Functionなどのプログラミング言語上の構
 
 モジュールは、新しい振る舞いの追加に対して開き、既存コードの変更に対して閉じた状態を目指す。機能追加のたびに既存コードへ手を入れると、動いていた処理まで巻き込む。インターフェースとDependency Inversionを組み合わせれば、実装を追加するだけで機能を広げられる。
 
-### 実行環境に依存する処理を差し替え可能にする
-
-外部I/O、永続化、時刻、ID生成、乱数など、実行のたびに結果が変わり得るものは、呼び出し元から差し替えられる形で抽象化する。時刻やIDをテスト用の固定値へ置き換えれば、実行のたびに変わる値に左右されずに検証できる。
-
 ### 依存関係を明示的に受け渡す（Dependency Injection）
 
-処理が必要とする依存関係は、コンストラクター、関数の引数、生成時に設定するフィールドなど、呼び出し側から渡せる形で宣言する。必須の依存関係を省略可能な項目として扱わず、生成時または呼び出し時に不足を検出できる型とAPIにする。
+必要な依存関係はその具体型または抽象型をコンストラクターまたは関数の引数として受け取る。ただし、処理対象となる入力値や、実装の内部だけで使う補助オブジェクトは、依存関係として外部から渡さない。
 
 処理の内部から、グローバル変数、静的アクセサー、DIコンテナー、Service Locatorを使って依存関係を検索しない。取得場所が隠れると、処理の理解と単体テストが難しくなる。
 
-DIコンテナーを使用する場合も、業務処理を担う型や関数は、通常のコンストラクターまたは関数呼び出しで生成、実行できる状態を保つ。
+次は、検索処理が協働オブジェクトと処理対象を別々に受け取る例である。パターン照合を行う`matcher`、走査を行う`searcher`、結果を出力する`printer`は、いずれも実行前に決まり検索の間ずっと使い回すため、`search_worker`の引数として一度だけ渡す。対して走査先の`haystack`は呼び出しごとに変わる処理対象なので、依存関係ではなく`search`の引数として渡す。協働オブジェクトと処理対象を引数の位置で区別しているため、`search_worker`の呼び出しを見れば、この検索が何に依存しているかが分かる。テストでは、`printer`に検証用の実装を渡して出力を確認できる。
 
-### 依存関係の構成を業務処理から分離する
+```rust
+let mut searcher = args.search_worker(
+    args.matcher()?,
+    args.searcher()?,
+    args.printer(mode, args.stdout()),
+)?;
+for haystack in haystacks {
+    searcher.search(&haystack)?;
+}
+```
 
-依存関係の実装、設定、生成、結線、ライフサイクルは、Composition Rootとしてアプリケーションの起動または構成を担当する範囲で決定する。
+### 起動点で依存関係を構成する
 
-結線には、通常のコード、DIコンテナー、自動登録のいずれも使用できる。方式にかかわらず、最終的な依存関係を追跡でき、必須の依存関係の未登録やライフサイクルの不整合をビルド時または起動時に検出できるようにする。
+実行可能なアプリケーションは、`main`などの起動点で設定を読み、複数の処理で共有する外部資源と依存関係の実装を生成し、最上位の実行対象を組み立ててから実行を開始する。この構成箇所をComposition Rootと呼ぶ。一回の操作の間だけ使う資源は、起動点ではなく、その操作を担う処理の内部で生成する。
 
-終了処理が必要な依存関係は、それを生成または所有する構成側でライフサイクルを管理する。初期化は依存される側から依存する側の順に行い、終了はその逆順に行う。順序を誤ると、まだ初期化されていない依存関係や、解放済みのリソースへのアクセスが起きる。
+DIコンテナーを使用する場合も参照箇所は起動点に限定する。業務処理を担う型や関数はコンテナーへ依存させない。
 
-### Composition Rootを構成単位へ分割する
+次は、Webアプリケーションの起動点である。`main`は`InMemoryUserRepository`という具体的な実装をここで一度だけ生成し、`Arc`で包んで共有状態`AppState`へ入れ、ルーティングと結び付けてから待ち受けを開始する。ハンドラーとその先の処理は、どの実装が選ばれたかを知らない。保存先をDBへ変えるときに書き換えるのは、この起動点で生成している行だけになる。
 
-Composition Rootが多くの依存関係を構成し、一つの起動処理では依存関係を追跡しにくくなる場合は、接続先、外部資源、依存先が扱う責務領域ごとにファイルを分割する。依存先を、Featureなどの依存元ごと、resources や services などの技術的な役割ごとでグループ化することは避ける。依存関係を依存関係として包括的に扱うのは避け、それぞれ責務を持つ構成要素のひとつとして扱う。各依存元や依存先の構築には、必要に応じてBuilderやFactoryを使用する。
+```rust
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let user_repository = InMemoryUserRepository::default();
 
-起動処理は共有する外部資源を生成して各構成単位を呼び出し、各構成単位は必要な依存関係を引数で個別に明示的に受け取り、構築済みの公開境界を返す。
+    let app = Router::new()
+        .route("/users", post(handle_create_user))
+        // ...
+        .with_state(AppState {
+            user_repository: Arc::new(user_repository),
+        });
 
-### 共有する依存関係の束を境界に限定する
+    let listener = TcpListener::bind("127.0.0.1:3000").await?;
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+```
 
-フレームワークが一つの状態型を要求する場合や、複数の構成単位が同じ外部資源を使う場合は、Composition Rootで生成した依存関係を専用の型へ束ねてよい。この型は関数、コンストラクター、フレームワーク境界の引数として明示的に渡し、グローバルな取得手段や、型名または文字列から依存関係を検索する機能を持たせない。
+生成手順が複雑な場合は、生成対象に固有のBuilderまたはFactoryを使用し、任意の依存関係を検索する汎用コンテナーとして扱わない。
 
-構成単位とフレームワーク境界は、束から必要な依存関係だけを取り出して業務処理へ渡す。業務処理が束全体を受け取ると、実際に必要な依存関係が引数の宣言から分からなくなる。
+次は、一回の操作の間だけ必要な資源を、それを使う処理の内部で生成する例である。前処理コマンドのプロセスと、その出力を読む`rdr`は、この`path`の検索でしか使わない。呼び出し側がこれらを組み立てて渡す形にすると、終了処理の責任まで呼び出し側へ広がる。ここでは生成から`close`までを`search_preprocessor`が持ち、検索が失敗した場合でも終了処理を実行するために、`result?`より先に`rdr.close()`を呼んでいる。
 
-Contextや状態抽出機能による依存関係の取得は、UIコンポーネント、HTTPハンドラーなどのフレームワーク境界に限定する。取得した依存関係は業務処理へ明示的に渡し、業務処理の内部からContextや状態抽出機能を使用しない。
+```rust
+fn search_preprocessor(&mut self, path: &Path) -> io::Result<SearchResult> {
+    let bin = self.config.preprocessor.as_ref().unwrap();
+    let mut cmd = std::process::Command::new(bin);
+    cmd.arg(path).stdin(Stdio::from(File::open(path)?));
+
+    let mut rdr = self.command_builder.build(&mut cmd)?;
+    let result = self.search_reader(path, &mut rdr);
+    let close_result = rdr.close();
+    let search_result = result?;
+    close_result?;
+    Ok(search_result)
+}
+```
+
+### 通信の共通処理をサービスごとのClientから分離する
+
+外部サービスや機能ごとの`Client`は、その対象に固有の操作と、接続先など対象ごとに異なる設定を担当する。認証、リトライ、タイムアウト、共通ヘッダー、通信エラーの変換など、複数の`Client`に共通する通信処理は下位の通信層へ分離し、各`Client`から必要な設定を渡す。サービスごとに異なる設定まで一つの共通`Client`へ集約しない。
+
+次は、サービスごとのClientが共通して使う通信設定を、下位の層が一つの型へまとめた例である。資格情報の供給元、再試行とタイムアウトの方針、HTTP通信の実装をこの型が持つため、各Clientはこれらを自前で用意せず、対象に固有の操作だけを担当する。`credentials_provider`と`http_client`が示すとおり、まとめているのは設定値だけではなく、値を供給する仕組みと通信に使う資源も含む。
+
+```rust
+pub struct SdkConfig {
+    credentials_provider: Option<SharedCredentialsProvider>,
+    region: Option<Region>,
+    endpoint_url: Option<String>,
+    retry_config: Option<RetryConfig>,
+    timeout_config: Option<TimeoutConfig>,
+    http_client: Option<SharedHttpClient>,
+    // ...
+}
+```
+
+### 共有可能な通信資源を再利用する
+
+複数のClientが共有する認証、接続、Retryなどの動作を決める設定や、実装の指定などは、Configにまとめて各Clientへ渡す。
+
+次は、その設定を組み立ててClientへ渡す側である。`load_defaults`が環境変数、共有設定ファイル、実行環境のメタデータなどを順に探索して設定を一度だけ作り、各サービスのClientは`Client::new(&config)`で同じ値を受け取る。扱うサービスが増えても資格情報の解決はやり直されず、接続に使う資源もClient間で共有される。
+
+```rust
+let config = aws_config::load_defaults(BehaviorVersion::v2023_11_09()).await;
+let client = aws_sdk_dynamodb::Client::new(&config);
+```
+
+### 共有状態は実行責務とライフサイクルでまとめる
+
+フレームワークが一つの状態型を要求する場合や、イベントループなどの実行主体が複数の状態と資源を同じ期間所有する場合は、利用範囲とライフサイクルが一致する値を専用の型へまとめてよい。利用側が共有状態の一部しか使わない場合は、その部分だけを渡す。新しく定義する共有状態の型名には、`AppState`または`GlobalState`を優先して使用する。フレームワークが別の名前を定めている場合は、その規約に従う。
+
+次は、言語サーバーのイベントループを実行する型である。`GlobalState`は、クライアントへの送信路`sender`、処理を別スレッドで走らせる`task_pool`、設定`config`を持つ。これらは`new`で一度に組み立てられ、`run`が回っている間だけ生き、ループの終了とともに解放される。この型は値を集めた入れ物ではなく、`run`でイベントを受け取り`handle_event`へ渡す実行主体そのものであり、持っている値の生存期間はループの生存期間と一致する。フィールドが複数あることを理由に分割していない。
+
+```rust
+pub(crate) struct GlobalState {
+    sender: Sender<lsp_server::Message>,
+    pub(crate) task_pool: Handle<TaskPool<Task>, Receiver<Task>>,
+    pub(crate) config: Arc<Config>,
+    // ...
+}
+
+impl GlobalState {
+    pub(crate) fn new(sender: Sender<lsp_server::Message>, config: Config) -> GlobalState {
+        let task_pool = {
+            let (sender, receiver) = unbounded();
+            let handle = TaskPool::new_with_threads(sender, config.main_loop_num_threads());
+            Handle { handle, receiver }
+        };
+        // ...
+        GlobalState {
+            sender,
+            task_pool,
+            config: Arc::new(config),
+        }
+    }
+
+    fn run(mut self, inbox: Receiver<lsp_server::Message>) -> anyhow::Result<()> {
+        while let Ok(event) = self.next_event(&inbox) {
+            self.handle_event(event);
+        }
+        // ...
+    }
+
+    pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
+        GlobalStateSnapshot {
+            config: Arc::clone(&self.config),
+            analysis: self.analysis_host.analysis(),
+            // ...
+        }
+    }
+}
+```
+
+次は、その状態を使う側である。重い処理を別スレッドで走らせるため、`GlobalState`は自身が持つ`task_pool`へ処理を渡す。このとき状態そのものは渡せないので、`snapshot()`で読み取りに必要な値だけを写した`GlobalStateSnapshot`を作り、クロージャーへ移動させる。実行主体が状態を持ち続けたまま、別スレッドへは必要な部分だけを渡す形になる。
+
+```rust
+self.task_pool
+    .handle
+    .spawn(ThreadIntent::LatencySensitive, {
+        let snapshot = self.snapshot();
+        move || {
+            // ...
+        }
+    });
+```
+
+次は、同じ考え方をWebフレームワークの共有状態へ当てはめた例である。`AppState`はプロセス全体で共有する値をまとめた型で、フレームワークはハンドラーへこれを`State`として渡す。`handle_create_user`は状態を受け取ってそのまま使う。一方`handle_get_user`は`user_repository`しか使わないため、`FromRef`の実装を通じて、状態全体ではなくその部分だけを受け取っている。ハンドラーの引数がそのハンドラーの必要とするものだけになり、テストでも状態全体を組み立てずに済む。
+
+```rust
+#[derive(Clone)]
+struct AppState {
+    user_repository: Arc<dyn UserRepository>,
+}
+
+async fn handle_create_user(
+    State(state): State<AppState>,
+    Json(params): Json<UserParams>,
+) -> Json<User> {
+    // ...
+    state.user_repository.save_user(&user);
+
+    Json(user)
+}
+
+impl FromRef<AppState> for Arc<dyn UserRepository> {
+    fn from_ref(app_state: &AppState) -> Arc<dyn UserRepository> {
+        app_state.user_repository.clone()
+    }
+}
+
+async fn handle_get_user(
+    State(user_repository): State<Arc<dyn UserRepository>>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<User>, StatusCode> {
+    // ...
+}
+```
 
 ### 循環依存を避ける
 
@@ -219,6 +385,20 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 検索条件は用途ごとの取得操作または読み取り専用クエリとして定義する。既存のORMやデータアクセスAPIと同じ粒度の汎用CRUDを包むだけのRepositoryは設けない。
 
+次は、利用者の永続化を分離した例である。`UserRepository`が公開するのは、業務ロジックが必要とする取得と保存だけで、どこへどう保存するかは現れない。`InMemoryUserRepository`は`HashMap`で保持するが、この`HashMap`も、複数スレッドから使うための`Arc<Mutex<_>>`も、実装の内側にある。保存先をDBへ置き換えても、契約と利用側は変わらない。テストでもこの実装をそのまま使える。
+
+```rust
+trait UserRepository: Send + Sync {
+    fn get_user(&self, id: Uuid) -> Option<User>;
+
+    fn save_user(&self, user: &User);
+}
+
+struct InMemoryUserRepository {
+    map: Arc<Mutex<HashMap<Uuid, User>>>,
+}
+```
+
 ### 外部システムとの境界を分離する
 
 外部資源（通知、他サービスのAPI、デバイス、時刻、乱数など）を利用する場合は、利用側の目的に沿った操作を公開する境界を定義し、外部APIの呼び出し、外部形式との変換、外部SDKの型とエラーを実装内へ閉じ込める。引数、戻り値、エラーは利用側が扱う型で定義し、業務上の判断は利用側で行う。
@@ -244,14 +424,13 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | ルール | 内容 |
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
-| 外部接続の命名 | 外部通信やインフラストラクチャの処理を、`api`、`data`、`infrastructure` のような抽象的な技術概念で命名、集約しない。実際の接続先システム、サービス、通信対象を明示する（例: `stripe_payment`、`device_hub`）。 |
-| 外部との境界の命名 | 外部システムや外部資源との境界は、利用側へ何を提供するかで命名する。実装の名前には接続先、方式、供給元を含める。NG: `SystemClockGateway`、`UuidGateway`、`RandomGateway`、OK: `Clock` / `SystemClock`、`IdGenerator`、`PaymentClient` / `StripeClient` |
+| 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: `github`、`jira`、`slack`、`postgres`、`mysql`、`s3` |
+| 外部境界の型名 | 外部との境界を表す型は、提供する機能や通信モデルで命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`StripeConnector`、OK: `Client`、`Repository`、`Store`、`Provider`、`Clock`、`Connection`、`Endpoint`、`Stream`、`Publisher`、`Listener`、`Transport`、`Gateway` / `StripeClient`、`PostgresOrderRepository` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
 | データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: `Message`、`Frame` |
 | 真偽値 | `is` / `has` / `can` / `should` プレフィックス |
-| 関数名 | 動詞で始める |
 | 要求と完了イベントの名前 | 処理の実行を求める型名は`Request`で終える。完了した出来事を表すイベントの名前には過去形を使用する。例：`InitRequest`、`Initialized` |
 | イベント待受属性名 | 要求またはイベントの発生を待ち受ける属性名は`on_`で始め、その後に対応するイベント名を続ける。例：`on_init_request`、`on_initialized` |
 | イベント処理関数名 | 要求またはイベントを受け取って処理する関数名は`handle_`で始め、その後に対応するイベント名を続ける。例：`handle_init_request`、`handle_initialized` |
@@ -295,20 +474,19 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 | `record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | [`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) | 名詞 | データ |
 | `id` | 識別子を表す型の名前は `id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | `UserId`、[`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
 | `event` | すでに起きた出来事を表す型に使用する。名前は過去形にする。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html)、[`cqrs-es`の`DomainEvent`](https://docs.rs/cqrs-es/latest/cqrs_es/trait.DomainEvent.html) | 名詞 | データ |
-| `config` | 実行時に読み込む設定値の集合を表す型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html) | 名詞 | データ |
+| `config` | 動作を決める設定値と、使用する実装の指定をまとめる型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html)、[AWS SDK for Rustの`SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137)、[`quinn`の`ClientConfig`](https://docs.rs/quinn/latest/quinn/struct.ClientConfig.html) | 名詞 | データ |
 | `formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter`、[`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
 | `validate` | 入力が形式、範囲、不変条件などの制約を満たすか検証する操作に使用する。検証専用の型を作らず、検証対象の型へ実装する。 | [`validator`の`Validate`](https://docs.rs/validator/latest/validator/trait.Validate.html) | 動詞 | 解析 |
-| `loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | `ConfigLoader`、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
+| `loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | [AWS SDK for Rustの`ConfigLoader`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L280)、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
 | `list` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | `UserList`、[`LinkedList`](https://doc.rust-lang.org/std/collections/struct.LinkedList.html) | 名詞 | 集合 |
 | `set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | `PermissionSet`、[`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) | 名詞 | 集合 |
 | `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap`、[`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
 | `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore`、[`object_store`の`ObjectStore`](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html) | 名詞 | データ |
 | `registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry`、[`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
-| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 | `OrderRepository`、`PostgresOrderRepository`、[`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html) | 名詞 | データ |
+| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 | `OrderRepository`、`PostgresOrderRepository`、[`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html)、[compass_appの`data/repositories/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/data/repositories) | 名詞 | データ |
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
-| `connector` | 特定の外部システムやサービスへの接続と、その形式変換をまとめた実装に使用する。接続先を名前に含める。差し替え可能な実装を接続先ごとに並べる場合に使用する。 | `StripeConnector`、`SlackConnector`、[HyperSwitchの`connectors`](https://github.com/juspay/hyperswitch/tree/main/crates/hyperswitch_connectors/src/connectors) | 名詞 | 通信 |
 | `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
-| `provider` | 値そのものではなく、要求された値や機能を取得または生成して供給する役割に使用する。何を供給するかを名前に含め、役割をより具体的に表せる名前があるときはその名前を優先する。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、`ConfigProvider` | 名詞 | データ |
+| `provider` | 値そのものではなく、要求された値や機能を取得または生成して供給する役割に使用する。何を供給するかを名前に含め、役割をより具体的に表せる名前があるときはその名前を優先する。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、[AWS SDK for Rustの`SharedCredentialsProvider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-credential-types/src/provider.rs#L79) | 名詞 | データ |
 | `generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator`、[`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/) | 名詞 | 生成 |
 | `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
 | `mock`、`fake` | テストのために本物の実装を置き換える型に使用する。呼び出しの記録と検証を目的とする場合は `mock`、動作する簡易な代替実装には `fake` を使う。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/)、[`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
@@ -529,8 +707,33 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
 | 3. 依存関係の管理 | [Inversion of Control Containers and the Dependency Injection pattern](https://martinfowler.com/articles/injection.html) | 依存性注入とService Locatorを比較し、構成と利用の分離を説明する。 |
+| 3. 依存関係の管理 | [Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/) | Composition Rootをアプリケーションの起動点付近に置き、アプリケーションごとに一つ設ける考え方を説明する。 |
+| 3. 依存関係の管理 | [Architectural principles - .NET](https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles) | Dependency Inversionと依存関係の明示を、上位の方針と下位の実装詳細の依存方向から説明する。 |
 | 3. 依存関係の管理 | [Dependency injection guidelines - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines) | 明示的な依存性注入、Service Locatorの回避、依存関係のライフサイクルを説明する。 |
 | 3. 依存関係の管理 | [Dependency Injection :: Spring Framework](https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html) | コンストラクター注入とコンテナーによる依存関係の構成を説明する。 |
+| 3. 依存関係の管理 | [Cargo `Executor`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/compiler/mod.rs#L130-L153) | 「具体的な実装に直接依存せず、抽象に依存する」のコード例の抜粋元。契約の定義。掲載時に既定実装を持つ`init`と`force_rebuild`を削っている。 |
+| 3. 依存関係の管理 | [Cargo `ops::compile`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/ops/cargo_compile/mod.rs#L131-L137) | 同じコード例の抜粋元。差し替えを必要としない呼び出しが`DefaultExecutor`を選ぶ箇所。 |
+| 3. 依存関係の管理 | [Cargo `main`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/bin/cargo/main.rs#L17-L58) | 起動点で`GlobalContext`を生成し、CLIの実行処理へ渡す実装。 |
+| 3. 依存関係の管理 | [ripgrep `search`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L113-L141) | 「依存関係を明示的に受け渡す」のコード例の抜粋元。掲載時に統計と打ち切り、エラーの分岐を削っている。 |
+| 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の抜粋元。掲載時にエラーへの文脈付与（`map_err`）を削っている。 |
+| 3. 依存関係の管理 | [Google Cloud Rust Storage `ClientBuilder`](https://github.com/googleapis/google-cloud-rust/blob/714e6ba9c814bdd97b19db014aeae7900f5639e1/src/storage/src/storage/client.rs#L388-L608) | Storage固有のClientが、接続先、認証情報、リトライなどの設定を共通の`ClientConfig`へ渡し、GAXのHTTPおよびgRPC通信層を構成する実装。 |
+| 3. 依存関係の管理 | [Google Cloud Rust GAX `ClientBuilder`](https://github.com/googleapis/google-cloud-rust/blob/714e6ba9c814bdd97b19db014aeae7900f5639e1/src/gax/src/client_builder.rs#L145-L425) | サービスごとのClientBuilderに共通する接続先、認証情報、リトライ、タイムアウトの設定機構を提供する実装。 |
+| 3. 依存関係の管理 | [reqwest `Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 内部に接続プールを持つClientを生成し直さず、複製または共有して再利用する方法を説明する。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L338) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時に約40あるフィールドと、その生成のうち4つ以外を削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::run`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L177-L218) | 同じコード例の抜粋元。状態を所有する型自身がイベントループを回す箇所。掲載時に起動時の登録処理と終了通知の判定を削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。状態から読み取り用の値を写す箇所。掲載時に写す12フィールドのうち2つ以外を削っている。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::update_tests`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L792-L800) | 所有した値を取り出して使うコード例の抜粋元。タスクプールへ、状態から作った読み取り用の値を渡して実行する。 |
+| 3. 依存関係の管理 | [axum `State`のSubstates](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/axum/src/extract/state.rs#L169-L215) | 部分状態を受け取るコード例の抜粋元。`FromRef`で共有状態から必要な値だけを取り出す。 |
+| 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時にログの初期化と、ジェネリクスで構成したルーターを削っている。 |
+| 3. 依存関係の管理 | [State in axum::extract](https://docs.rs/axum/latest/axum/extract/struct.State.html) | フレームワークが要求する共有状態の設定方法と、必要な部分状態を`FromRef`で取り出す方法を説明する。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137) | 「通信の共通処理をサービスごとのClientから分離する」のコード例の抜粋元。掲載時に26あるフィールドのうち6つ以外を削っている。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `load_defaults`の実行例](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L40-L41) | 「共有可能な通信資源を再利用する」のコード例の抜粋元。組み立てた設定をサービスのClientへ渡す箇所。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `CredentialsProviderChain`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/credentials.rs#L189-L193) | 資格情報を環境変数、プロファイル、実行環境のメタデータの順に解決する構成を確認する。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `region::default_provider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/region.rs#L19-L21) | 接続先リージョンの探索元と順序を確認する。 |
+| 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
+| 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「永続化処理をRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体を削っている。 |
+| 6. 設計パターン | [Repository（PoEAA）](https://martinfowler.com/eaaCatalog/repository.html) | 抜粋元の`UserRepo`を`UserRepository`へ改名した際の、名前の出典。 |
+| 7. 命名 | [rust-analyzer `handlers::request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L77) | 抜粋元の`create_user_dyn`などを`handle_create_user`へ改名した際の、`handle_`で始める書き方の出典。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |
