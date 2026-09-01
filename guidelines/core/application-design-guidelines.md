@@ -44,7 +44,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | --- | --- | --- |
 | `<source-root>/app/` | [`routing/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | ルーティングと、アプリケーション全体の実行経路との接続を配置する。依存関係を構成するための専用のフォルダは設けない。 |
 | `<source-root>/core/<name>/` | [`core/errors`](https://github.com/juspay/hyperswitch/blob/main/crates/common_utils/src/errors.rs)、[`core/clock`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)、[`core/id`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。時刻、乱数、識別子の発番のように通信を伴わない供給は、契約と実装をここへ置く。 |
-| `<source-root>/infra/<technology>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool) | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、起動点から呼び出す。ネットワーク越しの供給であっても、業務上の意味を持たないものはここへ置く。同じ技術で接続先が複数ある場合もフォルダは技術ごとに一つとし、接続先の違いは起動点で設定を与えて生成し分ける。 |
+| `<source-root>/infra/<technology>/` | [`infra/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[`infra/postgres/pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool) | Featureの型や業務ルールに依存しない技術基盤（ロガー、DB接続プール、Crash Reportingなど）の構築処理を、採用した技術ごとにまとめて配置し、起動点から呼び出す。ネットワーク越しの供給であっても、業務上の意味を持たないものはここへ置く。同じ技術で接続先が複数ある場合もフォルダは技術ごとに一つとし、接続先は役割を表す名前で区別して、起動点でそれぞれの設定から生成する。 |
 | `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。 |
 | `<source-root>/features/<feature>/presentation/` | [`presentation`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/handlers/` | [`handler`](https://docs.rs/axum/latest/axum/handler/index.html) | FeatureがUIを介さず外部からの要求を受け取る境界（HTTP、RPC、メッセージ、CLIなど）を配置する。業務ロジックはFeature内の処理へ委譲する。 |
@@ -138,6 +138,8 @@ Shell スクリプト以外の CLI に適用する。
 | --- | --- | --- |
 | 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を確認する。 |
 | 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を確認する。 |
+| 2. フォルダ構成 | [hyperswitch `Store` / `ReplicaStore`](https://github.com/juspay/hyperswitch/blob/83c7c809d3a0e81d524a3788576541a79505fd74/crates/storage_impl/src/database/store.rs#L69-L196) | 同じ技術で接続先が複数ある場合の扱いを確認する。4つのPostgreSQL接続先を、フォルダではなく`master_pool`、`replica_pool`などの名前で区別し、生成関数は共通で接続先ごとの設定を受け取る。 |
+| 2. フォルダ構成 | [vector `src/sinks/`](https://github.com/vectordotdev/vector/tree/1f7f0a70af1a3562625a95bc441545fa2dd4eef8/src/sinks) | 外部サービスごとの実装を技術名のフォルダへ分ける構成を確認する。同じ技術の接続先を複数使う場合は、フォルダを増やさず設定で識別子を与える。 |
 | 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | モジュールへ分ける時期と、パッケージへ切り出す時期を確認する。 |
 | 2. フォルダ構成 | [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) | 依存の向きを内側へそろえる規則を確認する。 |
 | 2. フォルダ構成 | [Guide to app architecture \| Android Developers](https://developer.android.com/topic/architecture) | 層の間で依存の向きを一方向に保つ構成を確認する。 |
