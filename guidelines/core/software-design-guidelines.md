@@ -424,8 +424,8 @@ struct InMemoryUserRepository {
 | ルール | 内容 |
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
-| 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、`github`、`jira`、`slack`、`postgres`、`mysql`、`s3`のように、実際の接続先または外部資源で命名する。`connectors`、`clients`、`gateways`のように型の役割だけを表す共通の配置名は使用しない。 |
-| 外部境界の型名 | 外部との境界を表す型は、提供する機能や通信モデルで命名する。`Client`、`Repository`、`Store`、`Provider`、`Clock`、`Connection`、`Endpoint`、`Stream`、`Publisher`、`Listener`、`Transport`、`Gateway`など既存の用語を使用し、複数の実装を区別する場合は具体型に接続先または供給元を含める。`Connector`は型の役割を表す名前として使用しない。 |
+| 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: `github`、`jira`、`slack`、`postgres`、`mysql`、`s3` |
+| 外部境界の型名 | 外部との境界を表す型は、提供する機能や通信モデルで命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`StripeConnector`、OK: `Client`、`Repository`、`Store`、`Provider`、`Clock`、`Connection`、`Endpoint`、`Stream`、`Publisher`、`Listener`、`Transport`、`Gateway` / `StripeClient`、`PostgresOrderRepository` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
