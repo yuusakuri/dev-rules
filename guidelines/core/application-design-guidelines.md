@@ -36,7 +36,7 @@
 
 アプリケーションのソース構成の例として、Feature単位でまとめるFeature First構成を示す。Featureは、一つの利用者目的または業務能力を表す。
 
-Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
+Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念や外部システムの実装も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
 
 `<technical-resource>`には、`postgres`、`stripe`、`s3`、`sentry`のような製品、サービス、プロトコルの名前、または`logging`のような技術機能の名前を使用する。Featureの型に依存しない構築処理は`infra/`へ、Featureの型に依存する実装はそのFeatureの下へ置く。
 
@@ -47,7 +47,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | `<source-root>/infra/<technical-resource>/` | [hyperswitchの`router_env/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[sqlxの`pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool)、[hyperswitchの`storage_impl/database`](https://github.com/juspay/hyperswitch/tree/main/crates/storage_impl/src/database)、[hyperswitchの`redis_interface`](https://github.com/juspay/hyperswitch/tree/main/crates/redis_interface) | ロガー、DB接続プール、キャッシュ接続のように、Featureの型や業務ルールに依存しない構築処理を配置し、起動点から呼び出す。同じ技術資源で接続先が複数ある場合もディレクトリは一つとし、接続先ごとの違いは起動点で設定を与えて生成し分ける。 |
 | `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。HTTP、RPC、メッセージ、CLIなど外部からの要求を受け取る処理は、業務ロジックを持たず、Feature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/presentation/` | [`presentation`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/<technical-resource>/` | [OpenDALの`github/`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql/`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`postgresql/`](https://github.com/apache/opendal/tree/main/core/services/postgresql)、[`s3/`](https://github.com/apache/opendal/tree/main/core/services/s3)、[Vectorの`postgres/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/postgres)、[`aws_s3/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/aws_s3) | Featureの型に依存する、外部システム、サービス、データストアの実装と外部データ形式を配置する。永続化の実装もここへ置く。複数のFeatureから使う場合も、最も強く所有するFeatureへ置き、他のFeatureはそのFeatureの公開APIを通じて参照する。 |
+| `<source-root>/features/<feature>/<technical-resource>/` | [OpenDALの`github/`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql/`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`postgresql/`](https://github.com/apache/opendal/tree/main/core/services/postgresql)、[`s3/`](https://github.com/apache/opendal/tree/main/core/services/s3)、[Vectorの`postgres/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/postgres)、[`aws_s3/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/aws_s3) | Featureの型に依存する、外部システム、サービス、データストアの実装と外部データ形式を配置する。永続化の実装もここへ置く。 |
 | `<source-root>/ui/` | [`ui/`](https://docs.flutter.dev/app-architecture/case-study) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
 | `<source-root>/<localization>/` | [`l10n`](https://docs.flutter.dev/ui/internationalization) | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
 | `<source-root>/locale_format/` | [`NumberFormat`](https://developer.android.com/reference/android/icu/text/NumberFormat) | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
