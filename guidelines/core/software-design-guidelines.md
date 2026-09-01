@@ -173,7 +173,7 @@ pub struct SdkConfig {
 
 ### 共有可能な通信資源を再利用する
 
-複数の`Client`が同じ認証情報や接続プールなどの通信資源を利用できる場合は、それらを`Client`ごとに生成せず共有する。接続管理を実行環境が提供する場合は、共有だけを目的とした独自の`HTTP Client`を設けない。
+複数のClientが共有する認証、接続、Retryなどの動作を決める設定や、実装の指定などは、Configにまとめて各Clientへ渡す。
 
 次は、その設定を組み立ててClientへ渡す側である。`load_defaults`が環境変数、共有設定ファイル、実行環境のメタデータなどを順に探索して設定を一度だけ作り、各サービスのClientは`Client::new(&config)`で同じ値を受け取る。扱うサービスが増えても資格情報の解決はやり直されず、接続に使う資源もClient間で共有される。
 
@@ -431,7 +431,6 @@ struct InMemoryUserRepository {
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
 | データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: `Message`、`Frame` |
 | 真偽値 | `is` / `has` / `can` / `should` プレフィックス |
-| 関数名 | 動詞で始める。ただし、`new`、`with_*`、`as_*`、`to_*`、`into_*`のように、言語やAPIの慣例が定める形がある場合はそれに従う。 |
 | 要求と完了イベントの名前 | 処理の実行を求める型名は`Request`で終える。完了した出来事を表すイベントの名前には過去形を使用する。例：`InitRequest`、`Initialized` |
 | イベント待受属性名 | 要求またはイベントの発生を待ち受ける属性名は`on_`で始め、その後に対応するイベント名を続ける。例：`on_init_request`、`on_initialized` |
 | イベント処理関数名 | 要求またはイベントを受け取って処理する関数名は`handle_`で始め、その後に対応するイベント名を続ける。例：`handle_init_request`、`handle_initialized` |
@@ -484,7 +483,7 @@ struct InMemoryUserRepository {
 | `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap`、[`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
 | `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore`、[`object_store`の`ObjectStore`](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html) | 名詞 | データ |
 | `registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry`、[`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
-| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 | `OrderRepository`、`PostgresOrderRepository`、[`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html) | 名詞 | データ |
+| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 | `OrderRepository`、`PostgresOrderRepository`、[`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html)、[compass_appの`data/repositories/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/data/repositories) | 名詞 | データ |
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
 | `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
 | `provider` | 値そのものではなく、要求された値や機能を取得または生成して供給する役割に使用する。何を供給するかを名前に含め、役割をより具体的に表せる名前があるときはその名前を優先する。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、[AWS SDK for Rustの`SharedCredentialsProvider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-credential-types/src/provider.rs#L79) | 名詞 | データ |

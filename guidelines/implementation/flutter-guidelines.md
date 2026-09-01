@@ -44,7 +44,7 @@
 | `apps/<app-name>/lib/generated/l10n/` | `apps/myproject-client/lib/generated/l10n/app_localizations.dart` | `gen_l10n`が生成する多言語対応コードを配置する。`l10n.yaml`の`output-dir`で出力先を`lib/l10n/`の外へ指定する。手動では編集しない。 |
 | `apps/<app-name>/lib/locale_format/` | `apps/myproject-client/lib/locale_format/currency_format.dart` | 文言の外側で使う数値、日付、通貨などの書式処理を`intl`パッケージで定義する。 |
 | `apps/<app-name>/lib/ui/` | `apps/myproject-client/lib/ui/ui.dart`、`apps/myproject-client/lib/ui/button/primary_button.dart` | 複数のFeatureへ公開する、機能固有の判断を持たないUI部品を役割ごとのサブフォルダへ配置する。公開するUI部品は`ui.dart`から`export`する。 |
-| `apps/<app-name>/lib/features/<feature>/<feature>.dart` | `apps/myproject-client/lib/features/auth/auth.dart` | Feature外へ公開する型、処理、Screen、Widget、BLoC、Handler、外部境界の契約、各実装の生成関数だけを`export`する。別Featureは、このファイルが公開する業務型、処理とその呼び出し契約、再利用用のWidgetだけを参照する。 |
+| `apps/<app-name>/lib/features/<feature>/<feature>.dart` | `apps/myproject-client/lib/features/auth/auth.dart` | Feature外へ公開する型、処理、Screen、Widget、BLoC、Handler、外部境界の契約、各実装の生成関数だけを`export`する。 |
 | `apps/<app-name>/lib/features/<feature>/<concept>.dart` | `apps/myproject-client/lib/features/auth/auth_session.dart` | Featureが所有する一つの業務概念について、値、状態、識別子、制約を型として定義する。 |
 | `apps/<app-name>/lib/features/<feature>/<responsibility>/` | `apps/myproject-client/lib/features/auth/sign_in/` | Feature内の一つの責務に属する型と処理を配置する。 |
 | `apps/<app-name>/lib/features/<feature>/presentation/screens/` | `apps/myproject-client/lib/features/auth/presentation/screens/sign_in_screen.dart` | ルーティングの遷移先となるScreenを配置する。 |
@@ -75,8 +75,6 @@
 | Screen、Widget | 同じFeatureのBLoCと型、`ui/` |
 | BLoC | 同じFeatureの処理と型 |
 | `ui/` | Flutter SDKのみ |
-
-外部境界の実装は`main.dart`で生成する。Feature内の処理とBLoCは`app.dart`または`app/router/`で生成、接続し、外部境界の契約はFeature内の処理へ、Feature内の処理はBLoCへコンストラクタから明示的に渡す。
 
 ---
 
