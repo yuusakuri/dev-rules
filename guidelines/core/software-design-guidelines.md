@@ -445,97 +445,97 @@ struct InMemoryUserRepository {
 
 | 名前 | 説明 | 例 | 品詞 | タグ |
 | --- | --- | --- | --- | --- |
-| `error` | エラーを表す型の名前は `error` で終える。特定の操作や対象に対応する場合は、何に失敗したかが分かる名前にする。 | `ParseError`、`ConnectionError`、`TimeoutError`、[`io::Error`](https://doc.rust-lang.org/std/io/struct.Error.html)、[`ParseIntError`](https://doc.rust-lang.org/std/num/struct.ParseIntError.html) | 名詞 | エラー |
-| `guard` | スコープ内でロック、アクセス権、状態変更などを一時的に保持し、破棄時またはスコープ終了時に自動解放、復元する型に使用する。 | [`MutexGuard`](https://doc.rust-lang.org/std/sync/struct.MutexGuard.html)、`LockGuard` | 名詞 | リソース |
-| `handle` | 実行中の処理、外部リソース、サービスなどを操作、監視、終了待機するための参照や権限を表す型に使用する。 | [`JoinHandle`](https://docs.rs/tokio/latest/tokio/task/struct.JoinHandle.html)、`ConnectionHandle` | 名詞 | リソース |
-| `sender` | メッセージ経路やチャネルの送信側を表す型に使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。関連: `receiver`も参照。 | `MessageSender`、[`mpsc::Sender`](https://doc.rust-lang.org/std/sync/mpsc/struct.Sender.html) | 名詞 | 通信 |
-| `receiver` | メッセージ経路やチャネルの受信側を表す型に使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。関連: `sender`も参照。 | `EventReceiver`、[`mpsc::Receiver`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html) | 名詞 | 通信 |
-| `permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | `ConnectionPermit`、`ExecutionPermit`、[`SemaphorePermit`](https://docs.rs/tokio/latest/tokio/sync/struct.SemaphorePermit.html) | 名詞 | リソース |
+| `error` | エラーを表す型の名前は `error` で終える。特定の操作や対象に対応する場合は、何に失敗したかが分かる名前にする。 | [`io::Error`](https://doc.rust-lang.org/std/io/struct.Error.html)、[`ParseIntError`](https://doc.rust-lang.org/std/num/struct.ParseIntError.html) | 名詞 | エラー |
+| `guard` | スコープ内でロック、アクセス権、状態変更などを一時的に保持し、破棄時またはスコープ終了時に自動解放、復元する型に使用する。 | [`MutexGuard`](https://doc.rust-lang.org/std/sync/struct.MutexGuard.html) | 名詞 | リソース |
+| `handle` | 実行中の処理、外部リソース、サービスなどを操作、監視、終了待機するための参照や権限を表す型に使用する。 | [`JoinHandle`](https://docs.rs/tokio/latest/tokio/task/struct.JoinHandle.html) | 名詞 | リソース |
+| `sender` | メッセージ経路やチャネルの送信側を表す型に使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。関連: `receiver`も参照。 | [`mpsc::Sender`](https://doc.rust-lang.org/std/sync/mpsc/struct.Sender.html) | 名詞 | 通信 |
+| `receiver` | メッセージ経路やチャネルの受信側を表す型に使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。関連: `sender`も参照。 | [`mpsc::Receiver`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html) | 名詞 | 通信 |
+| `permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | [`SemaphorePermit`](https://docs.rs/tokio/latest/tokio/sync/struct.SemaphorePermit.html) | 名詞 | リソース |
 | `runtime` | タスクの実行、スケジューリング、資源の保持を担う実行基盤を表す型に使用する。 | [`tokio`の`Runtime`](https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html) | 名詞 | リソース |
 | `token` | 取り消し要求や実行権など、保持していること自体が意味を持ち、複製して配れる値に使用する。 | [`tokio_util`の`CancellationToken`](https://docs.rs/tokio-util/latest/tokio_util/sync/struct.CancellationToken.html) | 名詞 | 制御 |
 | `layer` | 既存の処理を包み、横断的な機能を足す構成単位に使用する。包む対象のインターフェースは変えない。 | [`tower`の`Layer`](https://docs.rs/tower/latest/tower/trait.Layer.html)、[`tracing_subscriber`の`Layer`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/layer/trait.Layer.html) | 名詞 | 制御 |
 | `span` | 開始と終了を持つ処理区間を表す型に使用する。区間に属するログや計測を、その区間へ結び付ける。 | [`tracing`の`Span`](https://docs.rs/tracing/latest/tracing/struct.Span.html) | 名詞 | ログ |
-| `bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `bytes` を付ける。 | `LengthBytes`、`TimestampBytes`、[`u32::to_be_bytes`](https://doc.rust-lang.org/std/primitive.u32.html#method.to_be_bytes) | 名詞 | データ |
-| `frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | `RequestFrame`、`UartFrame`、[`smoltcp`の`EthernetFrame`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.EthernetFrame.html)、[`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) | 名詞 | 通信 |
-| `packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | `CommandPacket`、`TelemetryPacket`、[`smoltcp`の`TcpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.TcpPacket.html)、[`UdpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.UdpPacket.html)、[`Ipv4Packet`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.Ipv4Packet.html) | 名詞 | 通信 |
-| `datagram` | 送達確認と順序保証を持たない単位で送受信する通信データを表す型に使用する。 | `SensorDatagram`、[`quinn`の`Datagram`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.Datagram.html) | 名詞 | 通信 |
+| `bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `bytes` を付ける。 | [`u32::to_be_bytes`](https://doc.rust-lang.org/std/primitive.u32.html#method.to_be_bytes) | 名詞 | データ |
+| `frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | [`smoltcp`の`EthernetFrame`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.EthernetFrame.html)、[`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) | 名詞 | 通信 |
+| `packet` | プロトコル上の意味を持つ通信データの単位を表す型に使用する。コマンド、応答、イベント、送信元、送信先、データ種別など、通信内容を扱う場合に使用する。 | [`smoltcp`の`TcpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.TcpPacket.html)、[`UdpPacket`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.UdpPacket.html)、[`Ipv4Packet`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.Ipv4Packet.html) | 名詞 | 通信 |
+| `datagram` | 送達確認と順序保証を持たない単位で送受信する通信データを表す型に使用する。 | [`quinn`の`Datagram`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.Datagram.html) | 名詞 | 通信 |
 | `endpoint` | プロトコルが定める通信の端点を表す型に使用する。外部との境界一般には使わない。 | [`quinn`の`Endpoint`](https://docs.rs/quinn/latest/quinn/struct.Endpoint.html) | 名詞 | 通信 |
 | `listener` | 接続要求を待ち受け、確立した通信路を受け取る型に使用する。資源や状態の変化を監視する型には使わない。関連: `watcher`も参照。 | [`TcpListener`](https://doc.rust-lang.org/std/net/struct.TcpListener.html)、[`tokio`の`TcpListener`](https://docs.rs/tokio/latest/tokio/net/struct.TcpListener.html) | 名詞 | 通信 |
-| `watcher` | 既存の資源や状態の変化を監視し、変化を通知する型に使用する。監視する対象を名前に含める。関連: `listener`も参照。 | [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、`ConnectivityWatcher` | 名詞 | 通信 |
+| `watcher` | 既存の資源や状態の変化を監視し、変化を通知する型に使用する。監視する対象を名前に含める。関連: `listener`も参照。 | [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html) | 名詞 | 通信 |
 | `socket` | OSが提供する通信端点をそのまま扱う型に使用する。 | [`UdpSocket`](https://doc.rust-lang.org/std/net/struct.UdpSocket.html) | 名詞 | 通信 |
-| `connection` | 確立済みの通信路を表す型に使用する。接続先または方式を実装の名前に含める。 | [`quinn`の`Connection`](https://docs.rs/quinn/latest/quinn/struct.Connection.html)、`PgConnection` | 名詞 | 通信 |
+| `connection` | 確立済みの通信路を表す型に使用する。接続先または方式を実装の名前に含める。 | [`quinn`の`Connection`](https://docs.rs/quinn/latest/quinn/struct.Connection.html) | 名詞 | 通信 |
 | `stream` | 連続して流れるバイト列または値を、順に読み書きする型に使用する。境界が定められた単位を扱う場合は `frame`、`packet` を使う。関連: `sink`も参照。 | [`TcpStream`](https://doc.rust-lang.org/std/net/struct.TcpStream.html)、[`futures`の`Stream`](https://docs.rs/futures/latest/futures/stream/trait.Stream.html) | 名詞 | 通信 |
-| `sink` | 連続して流れる値を順に受け取り、送り先へ渡す型に使用する。送り先を名前に含める。関連: `stream`も参照。 | [`futures`の`Sink`](https://docs.rs/futures/latest/futures/sink/trait.Sink.html)、`MetricsSink` | 名詞 | 通信 |
+| `sink` | 連続して流れる値を順に受け取り、送り先へ渡す型に使用する。送り先を名前に含める。関連: `stream`も参照。 | [`futures`の`Sink`](https://docs.rs/futures/latest/futures/sink/trait.Sink.html) | 名詞 | 通信 |
 | `request` | 外部へ送る要求を表す型に使用する。対象の操作を名前に含める。関連: `response`も参照。 | [`http`の`Request`](https://docs.rs/http/latest/http/request/struct.Request.html) | 名詞 | 通信 |
 | `response` | 要求に対する応答を表す型に使用する。対象の操作を名前に含める。関連: `request`も参照。 | [`http`の`Response`](https://docs.rs/http/latest/http/response/struct.Response.html) | 名詞 | 通信 |
 | `service` | 要求を受け取って応答を返す処理を、要求と応答の型で表した抽象に使用する。中間処理を重ねて合成する場合に使う。業務処理をまとめただけの型の名前には使わない。 | [`tower`の`Service`](https://docs.rs/tower/latest/tower/trait.Service.html) | 名詞 | 通信 |
 | `router` | 受け取った要求を、経路や条件に対応する処理へ振り分ける型に使用する。 | [`axum`の`Router`](https://docs.rs/axum/latest/axum/struct.Router.html) | 名詞 | 通信 |
 | `widget` | 画面へ描画する部品を表す型に使用する。描画する対象を名前に含める。 | [`ratatui`の`Widget`](https://docs.rs/ratatui/latest/ratatui/widgets/trait.Widget.html) | 名詞 | 表示 |
-| `tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | `SearchTokenizer`、[`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
-| `lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | `ConfigLexer`、[`logos`の`Lexer`](https://docs.rs/logos/latest/logos/struct.Lexer.html) | 名詞 | 解析 |
-| `reader` | ファイル、ストリーム、デバイス、メモリなどの入力元からデータを読み取る型に使用する。読み取り位置、部分読み取り、終端、入力バッファの管理を主な責務とする。関連: `writer`も参照。 | `FileReader`、`PacketReader`、[`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html)、[`csv`の`Reader`](https://docs.rs/csv/latest/csv/struct.Reader.html) | 名詞 | 入出力 |
-| `writer` | データをファイル、ストリーム、デバイス、メモリなどの出力先へ書き込む型に使用する。部分書き込み、出力バッファ、`flush` の管理を主な責務とする。関連: `reader`も参照。 | `FileWriter`、`PacketWriter`、[`BufWriter`](https://doc.rust-lang.org/std/io/struct.BufWriter.html)、[`csv`の`Writer`](https://docs.rs/csv/latest/csv/struct.Writer.html) | 名詞 | 入出力 |
-| `parser` | 文字列、バイト列、トークン列を、定義された文法や形式に従った構文構造へ変換する型に使用する。区切り、階層、順序、構文上の妥当性の判断を主な責務とする。 | `FrameParser`、`CommandParser`、[`clap`の`Parser`](https://docs.rs/clap/latest/clap/trait.Parser.html) | 名詞 | 解析 |
-| `encoder` | 値やPacketを、保存、転送、通信などに使用する符号化表現へ変換する型に使用する。通信ではPacketからFrameを構築する処理や、Frameを送信可能なバイト列へ変換してヘッダー、長さ、区切り、検査値などを付加する処理に使用する。関連: `decoder`、`codec`も参照。 | `PacketEncoder`、`FrameEncoder`、[`tokio_util::codec`の`Encoder`](https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Encoder.html) | 名詞 | 変換 |
-| `decoder` | 符号化された表現を、元の表現または後続処理が利用できる表現へ戻す型に使用する。通信では受信したバイト列からFrameを復元する処理や、Frameの内容を解釈してPacketを生成する処理に使用する。関連: `encoder`、`codec`も参照。 | `FrameDecoder`、`PacketDecoder`、[`tokio_util::codec`の`Decoder`](https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Decoder.html) | 名詞 | 変換 |
+| `tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | [`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
+| `lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | [`logos`の`Lexer`](https://docs.rs/logos/latest/logos/struct.Lexer.html) | 名詞 | 解析 |
+| `reader` | ファイル、ストリーム、デバイス、メモリなどの入力元からデータを読み取る型に使用する。読み取り位置、部分読み取り、終端、入力バッファの管理を主な責務とする。関連: `writer`も参照。 | [`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html)、[`csv`の`Reader`](https://docs.rs/csv/latest/csv/struct.Reader.html) | 名詞 | 入出力 |
+| `writer` | データをファイル、ストリーム、デバイス、メモリなどの出力先へ書き込む型に使用する。部分書き込み、出力バッファ、`flush` の管理を主な責務とする。関連: `reader`も参照。 | [`BufWriter`](https://doc.rust-lang.org/std/io/struct.BufWriter.html)、[`csv`の`Writer`](https://docs.rs/csv/latest/csv/struct.Writer.html) | 名詞 | 入出力 |
+| `parser` | 文字列、バイト列、トークン列を、定義された文法や形式に従った構文構造へ変換する型に使用する。区切り、階層、順序、構文上の妥当性の判断を主な責務とする。 | [`clap`の`Parser`](https://docs.rs/clap/latest/clap/trait.Parser.html) | 名詞 | 解析 |
+| `encoder` | 値やPacketを、保存、転送、通信などに使用する符号化表現へ変換する型に使用する。通信ではPacketからFrameを構築する処理や、Frameを送信可能なバイト列へ変換してヘッダー、長さ、区切り、検査値などを付加する処理に使用する。関連: `decoder`、`codec`も参照。 | [`tokio_util::codec`の`Encoder`](https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Encoder.html) | 名詞 | 変換 |
+| `decoder` | 符号化された表現を、元の表現または後続処理が利用できる表現へ戻す型に使用する。通信では受信したバイト列からFrameを復元する処理や、Frameの内容を解釈してPacketを生成する処理に使用する。関連: `encoder`、`codec`も参照。 | [`tokio_util::codec`の`Decoder`](https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Decoder.html) | 名詞 | 変換 |
 | `codec` | 同じ形式の符号化と復号を一つの型にまとめる場合に使用する。対象の形式を名前に含める。関連: `encoder`、`decoder`も参照。 | [`tokio_util`の`LinesCodec`](https://docs.rs/tokio-util/latest/tokio_util/codec/struct.LinesCodec.html) | 名詞 | 変換 |
-| `serializer` | プログラム内の構造化された値や型付きオブジェクトを、保存または転送できる表現へ変換する型に使用する。関連: `deserializer`も参照。 | `JsonSerializer`、[`serde`の`Serializer`](https://docs.rs/serde/latest/serde/trait.Serializer.html) | 名詞 | 変換 |
-| `deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。関連: `serializer`も参照。 | `JsonDeserializer`、[`serde`の`Deserializer`](https://docs.rs/serde/latest/serde/trait.Deserializer.html) | 名詞 | 変換 |
+| `serializer` | プログラム内の構造化された値や型付きオブジェクトを、保存または転送できる表現へ変換する型に使用する。関連: `deserializer`も参照。 | [`serde`の`Serializer`](https://docs.rs/serde/latest/serde/trait.Serializer.html) | 名詞 | 変換 |
+| `deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。関連: `serializer`も参照。 | [`serde`の`Deserializer`](https://docs.rs/serde/latest/serde/trait.Deserializer.html) | 名詞 | 変換 |
 | `record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | [`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) | 名詞 | データ |
-| `snapshot` | ある時点の状態を写した読み取り専用の値を表す型に使用する。写した後は、元の状態の変化に影響されない。 | [rust-analyzerの`GlobalStateSnapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L214-L228)、`ConfigSnapshot` | 名詞 | データ |
-| `id` | 識別子を表す型の名前は `id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | `UserId`、[`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
+| `snapshot` | ある時点の状態を写した読み取り専用の値を表す型に使用する。写した後は、元の状態の変化に影響されない。 | [rust-analyzerの`GlobalStateSnapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L214-L228) | 名詞 | データ |
+| `id` | 識別子を表す型の名前は `id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | [`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
 | `event` | すでに起きた出来事を表す型に使用する。名前は過去形にする。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html)、[`cqrs-es`の`DomainEvent`](https://docs.rs/cqrs-es/latest/cqrs_es/trait.DomainEvent.html) | 名詞 | データ |
 | `config` | 動作を決める設定値と、使用する実装の指定をまとめる型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html)、[AWS SDK for Rustの`SdkConfig`](https://docs.rs/aws-config/latest/aws_config/struct.SdkConfig.html)、[`quinn`の`ClientConfig`](https://docs.rs/quinn/latest/quinn/struct.ClientConfig.html) | 名詞 | データ |
-| `formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter`、[`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
+| `formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | [`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
 | `validate` | 入力が形式、範囲、不変条件などの制約を満たすか検証する操作に使用する。検証専用の型を作らず、検証対象の型へ実装する。 | [`validator`の`Validate`](https://docs.rs/validator/latest/validator/trait.Validate.html) | 動詞 | 解析 |
 | `loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | [AWS SDK for Rustの`ConfigLoader`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L280)、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
-| `list` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | `UserList`、[`LinkedList`](https://doc.rust-lang.org/std/collections/struct.LinkedList.html) | 名詞 | 集合 |
-| `set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | `PermissionSet`、[`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) | 名詞 | 集合 |
-| `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap`、[`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
-| `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore`、[`object_store`の`ObjectStore`](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html) | 名詞 | データ |
-| `registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry`、[`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
-| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 | `OrderRepository`、`PostgresOrderRepository`、[`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html) | 名詞 | データ |
+| `list` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | [`LinkedList`](https://doc.rust-lang.org/std/collections/struct.LinkedList.html) | 名詞 | 集合 |
+| `set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | [`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) | 名詞 | 集合 |
+| `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | [`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
+| `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | [`object_store`の`ObjectStore`](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html) | 名詞 | データ |
+| `registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | [`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
+| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 | [`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html) | 名詞 | データ |
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
-| `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
+| `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html) | 名詞 | リソース |
 | `provider` | 要求に応じて、値または使用する実装を取得、生成して供給する型に使用する。何を供給するかを名前に含める。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`CryptoProvider`](https://docs.rs/rustls/latest/rustls/crypto/struct.CryptoProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、[AWS SDK for Rustの`SharedCredentialsProvider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-credential-types/src/provider.rs#L79) | 名詞 | データ |
-| `generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | `IdGenerator`、`SnowflakeIdGenerator`、[`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/) | 名詞 | 生成 |
-| `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
+| `generator` | 識別子など、新しい値を生成する型に使用する。生成する対象を名前に含める。 | [`snowflaked`の`Generator`](https://docs.rs/snowflaked/latest/snowflaked/) | 名詞 | 生成 |
+| `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html) | 名詞 | 生成 |
 | `mock` | テストのために本物の実装を置き換え、呼び出しの記録と検証を目的とする型に使用する。関連: `fake`も参照。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/) | 名詞 | 検証 |
 | `fake` | テストのために本物の実装を置き換える、動作する簡易な代替実装に使用する。関連: `mock`も参照。 | [`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
 | `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含める。境界は、外部サービスまたはAPIが定める契約の単位で決める。同じ提供者でもサービスが分かれていればサービスごとに定義し、一つのサービスの中を利用する機能ごとに分割しない。 | [`aws-sdk-s3`の`Client`](https://docs.rs/aws-sdk-s3/latest/aws_sdk_s3/struct.Client.html)、[`aws-sdk-dynamodb`の`Client`](https://docs.rs/aws-sdk-dynamodb/latest/aws_sdk_dynamodb/struct.Client.html)、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)、[`kube`の`Client`](https://docs.rs/kube/latest/kube/struct.Client.html) | 名詞 | 通信 |
 | `transport` | メッセージを運ぶ経路と手段を表す型に使用する。運ぶ内容の意味は扱わず、経路と手段ごとに実装を分ける。関連: `client`も参照。 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)、[`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) | 名詞 | 通信 |
 | `publisher` | メッセージをトピックまたは購読者へ公開する型に使用する。公開先の方式を実装の名前に含める。関連: `subscriber`、`producer`も参照。 | [`zenoh`の`Publisher`](https://docs.rs/zenoh/latest/zenoh/pubsub/struct.Publisher.html) | 名詞 | 通信 |
-| `producer` | メッセージをブローカーまたはキューへ送出する型に使用する。送出先の方式を実装の名前に含める。関連: `consumer`、`publisher`も参照。 | `KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
+| `producer` | メッセージをブローカーまたはキューへ送出する型に使用する。送出先の方式を実装の名前に含める。関連: `consumer`、`publisher`も参照。 | [`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
 | `subscriber` | トピックを購読してメッセージを受け取り、処理する型に使用する。購読元の方式を実装の名前に含める。関連: `publisher`、`consumer`も参照。 | [`zenoh`の`Subscriber`](https://docs.rs/zenoh/latest/zenoh/pubsub/struct.Subscriber.html) | 名詞 | 通信 |
 | `consumer` | ブローカーまたはキューからメッセージを受け取って処理する型に使用する。取得元の方式を実装の名前に含める。関連: `producer`、`subscriber`も参照。 | [`rdkafka`の`Consumer`](https://docs.rs/rdkafka/latest/rdkafka/consumer/trait.Consumer.html) | 名詞 | 通信 |
-| `pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool`、[`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
-| `cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache`、[`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
-| `buffer` | バイト列や要素を一時的に蓄積する型に使用する。関連: `buf`も参照。 | `ReceiveBuffer`、[`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html) | 名詞 | データ |
+| `pool` | 再利用可能なリソースの集合を表す型に使用する。 | [`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
+| `cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | [`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
+| `buffer` | バイト列や要素を一時的に蓄積する型に使用する。関連: `buf`も参照。 | [`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html) | 名詞 | データ |
 | `buf` | `buffer`の短縮形として同じ意味で使用する。標準ライブラリや外部crateの慣例に合わせる場合に使う。関連: `buffer`も参照。 | [`tokio`の`ReadBuf`](https://docs.rs/tokio/latest/tokio/io/struct.ReadBuf.html)、[`bytes`の`BufMut`](https://docs.rs/bytes/latest/bytes/buf/trait.BufMut.html) | 名詞 | データ |
-| `table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | `RoutingTable`、[`datafusion`の`MemTable`](https://docs.rs/datafusion/latest/datafusion/datasource/memory/struct.MemTable.html) | 名詞 | データ |
-| `queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `TaskQueue`、[`crossbeam`の`SegQueue`](https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html) | 名詞 | 集合 |
-| `stack` | LIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | `UndoStack`、[`rpds`の`Stack`](https://docs.rs/rpds/latest/rpds/stack/struct.Stack.html) | 名詞 | 集合 |
-| `new` | 型を生成する標準的なコンストラクターに使用する。 | `Client::new()`、[`String::new`](https://doc.rust-lang.org/std/string/struct.String.html#method.new) | 形容詞 | 生成 |
+| `table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | [`datafusion`の`MemTable`](https://docs.rs/datafusion/latest/datafusion/datasource/memory/struct.MemTable.html) | 名詞 | データ |
+| `queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | [`crossbeam`の`SegQueue`](https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html) | 名詞 | 集合 |
+| `stack` | LIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | [`rpds`の`Stack`](https://docs.rs/rpds/latest/rpds/stack/struct.Stack.html) | 名詞 | 集合 |
+| `new` | 型を生成する標準的なコンストラクターに使用する。 | [`String::new`](https://doc.rust-lang.org/std/string/struct.String.html#method.new) | 形容詞 | 生成 |
 | `options` | 生成や実行時に指定する任意設定をまとめる型に使用する。既定値を持ち、必要な項目だけを変更できる構造にする。 | [`OpenOptions`](https://doc.rust-lang.org/std/fs/struct.OpenOptions.html)、[`sqlx`の`PgConnectOptions`](https://docs.rs/sqlx/latest/sqlx/postgres/struct.PgConnectOptions.html) | 名詞 | 生成 |
 | `builder` | 値を段階的に組み立てて生成する型に使用する。組み立てる対象を名前に含める。 | [`thread::Builder`](https://doc.rust-lang.org/std/thread/struct.Builder.html)、[`tokio`の`runtime::Builder`](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html)、[`reqwest`の`ClientBuilder`](https://docs.rs/reqwest/latest/reqwest/struct.ClientBuilder.html) | 名詞 | 生成 |
-| `default` | デフォルト値によって型を生成するコンストラクターに使用する。`new` と両方を提供する場合は、同じ結果になるようにする。 | `Config::default()`、[`Default::default`](https://doc.rust-lang.org/std/default/trait.Default.html#tymethod.default) | 形容詞 | 生成 |
-| `with` + 設定名 | 追加の初期設定を指定する副コンストラクターに使用する。 | `Buffer::with_capacity(1024)`、[`Vec::with_capacity`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) | 前置詞 | 生成 |
-| `from` | 既存データの意味や形式を示しながら、ある型や表現を別の型や表現へ変換する場合に使用する。フィールド間の対応付けを含め、変換専用の型を作らず、変換元または変換先の型へ言語標準の変換機構またはコンストラクターとして実装する。関連: `try_from`も参照。 | [`From`](https://doc.rust-lang.org/std/convert/trait.From.html)、[`String::from_utf8`](https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8)、`Frame::from_bytes(bytes)` | 前置詞 | 変換 |
+| `default` | デフォルト値によって型を生成するコンストラクターに使用する。`new` と両方を提供する場合は、同じ結果になるようにする。 | [`Default::default`](https://doc.rust-lang.org/std/default/trait.Default.html#tymethod.default) | 形容詞 | 生成 |
+| `with` + 設定名 | 追加の初期設定を指定する副コンストラクターに使用する。 | [`Vec::with_capacity`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) | 前置詞 | 生成 |
+| `from` | 既存データの意味や形式を示しながら、ある型や表現を別の型や表現へ変換する場合に使用する。フィールド間の対応付けを含め、変換専用の型を作らず、変換元または変換先の型へ言語標準の変換機構またはコンストラクターとして実装する。関連: `try_from`も参照。 | [`From`](https://doc.rust-lang.org/std/convert/trait.From.html)、[`String::from_utf8`](https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8) | 前置詞 | 変換 |
 | `try_from` | 失敗しうる変換に使用する。変換できない入力を戻り値で表し、成功を前提とする`from`と区別する。関連: `from`も参照。 | [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) | 前置詞 | 変換 |
 | `open` | 既存のファイルやデバイスなどを開き、利用可能な外部リソースを取得する処理に使用する。 | [`File::open(path)`](https://doc.rust-lang.org/std/fs/struct.File.html#method.open) | 動詞 | 生成 |
 | `create` | 新しいファイル、ディレクトリ、リソースなどを生成する処理に使用する。 | [`File::create(path)`](https://doc.rust-lang.org/std/fs/struct.File.html#method.create) | 動詞 | 生成 |
 | `connect` | リモートの接続先との通信路を確立する処理に使用する。 | [`TcpStream::connect(address)`](https://doc.rust-lang.org/std/net/struct.TcpStream.html#method.connect) | 動詞 | 生成 |
 | `bind` | ローカルのアドレス、ポート、名前などへリソースを関連付ける処理に使用する。 | [`UdpSocket::bind(address)`](https://doc.rust-lang.org/std/net/struct.UdpSocket.html#method.bind) | 動詞 | 生成 |
 | `as` + 型名 | コストなしで同じデータを別の型として参照する変換に使用する。 | [`as_bytes`](https://doc.rust-lang.org/std/primitive.str.html#method.as_bytes) | 前置詞 | 変換 |
-| `to` + 型名 | コピー、割り当て、検査、計算などを伴い、新しい値または別表現を生成する変換に使用する。 | [`to_vec`](https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec)、`to_string` | 前置詞 | 変換 |
-| `into` + 型名 | 元の値の所有権または管理責任を移して別の型へ変換する場合に使用する。所有権の概念がない言語では、元の値を消費する変換に使用する。 | [`into_bytes`](https://doc.rust-lang.org/std/string/struct.String.html#method.into_bytes)、`into_inner` | 前置詞 | 変換 |
-| `try` + 操作名 | 通常版と対になり、待機、ブロック、パニックなどを避けて失敗を戻り値として返す代替操作に使用する。 | `try_send`、[`try_lock`](https://doc.rust-lang.org/std/sync/struct.Mutex.html#method.try_lock)、`try_reserve` | 動詞 | 制御 |
+| `to` + 型名 | コピー、割り当て、検査、計算などを伴い、新しい値または別表現を生成する変換に使用する。 | [`to_vec`](https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec) | 前置詞 | 変換 |
+| `into` + 型名 | 元の値の所有権または管理責任を移して別の型へ変換する場合に使用する。所有権の概念がない言語では、元の値を消費する変換に使用する。 | [`into_bytes`](https://doc.rust-lang.org/std/string/struct.String.html#method.into_bytes) | 前置詞 | 変換 |
+| `try` + 操作名 | 通常版と対になり、待機、ブロック、パニックなどを避けて失敗を戻り値として返す代替操作に使用する。 | [`try_lock`](https://doc.rust-lang.org/std/sync/struct.Mutex.html#method.try_lock) | 動詞 | 制御 |
 | `checked` + 演算名 | 演算結果が表現できる範囲を超える場合に、失敗を戻り値として返す処理に使用する。 | [`u32::checked_add`](https://doc.rust-lang.org/std/primitive.u32.html#method.checked_add) | 動詞句 | 制御 |
 | `saturating` + 演算名 | 演算結果が表現できる範囲を超える場合に、上限または下限で止めた値を返す処理に使用する。 | [`u32::saturating_add`](https://doc.rust-lang.org/std/primitive.u32.html#method.saturating_add) | 動詞句 | 制御 |
 | `wrapping` + 演算名 | 演算結果が表現できる範囲を超える場合に、あふれた分を切り捨てた値を返す処理に使用する。 | [`u32::wrapping_add`](https://doc.rust-lang.org/std/primitive.u32.html#method.wrapping_add) | 動詞句 | 制御 |
-| `spawn` | 独立して実行されるスレッド、タスク、プロセスなどを開始する処理に使用する。開始した処理を監視または終了待機する必要がある場合は、`handle` を返す。 | `spawn_worker`、[`thread::spawn`](https://doc.rust-lang.org/std/thread/fn.spawn.html) | 動詞 | 制御 |
-| `take` | 保持している値を取り出し、元の場所を空の状態または既定値へ置き換える処理に使用する。 | `take_message`、[`mem::take`](https://doc.rust-lang.org/std/mem/fn.take.html) | 動詞 | 制御 |
-| `replace` | 保持している値を新しい値へ置き換え、以前の値を返す処理に使用する。 | `replace_config`、[`mem::replace`](https://doc.rust-lang.org/std/mem/fn.replace.html) | 動詞 | 制御 |
+| `spawn` | 独立して実行されるスレッド、タスク、プロセスなどを開始する処理に使用する。開始した処理を監視または終了待機する必要がある場合は、`handle` を返す。 | [`thread::spawn`](https://doc.rust-lang.org/std/thread/fn.spawn.html) | 動詞 | 制御 |
+| `take` | 保持している値を取り出し、元の場所を空の状態または既定値へ置き換える処理に使用する。 | [`mem::take`](https://doc.rust-lang.org/std/mem/fn.take.html) | 動詞 | 制御 |
+| `replace` | 保持している値を新しい値へ置き換え、以前の値を返す処理に使用する。 | [`mem::replace`](https://doc.rust-lang.org/std/mem/fn.replace.html) | 動詞 | 制御 |
 | `push` | 単一要素を末尾に追加する処理に使用する。 | [`push(item)`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push) | 動詞 | 集合 |
 | `push_front` | 順序が重要なコレクションの先頭へ単一要素を追加する処理に使用する。 | [`push_front(item)`](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#method.push_front) | 動詞句 | 集合 |
 | `pop` | 末尾の要素を取り出す処理に使用する。 | [`pop()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop) | 動詞 | 集合 |
@@ -548,7 +548,7 @@ struct InMemoryUserRepository {
 | `drain` | 指定範囲または全要素を集合から一括して取り出す処理に使用する。 | [`drain(range)`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain) | 動詞 | 集合 |
 | `clear` | 全要素を削除して空にする処理に使用する。 | [`clear()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.clear) | 動詞 | 集合 |
 | `extend` | イテレーターや別の集合から複数の要素を追加する処理に使用する。 | [`extend(items)`](https://doc.rust-lang.org/std/iter/trait.Extend.html#tymethod.extend) | 動詞 | 集合 |
-| `iter` | コレクションの反復子を返す処理に使用する。可変参照を返す場合は `iter_mut`、所有権を渡す場合は `into_iter` を使う。 | [`slice::iter`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter)、[`iter_mut`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut)、`into_iter` | 動詞 | 集合 |
+| `iter` | コレクションの反復子を返す処理に使用する。可変参照を返す場合は `iter_mut`、所有権を渡す場合は `into_iter` を使う。 | [`slice::iter`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter)、[`iter_mut`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter_mut) | 動詞 | 集合 |
 | `len` | 要素数を返す処理に使用する。 | [`len()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.len) | 名詞 | 集合 |
 | `is_empty` | 集合が空かどうかを判定する処理に使用する。 | [`is_empty()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.is_empty) | 動詞句 | 集合 |
 | `contains` | 指定した要素またはキーを含むか判定する処理に使用する。 | [`contains(item)`](https://doc.rust-lang.org/std/collections/struct.HashSet.html#method.contains) | 動詞 | 集合 |
