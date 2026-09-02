@@ -424,6 +424,7 @@ struct InMemoryUserRepository {
 | ルール | 内容 |
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
+| 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: `Authenticator`、`SessionIssuer` |
 | 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: `github`、`jira`、`slack`、`postgres`、`mysql`、`s3` |
 | 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: `PaymentClient` / `StripeClient`、`ConnectivityWatcher` |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
@@ -437,6 +438,8 @@ struct InMemoryUserRepository {
 | 定数、マジックナンバー | マジックナンバーを避け、意味を持つ名前付き定数にする。 |
 
 ### 単語
+
+本節は、次の語を使う場合に意味を揃えるための対照表であり、ここから名前を選ぶための一覧ではない。責務を直接表せる名前があるときは、その名前を優先する。言語、プロトコル、フレームワーク、ライブラリで意味が確立している名前は、その名前を使用する。
 
 | 名前 | 説明 | 例 | 品詞 | タグ |
 | --- | --- | --- | --- | --- |
