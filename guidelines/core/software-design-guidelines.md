@@ -524,8 +524,7 @@ impl UserRepo for InMemoryUserRepo {
 | `consumer` | ブローカーまたはキューからメッセージを受け取って処理する型に使用する。取得元の方式を実装の名前に含める。関連: `producer`、`subscriber`も参照。 | [`rdkafka`の`Consumer`](https://docs.rs/rdkafka/latest/rdkafka/consumer/trait.Consumer.html) | 名詞 | 通信 |
 | `pool` | 再利用可能なリソースの集合を表す型に使用する。 | [`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
 | `cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | [`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
-| `buffer` | バイト列や要素を一時的に蓄積する型に使用する。関連: `buf`も参照。 | [`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html) | 名詞 | データ |
-| `buf` | `buffer`の短縮形として同じ意味で使用する。標準ライブラリや外部crateの慣例に合わせる場合に使う。関連: `buffer`も参照。 | [`tokio`の`ReadBuf`](https://docs.rs/tokio/latest/tokio/io/struct.ReadBuf.html)、[`bytes`の`BufMut`](https://docs.rs/bytes/latest/bytes/buf/trait.BufMut.html) | 名詞 | データ |
+| `buffer`、`buf` | バイト列や要素を一時的に蓄積する型に使用する。短縮形の`buf`も同じ意味で使用し、標準ライブラリや外部crateの慣例に合わせる場合に使う。 | [`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html)、[`tokio`の`ReadBuf`](https://docs.rs/tokio/latest/tokio/io/struct.ReadBuf.html)、[`bytes`の`BufMut`](https://docs.rs/bytes/latest/bytes/buf/trait.BufMut.html) | 名詞 | データ |
 | `table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | [`datafusion`の`MemTable`](https://docs.rs/datafusion/latest/datafusion/datasource/memory/struct.MemTable.html) | 名詞 | データ |
 | `queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | [`crossbeam`の`SegQueue`](https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html) | 名詞 | 集合 |
 | `stack` | 重なり順のように、前後の並び自体が意味を持つ集合を表す型に使用する。並べる対象を名前に含める。 | Bevyの[`UiStack`](https://github.com/bevyengine/bevy/blob/9c218dae30a1ba0b01133d0ca0094f2ae3771595/crates/bevy_ui/src/stack.rs#L30-L35) | 名詞 | データ |
