@@ -42,12 +42,12 @@
 - 実行時に実装を選ぶ場合、異なる実装を同じ型として一つのコレクションへ入れる場合、または具体型を利用側の定義へ波及させたくない場合は、trait objectで受け取る。
 - いずれにも当てはまらない場合は、ジェネリクスで受け取る。
 
-次は、共有状態が実装型を型パラメーターとして保持する例である。状態を受け取るハンドラーとルートの登録まで同じ型パラメーターが必要になるため、この波及を避ける場合は`Arc<dyn UserRepository>`で受け取る。
+次は、共有状態が実装型を型パラメーターとして保持する例である。状態を受け取るハンドラーとルートの登録まで同じ型パラメーターが必要になるため、この波及を避ける場合は`Arc<dyn UserRepo>`で受け取る。
 
 ```rust
 #[derive(Clone)]
 struct AppState<T> {
-    user_repository: T,
+    user_repo: T,
 }
 
 async fn handle_get_user<T>(
@@ -55,17 +55,14 @@ async fn handle_get_user<T>(
     Path(id): Path<Uuid>,
 ) -> Result<Json<User>, StatusCode>
 where
-    T: UserRepository,
+    T: UserRepo,
 {
     // ...
 }
 
 let using_generic = Router::new()
-    .route(
-        "/users/{id}",
-        get(handle_get_user::<InMemoryUserRepository>),
-    )
-    .with_state(AppState { user_repository });
+    .route("/users/{id}", get(handle_get_user::<InMemoryUserRepo>))
+    .with_state(AppState { user_repo });
 ```
 
 ---

@@ -116,18 +116,18 @@ for haystack in haystacks {
 
 DIコンテナーを使用する場合も参照箇所は起動点に限定する。業務処理を担う型や関数はコンテナーへ依存させない。
 
-次は、Webアプリケーションの起動点である。`main`は`InMemoryUserRepository`という具体的な実装をここで一度だけ生成し、`Arc`で包んで共有状態`AppState`へ入れ、ルーティングと結び付けてから待ち受けを開始する。ハンドラーとその先の処理は、どの実装が選ばれたかを知らない。保存先をDBへ変えるときに書き換えるのは、この起動点で生成している行だけになる。
+次は、Webアプリケーションの起動点である。`main`は`InMemoryUserRepo`という具体的な実装をここで一度だけ生成し、`Arc`で包んで共有状態`AppState`へ入れ、ルーティングと結び付けてから待ち受けを開始する。ハンドラーとその先の処理は、どの実装が選ばれたかを知らない。保存先をDBへ変えるときに書き換えるのは、この起動点で生成している行だけになる。
 
 ```rust
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let user_repository = InMemoryUserRepository::default();
+    let user_repo = InMemoryUserRepo::default();
 
     let app = Router::new()
         .route("/users", post(handle_create_user))
         // ...
         .with_state(AppState {
-            user_repository: Arc::new(user_repository),
+            user_repo: Arc::new(user_repo),
         });
 
     let listener = TcpListener::bind("127.0.0.1:3000").await?;
@@ -243,12 +243,12 @@ self.task_pool
     });
 ```
 
-次は、同じ考え方をWebフレームワークの共有状態へ当てはめた例である。`AppState`はプロセス全体で共有する値をまとめた型で、フレームワークはハンドラーへこれを`State`として渡す。`handle_create_user`は状態を受け取ってそのまま使う。一方`handle_get_user`は`user_repository`しか使わないため、`FromRef`の実装を通じて、状態全体ではなくその部分だけを受け取っている。ハンドラーの引数がそのハンドラーの必要とするものだけになり、テストでも状態全体を組み立てずに済む。
+次は、同じ考え方をWebフレームワークの共有状態へ当てはめた例である。`AppState`はプロセス全体で共有する値をまとめた型で、フレームワークはハンドラーへこれを`State`として渡す。`handle_create_user`は状態を受け取ってそのまま使う。一方`handle_get_user`は`user_repo`しか使わないため、`FromRef`の実装を通じて、状態全体ではなくその部分だけを受け取っている。ハンドラーの引数がそのハンドラーの必要とするものだけになり、テストでも状態全体を組み立てずに済む。
 
 ```rust
 #[derive(Clone)]
 struct AppState {
-    user_repository: Arc<dyn UserRepository>,
+    user_repo: Arc<dyn UserRepo>,
 }
 
 async fn handle_create_user(
@@ -256,19 +256,19 @@ async fn handle_create_user(
     Json(params): Json<UserParams>,
 ) -> Json<User> {
     // ...
-    state.user_repository.save_user(&user);
+    state.user_repo.save_user(&user);
 
     Json(user)
 }
 
-impl FromRef<AppState> for Arc<dyn UserRepository> {
-    fn from_ref(app_state: &AppState) -> Arc<dyn UserRepository> {
-        app_state.user_repository.clone()
+impl FromRef<AppState> for Arc<dyn UserRepo> {
+    fn from_ref(app_state: &AppState) -> Arc<dyn UserRepo> {
+        app_state.user_repo.clone()
     }
 }
 
 async fn handle_get_user(
-    State(user_repository): State<Arc<dyn UserRepository>>,
+    State(user_repo): State<Arc<dyn UserRepo>>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<User>, StatusCode> {
     // ...
@@ -381,23 +381,28 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 利用側と提供側にすでに存在するインターフェースが互換でない場合は、Adapterパターンで一方の操作とデータを他方の形式へ変換する。変換以外の業務上の判断はAdapterに持たせない。
 
-### 永続化処理をRepositoryへ分離する
+### 永続化の入口を一つにし、対象ごとに問い合わせを分ける
 
-業務ロジックをDB、ファイル、端末ストレージなどの保存方式から分離する場合は、Repositoryパターンを使う。Repositoryは利用側に必要な取得、保存、削除などの操作だけを公開し、SQL、ORMのQuery型、DB接続、カーソル、ファイル形式など保存方式に固有の型と処理を実装内へ閉じ込める。
+業務ロジックをDB、ファイル、端末ストレージなどの保存方式から分離する場合は、接続と実行を担う型を一つ置き、その型の操作として対象ごとの問い合わせを定義する。SQL、ORMのQuery型、DB接続、カーソル、ファイル形式など保存方式に固有の型と処理は、この型の内側へ閉じ込める。外部データ形式の定義は、問い合わせとは別の場所へ置く。
 
-検索条件は用途ごとの取得操作または読み取り専用クエリとして定義する。既存のORMやデータアクセスAPIと同じ粒度の汎用CRUDを包むだけのRepositoryは設けない。
+検索条件は用途ごとの取得操作として定義する。既存のデータアクセスAPIと同じ粒度の汎用CRUDを並べない。
 
-次は、利用者の永続化を分離した例である。`UserRepository`が公開するのは、業務ロジックが必要とする取得と保存だけで、どこへどう保存するかは現れない。`InMemoryUserRepository`は`HashMap`で保持するが、この`HashMap`も、複数スレッドから使うための`Arc<Mutex<_>>`も、実装の内側にある。保存先をDBへ置き換えても、契約と利用側は変わらない。テストでもこの実装をそのまま使える。
+次は、利用者を登録する問い合わせである。`Database`が接続とトランザクションを持ち、`create_user`はその操作として定義されている。ORMのEntityとActiveModelはこの中だけに現れ、呼び出し側は`NewUserResult`だけを受け取る。同じ`Database`に対して、対象ごとの問い合わせが別々のモジュールへ分かれており、テーブル定義はさらに別の場所にある。
 
 ```rust
-trait UserRepository: Send + Sync {
-    fn get_user(&self, id: Uuid) -> Option<User>;
+pub async fn create_user(&self, admin: bool) -> Result<NewUserResult> {
+    self.transaction(|tx| async {
+        let tx = tx;
+        let user = user::Entity::insert(user::ActiveModel {
+            admin: ActiveValue::set(admin),
+            ..Default::default()
+        })
+        .exec_with_returning(&*tx)
+        .await?;
 
-    fn save_user(&self, user: &User);
-}
-
-struct InMemoryUserRepository {
-    map: Arc<Mutex<HashMap<Uuid, User>>>,
+        Ok(NewUserResult { user_id: user.id })
+    })
+    .await
 }
 ```
 
@@ -431,31 +436,13 @@ struct InMemoryUserRepository {
 | 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
-| 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
+| 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `ITransport` / `TransportImpl`、OK: [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
 | データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: [`tungstenite`の`Message`](https://docs.rs/tungstenite/latest/tungstenite/protocol/enum.Message.html)、[`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) |
-| 真偽値 | `is` / `has` / `can` / `should` プレフィックス |
+| 真偽値 | 真偽値を返す関数は、その判定内容を表す自然な動詞または `is` / `has` / `can` / `should` を使用する。 |
 | 要求と完了イベントの名前 | 処理の実行を求める型名は`Request`で終える。完了した出来事を表すイベントの名前には過去形を使用する。例：`InitRequest`、`Initialized` |
 | イベント待受属性名 | 要求またはイベントの発生を待ち受ける属性名は`on_`で始め、その後に対応するイベント名を続ける。例：`on_init_request`、`on_initialized` |
 | イベント処理関数名 | 要求またはイベントを受け取って処理する関数名は`handle_`で始め、その後に対応するイベント名を続ける。例：`handle_init_request`、`handle_initialized` |
 | 定数、マジックナンバー | マジックナンバーを避け、意味を持つ名前付き定数にする。 |
-
-次は、要求を受け取って処理する関数の例である。Language Server Protocolのワークスペース再読み込み要求を受け取り、キャッシュした状態を捨てて再取得を要求する。名前が`handle_workspace_reload`となっており、`handle_`に続けて対応する要求名を置いている。`handle_request`や`process`のような、何を処理するのか分からない名前にはしていない。同じモジュールには`handle_completion`、`handle_hover`、`handle_rename`が並び、いずれも同じ形になっている。
-
-```rust
-pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    state.proc_macro_clients = Arc::from_iter([]);
-    state.build_deps_changed = false;
-
-    let req = FetchWorkspaceRequest {
-        path: None,
-        force_crate_graph_reload: false,
-    };
-    state
-        .fetch_workspaces_queue
-        .request_op("reload workspace request".to_owned(), req);
-    Ok(())
-}
-```
 
 ### 単語
 
@@ -471,7 +458,7 @@ pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow:
 | `permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | [`SemaphorePermit`](https://docs.rs/tokio/latest/tokio/sync/struct.SemaphorePermit.html) | 名詞 | リソース |
 | `runtime` | タスクの実行、スケジューリング、資源の保持を担う実行基盤を表す型に使用する。 | [`tokio`の`Runtime`](https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html) | 名詞 | リソース |
 | `token` | 取り消し要求や実行権など、保持していること自体が意味を持ち、複製して配れる値に使用する。 | [`tokio_util`の`CancellationToken`](https://docs.rs/tokio-util/latest/tokio_util/sync/struct.CancellationToken.html) | 名詞 | 制御 |
-| `layer` | 既存の処理を包み、横断的な機能を足す構成単位に使用する。包む対象のインターフェースは変えない。 | [`tower`の`Layer`](https://docs.rs/tower/latest/tower/trait.Layer.html)、[`tracing_subscriber`の`Layer`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/layer/trait.Layer.html) | 名詞 | 制御 |
+| `layer` | 既存の処理を包み、横断的な機能を足した処理を生成する構成単位に使用する。包む対象のインターフェースは変えない。`layer`自身は要求を処理しない。関連: `service`も参照。 | [`tower`の`Layer`](https://docs.rs/tower/latest/tower/trait.Layer.html)、[`tracing_subscriber`の`Layer`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/layer/trait.Layer.html) | 名詞 | 制御 |
 | `span` | 開始と終了を持つ処理区間を表す型に使用する。区間に属するログや計測を、その区間へ結び付ける。 | [`tracing`の`Span`](https://docs.rs/tracing/latest/tracing/struct.Span.html) | 名詞 | ログ |
 | `bytes` | 整数値をバイト列として保持する型、変数には、対象を表す名前に `bytes` を付ける。 | [`u32::to_be_bytes`](https://doc.rust-lang.org/std/primitive.u32.html#method.to_be_bytes) | 名詞 | データ |
 | `frame` | 連続したバイト列の中で、長さ、区切り、ヘッダー、ペイロード、検査値などによって境界が定められる伝送単位を表す型に使用する。通信内容の意味よりも、送受信時のバイト配置や境界を管理する場合に使用する。 | [`smoltcp`の`EthernetFrame`](https://docs.rs/smoltcp/latest/smoltcp/wire/struct.EthernetFrame.html)、[`tungstenite`の`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) | 名詞 | 通信 |
@@ -486,8 +473,10 @@ pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow:
 | `sink` | 連続して流れる値を順に受け取り、送り先へ渡す型に使用する。送り先を名前に含める。関連: `stream`も参照。 | [`futures`の`Sink`](https://docs.rs/futures/latest/futures/sink/trait.Sink.html) | 名詞 | 通信 |
 | `request` | 外部へ送る要求を表す型に使用する。対象の操作を名前に含める。関連: `response`も参照。 | [`http`の`Request`](https://docs.rs/http/latest/http/request/struct.Request.html) | 名詞 | 通信 |
 | `response` | 要求に対する応答を表す型に使用する。対象の操作を名前に含める。関連: `request`も参照。 | [`http`の`Response`](https://docs.rs/http/latest/http/response/struct.Response.html) | 名詞 | 通信 |
-| `service` | 要求を受け取って応答を返す処理を、要求と応答の型で表した抽象に使用する。中間処理を重ねて合成する場合に使う。業務処理をまとめただけの型の名前には使わない。 | [`tower`の`Service`](https://docs.rs/tower/latest/tower/trait.Service.html) | 名詞 | 通信 |
+| `service` | 要求を受け取って応答を返す処理を、要求と応答の型で表した抽象に使用する。個別の業務処理と横断処理を同じ形で扱えるようにする。業務処理をまとめただけの型の名前には使わない。関連: `handler`、`layer`も参照。 | [`tower`の`Service`](https://docs.rs/tower/latest/tower/trait.Service.html) | 名詞 | 通信 |
 | `router` | 受け取った要求を、経路や条件に対応する処理へ振り分ける型に使用する。 | [`axum`の`Router`](https://docs.rs/axum/latest/axum/struct.Router.html) | 名詞 | 通信 |
+| `handler` | 受け取った要求に対して、個別の処理そのものを実行する型または関数に使用する。要求の種類ごとに定義し、処理する対象を名前に含める。関連: `service`も参照。 | [`axum`の`Handler`](https://docs.rs/axum/latest/axum/handler/trait.Handler.html)、rust-analyzerの[`handle_workspace_reload`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 名詞 | 通信 |
+| `interceptor` | 要求が処理へ届く前に検査し、必要なら内容を変更するか処理を中断する型に使用する。検査する内容を名前に含める。関連: `layer`も参照。 | [`tonic`の`Interceptor`](https://docs.rs/tonic/latest/tonic/service/interceptor/trait.Interceptor.html) | 名詞 | 通信 |
 | `widget` | 画面へ描画する部品を表す型に使用する。描画する対象を名前に含める。 | [`ratatui`の`Widget`](https://docs.rs/ratatui/latest/ratatui/widgets/trait.Widget.html) | 名詞 | 表示 |
 | `tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | [`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
 | `lexer` | プログラム言語や独自言語の入力文字列を、識別子、数値、キーワード、記号などの種類付きトークンへ変換する型に使用する。 | [`logos`の`Lexer`](https://docs.rs/logos/latest/logos/struct.Lexer.html) | 名詞 | 解析 |
@@ -512,7 +501,6 @@ pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow:
 | `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | [`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
 | `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。保持する対象を名前に含める。 | Zedの[`BufferStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/buffer_store.rs#L34)、[`GitStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/git_store.rs#L101)、[`TaskStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/task_store.rs#L26)、[`WorktreeStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/worktree_store.rs#L207) | 名詞 | データ |
 | `registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | [`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
-| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 |  | 名詞 | データ |
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
 | `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | Wasmtimeの[`Clock`](https://github.com/bytecodealliance/wasmtime/blob/bf330493f4352546ee2a3435eeb85d75d6328f1b/examples/min-platform/embedding/src/wasi.rs#L233-L245) | 名詞 | リソース |
 | `provider` | 要求に応じて、値または使用する実装を取得、生成して供給する型に使用する。何を供給するかを名前に含める。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`CryptoProvider`](https://docs.rs/rustls/latest/rustls/crypto/struct.CryptoProvider.html)、[AWS SDK for Rustの`SharedCredentialsProvider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-credential-types/src/provider.rs#L79) | 名詞 | データ |
@@ -763,13 +751,11 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [AWS SDK for Rust `CredentialsProviderChain`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/credentials.rs#L189-L193) | 資格情報を環境変数、プロファイル、実行環境のメタデータの順に解決する構成を確認する。 |
 | 3. 依存関係の管理 | [AWS SDK for Rust `region::default_provider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/region.rs#L19-L21) | 接続先リージョンの探索元と順序を確認する。 |
 | 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
-| 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「永続化処理をRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体を削っている。 |
-| 6. 設計パターン | [Repository（PoEAA）](https://martinfowler.com/eaaCatalog/repository.html) | 抜粋元の`UserRepo`を`UserRepository`へ改名した際の、名前の出典。 |
+| 6. 設計パターン | [Zed `Database::create_user`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/collab/src/db/queries/users.rs#L6-L18) | 「永続化の入口を一つにし、対象ごとに問い合わせを分ける」のコード例の抜粋元。接続を持つ[`Database`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/collab/src/db.rs#L51-L60)に対し、問い合わせは対象ごとのモジュールへ、テーブル定義は`db/tables.rs`へ分かれている。 |
 | 7. 命名 | [rust-analyzer `handle_workspace_reload`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 「イベント処理関数名」のコード例の抜粋元。同じモジュールに`handle_completion`、`handle_hover`、`handle_rename`が並ぶ。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
 | 5. 型とカプセル化 | [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) | 検証結果を型として持ち、不正な値を後段へ持ち込まない設計を説明する。 |
-| 6. 設計パターン | [Repository](https://martinfowler.com/eaaCatalog/repository.html) | 永続化されたデータを、コレクションのように扱う境界として分離する構造を説明する。 |
 | 6. 設計パターン | [Gateway](https://martinfowler.com/eaaCatalog/gateway.html) | 外部システムや外部資源へのアクセスを1つの型へ包む構造を説明する。 |
 | 10. ログ | [Logs Data Model \| OpenTelemetry](https://opentelemetry.io/docs/specs/otel/logs/data-model/) | ログの重大度と構造化項目の標準を定義する。 |
 | 10. ログ | [Naming \| OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/general/naming/) | 属性名とイベント名の命名規則を定義する。 |

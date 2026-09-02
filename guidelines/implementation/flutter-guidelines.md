@@ -66,7 +66,7 @@
 | --- | --- | --- |
 | コードの書式を統一し、機械的な差分を防ぐ。 | アプリケーション内の全Dartソースコード。 | `dart format -o none --set-exit-if-changed .` |
 | 型エラー、静的解析違反、lint違反を検出し、警告を残さない。 | アプリケーション内のDartソースコードと解析設定。 | `flutter analyze --fatal-infos --fatal-warnings` |
-| ロジック、Repository、BLoC、Widgetの振る舞いの破壊を検出する。 | `test/`に配置した単体テストとWidgetテスト。 | `flutter test` |
+| ロジック、外部境界の実装、BLoC、Widgetの振る舞いの破壊を検出する。 | `test/`に配置した単体テストとWidgetテスト。 | `flutter test` |
 | Feature、外部I/O、実行環境を結合した主要フローの破壊を検出する。 | `integration_test/`に配置した結合テストとE2Eテスト。 | `flutter test integration_test` |
 | 依存関係に含まれる既知の脆弱性を検出する。 | リポジトリ内のすべての`pubspec.lock`。 | `osv-scanner scan source -r .` |
 
