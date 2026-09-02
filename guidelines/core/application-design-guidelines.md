@@ -48,7 +48,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。HTTP、RPC、メッセージ、CLIなど外部からの要求を受け取る処理は、業務ロジックを持たず、Feature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/presentation/` | [`presentation`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
 | `<source-root>/features/<feature>/<technical-resource>/` | [OpenDALの`github/`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql/`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`postgresql/`](https://github.com/apache/opendal/tree/main/core/services/postgresql)、[`s3/`](https://github.com/apache/opendal/tree/main/core/services/s3)、[Vectorの`postgres/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/postgres)、[`aws_s3/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/aws_s3) | Featureの型に依存する、外部システム、サービス、データストアの実装と外部データ形式を配置する。永続化の実装もここへ置く。 |
-| `<source-root>/ui/` | [`ui/`](https://docs.flutter.dev/app-architecture/case-study) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。 |
+| `<source-root>/ui/` | [`ui/`](https://docs.flutter.dev/app-architecture/case-study) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。アプリケーションが決める文言は引数で受け取り、部品自身が生成する文言だけ多言語対応とロケール書式を参照する。 |
 | `<source-root>/<localization>/` | [`l10n`](https://docs.flutter.dev/ui/internationalization) | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
 | `<source-root>/locale_format/` | [`NumberFormat`](https://developer.android.com/reference/android/icu/text/NumberFormat) | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
 
@@ -67,7 +67,7 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 | Featureの外部依存の実装（`features/<feature>/<technical-resource>/`） | 同じFeatureの型、対応する契約、共有基盤、技術基盤、外部SDK、外部データ形式 |
 | 共有基盤（`core/<name>/`） | 標準ライブラリ、基盤の表現に必要な外部パッケージ |
 | 技術基盤（`infra/<technical-resource>/`） | 技術基盤の外部SDKとライブラリ |
-| 共有UI部品（`ui/`） | UIフレームワーク |
+| 共有UI部品（`ui/`） | UIフレームワーク、多言語対応、ロケール書式 |
 | 多言語対応、ロケール書式（`<localization>/`、`locale_format/`） | 標準ライブラリ、翻訳と書式のライブラリ |
 
 ---
@@ -137,6 +137,7 @@ Shell スクリプト以外の CLI に適用する。
 | 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | モジュールへ分ける時期と、パッケージへ切り出す時期を確認する。 |
 | 2. フォルダ構成 | [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) | 依存の向きを内側へそろえる規則を確認する。 |
 | 2. フォルダ構成 | [Guide to app architecture \| Android Developers](https://developer.android.com/topic/architecture) | 層の間で依存の向きを一方向に保つ構成を確認する。 |
+| 2. フォルダ構成 | [Flutterの`TextField`](https://github.com/flutter/flutter/blob/540a2711c83a08d5c40443058448782e4dfe34aa/packages/flutter/lib/src/material/text_field.dart#L1253)、[compass_appの`ErrorIndicator`](https://github.com/flutter/samples/blob/463e365e4842f252ffab9c6198594a504d69469f/compass_app/app/lib/ui/core/ui/error_indicator.dart#L10-L18) | 共有UI部品と文言の関係を確認する。`TextField`は文字数カウンタなど部品自身が生成する文言を`MaterialLocalizations`から取り、`ErrorIndicator`は表示する`title`と`label`を引数で受け取る。 |
 | 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みを分離する条件と構成を確認する。 |
 | 4. セキュリティ | [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) | 外部入力を受け取る境界で検証する項目と方法を確認する。 |
 | 4. セキュリティ | [Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | 機密情報の保存、利用、記録を安全に扱う方法を確認する。 |
