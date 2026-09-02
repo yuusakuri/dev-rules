@@ -23,7 +23,9 @@
 
 本書の原則は、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
-本書のコード例は、規則の形を示す目的でRustを用いる。例は実在するOSSの実装からの抜粋で、規則に関係しない部分は削るか`// ...`、`/* ... */`で省略する。複数の型や引数を独自の型へまとめるなどの書き換えは行わない。
+本書のコード例は、規則の形を示す目的でRustを用いる。例は実在するOSSの実装からの抜粋で、規則に関係しない部分は削るか`// ...`、`/* ... */`で省略する。複数の型や引数を独自の型へまとめるなどの書き換えは行わない。抜粋元は固定コミットへのリンクで「参考資料」に記載し、抜粋元の名前を本書の命名へ変えた場合は、変更先の書き方の出典も記載する。各例には、そのコードが何をしていて、なぜその規則の例になるのかを本文で説明する。
+
+「命名」の規則のOK例と「単語」の例には、実際に採用されている著名なRust OSS（GitHubのStarが2,000以上）の型名と、その定義へのリンクを記載する。そのリンクは、命名の根拠として「参考資料」へ重ねて記載しない。コード例の抜粋元や、規則の背景を説明する資料としての記載はこれに当たらない。
 
 ---
 
@@ -424,13 +426,13 @@ struct InMemoryUserRepository {
 | ルール | 内容 |
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
-| 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: `Authenticator`、`SessionIssuer` |
-| 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: `github`、`jira`、`slack`、`postgres`、`mysql`、`s3` |
-| 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: `PaymentClient` / `StripeClient`、`ConnectivityWatcher` |
+| 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: [`tower`の`Timeout`](https://docs.rs/tower/latest/tower/timeout/struct.Timeout.html)、[`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html) |
+| 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: [`github`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/github)、[`mysql`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/mysql)、[`s3`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/s3) |
+| 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
-| 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: `OrderRepository` / `PostgresOrderRepository` |
-| データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: `Message`、`Frame` |
+| 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `IOrderRepository` / `OrderRepositoryImpl`、OK: [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
+| データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: [`tungstenite`の`Message`](https://docs.rs/tungstenite/latest/tungstenite/protocol/enum.Message.html)、[`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) |
 | 真偽値 | `is` / `has` / `can` / `should` プレフィックス |
 | 要求と完了イベントの名前 | 処理の実行を求める型名は`Request`で終える。完了した出来事を表すイベントの名前には過去形を使用する。例：`InitRequest`、`Initialized` |
 | イベント待受属性名 | 要求またはイベントの発生を待ち受ける属性名は`on_`で始め、その後に対応するイベント名を続ける。例：`on_init_request`、`on_initialized` |
@@ -492,7 +494,7 @@ struct InMemoryUserRepository {
 | `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | `UserMap`、[`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
 | `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。 | `SessionStore`、[`object_store`の`ObjectStore`](https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html) | 名詞 | データ |
 | `registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | `PluginRegistry`、[`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
-| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 | `OrderRepository`、`PostgresOrderRepository`、[`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html)、[compass_appの`data/repositories/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/data/repositories) | 名詞 | データ |
+| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する型に使用する。 | `OrderRepository`、`PostgresOrderRepository`、[`cqrs-es`の`ViewRepository`](https://docs.rs/cqrs-es/latest/cqrs_es/persist/trait.ViewRepository.html) | 名詞 | データ |
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
 | `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`Clock`](https://docs.rs/governor/latest/governor/clock/trait.Clock.html)、`SystemClock`、`MonotonicClock`、`FakeClock` | 名詞 | リソース |
 | `provider` | 値そのものではなく、要求された値や機能を取得または生成して供給する役割に使用する。何を供給するかを名前に含め、役割をより具体的に表せる名前があるときはその名前を優先する。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`figment`の`Provider`](https://docs.rs/figment/latest/figment/trait.Provider.html)、[AWS SDK for Rustの`SharedCredentialsProvider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-credential-types/src/provider.rs#L79) | 名詞 | データ |
@@ -500,12 +502,11 @@ struct InMemoryUserRepository {
 | `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html)、`SeedableRng`、`StdRng` | 名詞 | 生成 |
 | `mock` | テストのために本物の実装を置き換え、呼び出しの記録と検証を目的とする型に使用する。関連: `fake`も参照。 | [`mockall`の`MockX`](https://docs.rs/mockall/latest/mockall/) | 名詞 | 検証 |
 | `fake` | テストのために本物の実装を置き換える、動作する簡易な代替実装に使用する。関連: `mock`も参照。 | [`governor`の`FakeRelativeClock`](https://docs.rs/governor/latest/governor/clock/struct.FakeRelativeClock.html) | 名詞 | 検証 |
-| `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含める。接続先が同じであれば、利用する機能ごとに分割せず一つにまとめる。 | `StripeClient`、`GitHubClient`、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)、[`kube`の`Client`](https://docs.rs/kube/latest/kube/struct.Client.html) | 名詞 | 通信 |
-| `mailer` | メールの送信を担う型に使用する。送信方式または送信先サービスを実装の名前に含める。 | `Mailer`、`SmtpMailer` | 名詞 | 通信 |
+| `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含める。境界は、外部サービスまたはAPIが定める契約の単位で決める。同じ提供者でもサービスが分かれていればサービスごとに定義し、一つのサービスの中を利用する機能ごとに分割しない。 | [`aws-sdk-s3`の`Client`](https://docs.rs/aws-sdk-s3/latest/aws_sdk_s3/struct.Client.html)、[`aws-sdk-dynamodb`の`Client`](https://docs.rs/aws-sdk-dynamodb/latest/aws_sdk_dynamodb/struct.Client.html)、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)、[`kube`の`Client`](https://docs.rs/kube/latest/kube/struct.Client.html) | 名詞 | 通信 |
 | `transport` | メッセージの送信経路と送信手段を表す型に使用する。経路ごとに実装を差し替えられる場合に使い、送信手段が一つしかない場合は`client`を使う。関連: `client`も参照。 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)、[`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) | 名詞 | 通信 |
-| `publisher` | メッセージをトピックまたは購読者へ送出する型に使用する。送出先の方式を実装の名前に含める。関連: `subscriber`、`producer`も参照。 | `EventPublisher` | 名詞 | 通信 |
+| `publisher` | メッセージをトピックまたは購読者へ公開する型に使用する。公開先の方式を実装の名前に含める。関連: `subscriber`、`producer`も参照。 | [`zenoh`の`Publisher`](https://docs.rs/zenoh/latest/zenoh/pubsub/struct.Publisher.html) | 名詞 | 通信 |
 | `producer` | メッセージをブローカーまたはキューへ送出する型に使用する。送出先の方式を実装の名前に含める。関連: `consumer`、`publisher`も参照。 | `KafkaEventProducer`、[`rdkafka`の`Producer`](https://docs.rs/rdkafka/latest/rdkafka/producer/trait.Producer.html) | 名詞 | 通信 |
-| `subscriber` | トピックを購読してメッセージを受け取り、処理する型に使用する。取得元の方式を実装の名前に含める。関連: `publisher`、`consumer`も参照。 | `EventSubscriber` | 名詞 | 通信 |
+| `subscriber` | トピックを購読してメッセージを受け取り、処理する型に使用する。購読元の方式を実装の名前に含める。関連: `publisher`、`consumer`も参照。 | [`zenoh`の`Subscriber`](https://docs.rs/zenoh/latest/zenoh/pubsub/struct.Subscriber.html) | 名詞 | 通信 |
 | `consumer` | ブローカーまたはキューからメッセージを受け取って処理する型に使用する。取得元の方式を実装の名前に含める。関連: `producer`、`subscriber`も参照。 | [`rdkafka`の`Consumer`](https://docs.rs/rdkafka/latest/rdkafka/consumer/trait.Consumer.html) | 名詞 | 通信 |
 | `pool` | 再利用可能なリソースの集合を表す型に使用する。 | `ConnectionPool`、`ThreadPool`、[`sqlx`の`Pool`](https://docs.rs/sqlx/latest/sqlx/struct.Pool.html) | 名詞 | リソース |
 | `cache` | TTL、容量制限、無効化規則を持つ一時保持を表す型に使用する。 | `ResponseCache`、[`moka`の`Cache`](https://docs.rs/moka/latest/moka/sync/struct.Cache.html) | 名詞 | データ |
@@ -747,9 +748,6 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
 | 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「永続化処理をRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体を削っている。 |
 | 6. 設計パターン | [Repository（PoEAA）](https://martinfowler.com/eaaCatalog/repository.html) | 抜粋元の`UserRepo`を`UserRepository`へ改名した際の、名前の出典。 |
-| 7. 命名 | [kube `Client`と`Connection`](https://github.com/kube-rs/kube/blob/7a4641d4cc2f693b2dee97b9fc15fadb96d7f62e/kube-client/src/client/mod.rs#L87-L102) | 外部サービス全体を呼ぶ型に`Client`、成立した通信路に`Connection`を使う区別を確認する。Kubernetes APIは機能が多いが、機能ごとにClientを分けていない。 |
-| 7. 命名 | [notify `Watcher`](https://github.com/notify-rs/notify/blob/dae9f3f559863ee5f06c3b315c3190f9cdd3a8b5/notify/src/lib.rs#L372-L400) | 資源や状態の変化を監視する型に`Watcher`を使う例を確認する。 |
-| 7. 命名 | [reqwest `Client`](https://github.com/seanmonstar/reqwest/blob/9f06fd28abe53e5ff84a091825ea5ce8984b51e0/src/async_impl/client.rs#L93-L95) | 接続プールを持つHTTP通信の共有オブジェクトでも、名前が`Transport`ではなく`Client`であることを確認する。 |
 | 7. 命名 | [rust-analyzer `handlers::request`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L77) | 抜粋元の`create_user_dyn`などを`handle_create_user`へ改名した際の、`handle_`で始める書き方の出典。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
