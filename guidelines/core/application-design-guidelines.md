@@ -60,13 +60,15 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 | 役割 | 依存してよい相手 |
 | --- | --- |
-| 起動と構成 | 各Featureの公開API、共有基盤、技術基盤、共有UI部品 |
-| Featureの表示と受け口 | 同じFeatureの処理と型、別Featureの公開API、共有基盤、共有UI部品 |
-| Featureの処理 | 同じFeatureの外部依存の契約と型、別Featureの公開API、共有基盤 |
-| Featureの外部依存の実装 | 対応する契約、同じFeatureの型、技術基盤、外部SDK、外部データ形式 |
-| 共有基盤 | 標準ライブラリと、基盤の表現に必要な外部パッケージのみ |
-| 技術基盤 | 技術基盤の外部SDKとライブラリのみ |
-| 共有UI部品 | UIフレームワークのみ |
+| 起動と構成（起動点、`app/`） | 各Featureの公開API、共有基盤、技術基盤、共有UI部品、多言語対応、ロケール書式 |
+| Featureの表示（`features/<feature>/presentation/`） | 同じFeatureの処理と型、別Featureの公開API、共有基盤、共有UI部品、多言語対応、ロケール書式 |
+| Featureの受け口（`features/<feature>/`） | 同じFeatureの処理と型、共有基盤 |
+| Featureの処理（`features/<feature>/`） | 同じFeatureの型、同じFeatureの外部依存の契約、別Featureの公開API、共有基盤 |
+| Featureの外部依存の実装（`features/<feature>/<technical-resource>/`） | 同じFeatureの型、対応する契約、共有基盤、技術基盤、外部SDK、外部データ形式 |
+| 共有基盤（`core/<name>/`） | 標準ライブラリ、基盤の表現に必要な外部パッケージ |
+| 技術基盤（`infra/<technical-resource>/`） | 技術基盤の外部SDKとライブラリ |
+| 共有UI部品（`ui/`） | UIフレームワーク |
+| 多言語対応、ロケール書式（`<localization>/`、`locale_format/`） | 標準ライブラリ、翻訳と書式のライブラリ |
 
 ---
 
