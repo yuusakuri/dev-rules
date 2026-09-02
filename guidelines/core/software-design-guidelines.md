@@ -381,36 +381,11 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 利用側と提供側にすでに存在するインターフェースが互換でない場合は、Adapterパターンで一方の操作とデータを他方の形式へ変換する。変換以外の業務上の判断はAdapterに持たせない。
 
-### 永続化の入口を一つにし、対象ごとに問い合わせを分ける
-
-業務ロジックをDB、ファイル、端末ストレージなどの保存方式から分離する場合は、接続と実行を担う型を一つ置き、その型の操作として対象ごとの問い合わせを定義する。SQL、ORMのQuery型、DB接続、カーソル、ファイル形式など保存方式に固有の型と処理は、この型の内側へ閉じ込める。外部データ形式の定義は、問い合わせとは別の場所へ置く。
-
-検索条件は用途ごとの取得操作として定義する。既存のデータアクセスAPIと同じ粒度の汎用CRUDを並べない。
-
-次は、利用者を登録する問い合わせである。`Database`が接続とトランザクションを持ち、`create_user`はその操作として定義されている。ORMのEntityとActiveModelはこの中だけに現れ、呼び出し側は`NewUserResult`だけを受け取る。同じ`Database`に対して、対象ごとの問い合わせが別々のモジュールへ分かれており、テーブル定義はさらに別の場所にある。
-
-```rust
-pub async fn create_user(&self, admin: bool) -> Result<NewUserResult> {
-    self.transaction(|tx| async {
-        let tx = tx;
-        let user = user::Entity::insert(user::ActiveModel {
-            admin: ActiveValue::set(admin),
-            ..Default::default()
-        })
-        .exec_with_returning(&*tx)
-        .await?;
-
-        Ok(NewUserResult { user_id: user.id })
-    })
-    .await
-}
-```
-
 ### 保存先を交換する場合はRepositoryへ分離する
 
-業務ロジックを保存方式から独立させ、保存先を交換できるようにする場合は、Repositoryパターンを使う。Repositoryは利用側に必要な取得、保存、削除などの操作だけを契約として公開し、保存方式に固有の型と処理を実装内へ閉じ込める。交換する必要がない場合は、前の規則のとおり接続を持つ型の操作として問い合わせを定義する。
+業務ロジックを保存方式から独立させ、保存先を交換できるようにする場合は、Repositoryパターンを使う。Repositoryは利用側に必要な取得、保存、削除などの操作だけを契約として公開し、保存方式に固有の型と処理を実装内へ閉じ込める。
 
-次は、利用者の取得と保存だけを契約にした例である。`UserRepo`が公開するのは業務ロジックが必要とする2つの操作だけで、どこへどう保存するかは現れない。`InMemoryUserRepo`は`HashMap`で保持するが、この`HashMap`も、複数スレッドから使うための`Arc<Mutex<_>>`も実装の内側にある。保存先をDBへ置き換えても、契約と利用側は変わらない。テストでもこの実装をそのまま使える。
+次は、保存方式を実装の内側へ閉じ込めた例である。`UserRepo`が公開するのは業務ロジックが呼ぶ操作だけで、どこへどう保存するかは現れない。`InMemoryUserRepo`は`HashMap`で保持するが、この`HashMap`も、複数スレッドから使うための`Arc<Mutex<_>>`も実装の内側にある。保存先をDBへ置き換えても、契約と利用側は変わらない。
 
 ```rust
 trait UserRepo: Send + Sync {
@@ -421,6 +396,10 @@ trait UserRepo: Send + Sync {
 
 struct InMemoryUserRepo {
     map: Arc<Mutex<HashMap<Uuid, User>>>,
+}
+
+impl UserRepo for InMemoryUserRepo {
+    // ...
 }
 ```
 
@@ -448,7 +427,7 @@ struct InMemoryUserRepo {
 
 | ルール | 内容 |
 | --- | --- |
-| 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
+| 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Do`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: [`tower`の`Timeout`](https://docs.rs/tower/latest/tower/timeout/struct.Timeout.html)、[`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html) |
 | 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: [`github`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/github)、[`mysql`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/mysql)、[`s3`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/s3) |
 | 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
@@ -770,7 +749,6 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [AWS SDK for Rust `CredentialsProviderChain`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/credentials.rs#L189-L193) | 資格情報を環境変数、プロファイル、実行環境のメタデータの順に解決する構成を確認する。 |
 | 3. 依存関係の管理 | [AWS SDK for Rust `region::default_provider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/region.rs#L19-L21) | 接続先リージョンの探索元と順序を確認する。 |
 | 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
-| 6. 設計パターン | [Zed `Database::create_user`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/collab/src/db/queries/users.rs#L6-L18) | 「永続化の入口を一つにし、対象ごとに問い合わせを分ける」のコード例の抜粋元。接続を持つ[`Database`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/collab/src/db.rs#L51-L60)に対し、問い合わせは対象ごとのモジュールへ、テーブル定義は`db/tables.rs`へ分かれている。 |
 | 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「保存先を交換する場合はRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体と`#[derive(..)]`を削っている。 |
 | 6. 設計パターン | [Repository](https://martinfowler.com/eaaCatalog/repository.html) | 永続化されたデータを、コレクションのように扱う境界として分離する構造を説明する。 |
 | 7. 命名 | [rust-analyzer `handle_workspace_reload`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 「イベント処理関数名」のコード例の抜粋元。同じモジュールに`handle_completion`、`handle_hover`、`handle_rename`が並ぶ。 |
