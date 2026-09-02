@@ -406,6 +406,24 @@ pub async fn create_user(&self, admin: bool) -> Result<NewUserResult> {
 }
 ```
 
+### 保存先を交換する場合はRepositoryへ分離する
+
+業務ロジックを保存方式から独立させ、保存先を交換できるようにする場合は、Repositoryパターンを使う。Repositoryは利用側に必要な取得、保存、削除などの操作だけを契約として公開し、保存方式に固有の型と処理を実装内へ閉じ込める。交換する必要がない場合は、前の規則のとおり接続を持つ型の操作として問い合わせを定義する。
+
+次は、利用者の取得と保存だけを契約にした例である。`UserRepo`が公開するのは業務ロジックが必要とする2つの操作だけで、どこへどう保存するかは現れない。`InMemoryUserRepo`は`HashMap`で保持するが、この`HashMap`も、複数スレッドから使うための`Arc<Mutex<_>>`も実装の内側にある。保存先をDBへ置き換えても、契約と利用側は変わらない。テストでもこの実装をそのまま使える。
+
+```rust
+trait UserRepo: Send + Sync {
+    fn get_user(&self, id: Uuid) -> Option<User>;
+
+    fn save_user(&self, user: &User);
+}
+
+struct InMemoryUserRepo {
+    map: Arc<Mutex<HashMap<Uuid, User>>>,
+}
+```
+
 ### 外部システムとの境界を分離する
 
 外部資源（通知、他サービスのAPI、デバイス、時刻、乱数など）を利用する場合は、利用側の目的に沿った操作を公開する境界を定義し、外部APIの呼び出し、外部形式との変換、外部SDKの型とエラーを実装内へ閉じ込める。引数、戻り値、エラーは利用側が扱う型で定義し、業務上の判断は利用側で行う。
@@ -500,6 +518,7 @@ pub async fn create_user(&self, admin: bool) -> Result<NewUserResult> {
 | `set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | [`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) | 名詞 | 集合 |
 | `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | [`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
 | `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。保持する対象を名前に含める。 | Zedの[`BufferStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/buffer_store.rs#L34)、[`GitStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/git_store.rs#L101)、[`TaskStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/task_store.rs#L26)、[`WorktreeStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/worktree_store.rs#L207) | 名詞 | データ |
+| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する契約に使用する。利用側が必要とする操作だけを公開し、保存方式は実装へ閉じ込める。実装の名前には保存先を含める。 | axumの[`UserRepo`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L154)、[`InMemoryUserRepo`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L156-L159) | 名詞 | データ |
 | `registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | [`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
 | `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | Wasmtimeの[`Clock`](https://github.com/bytecodealliance/wasmtime/blob/bf330493f4352546ee2a3435eeb85d75d6328f1b/examples/min-platform/embedding/src/wasi.rs#L233-L245) | 名詞 | リソース |
@@ -752,6 +771,8 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [AWS SDK for Rust `region::default_provider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/region.rs#L19-L21) | 接続先リージョンの探索元と順序を確認する。 |
 | 3. 依存関係の管理 | [rust-analyzer `main`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/bin/main.rs#L28-L38) | 抜粋元の`unwrap()`を`?`へ変えた際の、起動点が`anyhow::Result`を返す書き方の出典。 |
 | 6. 設計パターン | [Zed `Database::create_user`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/collab/src/db/queries/users.rs#L6-L18) | 「永続化の入口を一つにし、対象ごとに問い合わせを分ける」のコード例の抜粋元。接続を持つ[`Database`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/collab/src/db.rs#L51-L60)に対し、問い合わせは対象ごとのモジュールへ、テーブル定義は`db/tables.rs`へ分かれている。 |
+| 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「保存先を交換する場合はRepositoryへ分離する」のコード例の抜粋元。掲載時に実装の本体と`#[derive(..)]`を削っている。 |
+| 6. 設計パターン | [Repository](https://martinfowler.com/eaaCatalog/repository.html) | 永続化されたデータを、コレクションのように扱う境界として分離する構造を説明する。 |
 | 7. 命名 | [rust-analyzer `handle_workspace_reload`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 「イベント処理関数名」のコード例の抜粋元。同じモジュールに`handle_completion`、`handle_hover`、`handle_rename`が並ぶ。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
 | 5. 型とカプセル化 | [ValueObject](https://martinfowler.com/bliki/ValueObject.html) | 値を表す型の不変性と、保持する値による等価性を説明する。 |
