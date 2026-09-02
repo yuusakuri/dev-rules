@@ -23,9 +23,9 @@
 
 本書の原則は、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
-本書のコード例は、規則の形を示す目的でRustを用いる。例は実在するOSSの実装からの抜粋で、規則に関係しない部分は削るか`// ...`、`/* ... */`で省略する。複数の型や引数を独自の型へまとめるなどの書き換えは行わない。抜粋元は固定コミットへのリンクで「参考資料」に記載し、抜粋元の名前を本書の命名へ変えた場合は、変更先の書き方の出典も記載する。各例には、そのコードが何をしていて、なぜその規則の例になるのかを本文で説明する。
+本書のコード例は、規則の形を示す目的でRustを用いる。例は実在するOSSの実装からの抜粋で、規則に関係しない部分は削るか`// ...`、`/* ... */`で省略する。複数の型や引数を独自の型へまとめるなどの書き換えは行わない。抜粋元は固定コミットへのリンクで「参考資料」に記載する。各例には、そのコードが何をしていて、なぜその規則の例になるのかを本文で説明する。
 
-「命名」の規則のOK例と「単語」の例には、実際に採用されている著名なRust OSS（GitHubのStarが2,000以上）の型名と、その定義へのリンクを記載する。そのリンクは、命名の根拠として「参考資料」へ重ねて記載しない。コード例の抜粋元や、規則の背景を説明する資料としての記載はこれに当たらない。
+採用する名前の例は、実際に採用されている著名なRust OSS（GitHubのStarが2,000以上）の型名または関数名と、その定義へのリンクを記載する。そのリンクは、「参考資料」へ重ねて記載しない。
 
 ---
 
@@ -485,7 +485,7 @@ struct InMemoryUserRepository {
 | `snapshot` | ある時点の状態を写した読み取り専用の値を表す型に使用する。写した後は、元の状態の変化に影響されない。 | [rust-analyzerの`GlobalStateSnapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L214-L228)、`ConfigSnapshot` | 名詞 | データ |
 | `id` | 識別子を表す型の名前は `id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | `UserId`、[`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
 | `event` | すでに起きた出来事を表す型に使用する。名前は過去形にする。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html)、[`cqrs-es`の`DomainEvent`](https://docs.rs/cqrs-es/latest/cqrs_es/trait.DomainEvent.html) | 名詞 | データ |
-| `config` | 動作を決める設定値と、使用する実装の指定をまとめる型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html)、[AWS SDK for Rustの`SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137)、[`quinn`の`ClientConfig`](https://docs.rs/quinn/latest/quinn/struct.ClientConfig.html) | 名詞 | データ |
+| `config` | 動作を決める設定値と、使用する実装の指定をまとめる型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html)、[AWS SDK for Rustの`SdkConfig`](https://docs.rs/aws-config/latest/aws_config/struct.SdkConfig.html)、[`quinn`の`ClientConfig`](https://docs.rs/quinn/latest/quinn/struct.ClientConfig.html) | 名詞 | データ |
 | `formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | `LogFormatter`、[`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
 | `validate` | 入力が形式、範囲、不変条件などの制約を満たすか検証する操作に使用する。検証専用の型を作らず、検証対象の型へ実装する。 | [`validator`の`Validate`](https://docs.rs/validator/latest/validator/trait.Validate.html) | 動詞 | 解析 |
 | `loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | [AWS SDK for Rustの`ConfigLoader`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L280)、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
@@ -733,7 +733,6 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 | 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の抜粋元。掲載時にエラーへの文脈付与（`map_err`）を削っている。 |
 | 3. 依存関係の管理 | [Google Cloud Rust Storage `ClientBuilder`](https://github.com/googleapis/google-cloud-rust/blob/714e6ba9c814bdd97b19db014aeae7900f5639e1/src/storage/src/storage/client.rs#L388-L608) | Storage固有のClientが、接続先、認証情報、リトライなどの設定を共通の`ClientConfig`へ渡し、GAXのHTTPおよびgRPC通信層を構成する実装。 |
 | 3. 依存関係の管理 | [Google Cloud Rust GAX `ClientBuilder`](https://github.com/googleapis/google-cloud-rust/blob/714e6ba9c814bdd97b19db014aeae7900f5639e1/src/gax/src/client_builder.rs#L145-L425) | サービスごとのClientBuilderに共通する接続先、認証情報、リトライ、タイムアウトの設定機構を提供する実装。 |
-| 3. 依存関係の管理 | [reqwest `Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html) | 内部に接続プールを持つClientを生成し直さず、複製または共有して再利用する方法を説明する。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L338) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。掲載時に約40あるフィールドと、その生成のうち4つ以外を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::run`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L177-L218) | 同じコード例の抜粋元。状態を所有する型自身がイベントループを回す箇所。掲載時に起動時の登録処理と終了通知の判定を削っている。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。状態から読み取り用の値を写す箇所。掲載時に写す12フィールドのうち2つ以外を削っている。 |
