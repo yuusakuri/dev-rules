@@ -194,7 +194,7 @@ let client = aws_sdk_dynamodb::Client::new(&config);
 
 フレームワークが一つの状態型を要求する場合や、イベントループなどの実行主体が複数の状態と資源を同じ期間所有する場合は、利用範囲とライフサイクルが一致する値を専用の型へまとめてよい。利用側が共有状態の一部しか使わない場合は、その部分だけを渡す。新しく定義する共有状態の型名には、`AppState`または`GlobalState`を優先して使用する。フレームワークが別の名前を定めている場合は、その規約に従う。
 
-次は、言語サーバーのイベントループを実行する型の例である。`GlobalState`は、クライアントへの送信路`sender`、処理を別スレッドで走らせる`task_pool`、設定`config`を持つ。これらは`new`で一度に組み立てられ、`run`が回っている間だけ生き、ループの終了とともに解放される。この型は値を集めた入れ物ではなく、`run`でイベントを受け取り`handle_event`へ渡す実行主体そのものであり、持っている値の生存期間はループの生存期間と一致する。フィールドが複数あることを理由に分割していない。
+次は、言語サーバーのイベントループを実行する型の例である。`GlobalState`は、クライアントへの送信路`sender`、処理を別スレッドで走らせる`task_pool`、設定`config`を持つ。これらは`new`で組み立てられ、`run`の実行中は同じライフサイクルで管理されるため、一つの型にまとめている。`GlobalState`は`run`でイベントを受け取り`handle_event`へ渡す。
 
 ```rust
 pub(crate) struct GlobalState {
@@ -236,7 +236,7 @@ impl GlobalState {
 }
 ```
 
-次は、その状態を使う側の例である。重い処理を別スレッドで走らせるため、`GlobalState`は自身が持つ`task_pool`へ処理を渡す。このとき状態そのものは渡せないので、`snapshot()`で読み取りに必要な値だけを写した`GlobalStateSnapshot`を作り、クロージャーへ移動させる。実行主体が状態を持ち続けたまま、別スレッドへは必要な部分だけを渡す形になる。
+次は、その状態を使う側の例である。重い処理を別スレッドで走らせるため、`GlobalState`は自身が持つ`task_pool`へ処理を渡す。このとき状態そのものは渡せないので、`snapshot()`で読み取りに必要な値だけを写した`GlobalStateSnapshot`を作り、クロージャーへ移動させる。
 
 ```rust
 self.task_pool
@@ -351,11 +351,11 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 値の範囲や形式、要素の重複、並び順、件数など、型が満たすべき条件は、その型の生成と操作の内側で検証し、外から不正な値や状態を作れないようにする。
 
-### 継承より委譲を選ぶ
+### 継承より合成と委譲を選ぶ
 
-継承は、インターフェースの実装、つまり振る舞いの契約を表す目的でのみ使う。実装の再利用を目的とした継承は行わず、委譲を使う。
+継承は、インターフェースの実装、つまり振る舞いの契約を表す目的でのみ使う。実装を再利用したい場合は、その実装を持つ型を部品として保持する合成と、処理をその部品へ任せる委譲を使う。
 
-実装継承では、子クラスが親クラスの内部実装に依存するため、親の内部を変えると子が壊れる。委譲が依存するのは相手の公開インターフェースだけで、相手の内部が変わっても影響を受けない。相手をインターフェース経由で差し替えられるため、テストも容易になる。
+実装継承では、子クラスが親クラスの内部実装に依存するため、親の内部を変えると子が壊れる。合成では、部品として保持していることだけが両者の関係になり、委譲が依存するのも部品の公開インターフェースに限られるため、部品の内部が変わっても影響を受けない。部品をインターフェース経由で差し替えられるため、テストも容易になる。
 
 ---
 
@@ -435,11 +435,10 @@ impl UserRepo for InMemoryUserRepo {
 | --- | --- |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Do`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: [`tower`の`Timeout`](https://docs.rs/tower/latest/tower/timeout/struct.Timeout.html)、[`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html) |
-| 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: [`github`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/github)、[`mysql`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/mysql)、[`s3`](https://github.com/apache/opendal/tree/670d8f9637ff79fd0a3a2f00cdf751fb3b11f994/core/services/s3) |
+| 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: [`github`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`s3`](https://github.com/apache/opendal/tree/main/core/services/s3) |
 | 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
-| 短く命名する | 文脈上明らかな語は省く。意味を損なわない範囲で簡潔にする |
-| 名前の長さ | 型名が4単語以上、関数名が5単語以上になる場合は見直す。 |
+| 短く命名する | 文脈上明らかな語は省き、意味を損なわない範囲で簡潔にする。型名が4単語以上、関数名が5単語以上になる場合は見直す。 |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `ITransport` / `TransportImpl`、OK: [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
 | データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: [`tungstenite`の`Message`](https://docs.rs/tungstenite/latest/tungstenite/protocol/enum.Message.html)、[`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) |
 | 真偽値 | 真偽値を返す関数は、その判定内容を表す自然な動詞または `is` / `has` / `can` / `should` を使用する。 |
@@ -460,7 +459,7 @@ impl UserRepo for InMemoryUserRepo {
 | --- | --- | --- | --- | --- |
 | `error` | エラーを表す型の名前は `error` で終える。特定の操作や対象に対応する場合は、何に失敗したかが分かる名前にする。 | [`io::Error`](https://doc.rust-lang.org/std/io/struct.Error.html)、[`ParseIntError`](https://doc.rust-lang.org/std/num/struct.ParseIntError.html) | 名詞 | エラー |
 | `guard` | スコープ内でロック、アクセス権、状態変更などを一時的に保持し、破棄時またはスコープ終了時に自動解放、復元する型に使用する。 | [`MutexGuard`](https://doc.rust-lang.org/std/sync/struct.MutexGuard.html) | 名詞 | リソース |
-| `handle` | 実行中の処理、外部リソース、サービスなどを操作、監視、終了待機するための参照や権限を表す型に使用する。要求やイベントを受け取って処理する関数の名前は`handle_`で始め、対応する要求名またはイベント名を続ける。 | [`tokio`の`JoinHandle`](https://docs.rs/tokio/latest/tokio/task/struct.JoinHandle.html)、[`Handle`](https://docs.rs/tokio/latest/tokio/runtime/struct.Handle.html)、rust-analyzerの[`handle_workspace_reload`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 名詞、動詞 | リソース |
+| `handle` | 実行中の処理、外部リソース、サービスなどを操作、監視、終了待機するための参照や権限を表す型に使用する。要求やイベントを受け取って処理する関数の名前は`handle_`で始め、対応する要求名またはイベント名を続ける。 | [`tokio`の`JoinHandle`](https://docs.rs/tokio/latest/tokio/task/struct.JoinHandle.html)、[`Handle`](https://docs.rs/tokio/latest/tokio/runtime/struct.Handle.html) | 名詞、動詞 | リソース |
 | `sender` | メッセージ経路やチャネルの送信側を表す型に使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。関連: `receiver`も参照。 | [`mpsc::Sender`](https://doc.rust-lang.org/std/sync/mpsc/struct.Sender.html) | 名詞 | 通信 |
 | `receiver` | メッセージ経路やチャネルの受信側を表す型に使用する。通信方式や容量などを区別する必要がある場合は、その性質を名前に付ける。関連: `sender`も参照。 | [`mpsc::Receiver`](https://doc.rust-lang.org/std/sync/mpsc/struct.Receiver.html) | 名詞 | 通信 |
 | `permit` | 一時的に確保した容量、実行権、アクセス権を表す値に使用する。使用、破棄、スコープ終了などによって権利を返却する構造にする。 | [`SemaphorePermit`](https://docs.rs/tokio/latest/tokio/sync/struct.SemaphorePermit.html) | 名詞 | リソース |
@@ -483,7 +482,7 @@ impl UserRepo for InMemoryUserRepo {
 | `response` | 要求に対する応答を表す型に使用する。対象の操作を名前に含める。関連: `request`も参照。 | [`http`の`Response`](https://docs.rs/http/latest/http/response/struct.Response.html) | 名詞 | 通信 |
 | `service` | 要求を受け取って応答を返す処理を、要求と応答の型で表した抽象に使用する。個別の業務処理と横断処理を同じ形で扱えるようにする。業務処理をまとめただけの型の名前には使わない。関連: `handler`、`layer`も参照。 | [`tower`の`Service`](https://docs.rs/tower/latest/tower/trait.Service.html) | 名詞 | 通信 |
 | `router` | 受け取った要求を、経路や条件に対応する処理へ振り分ける型に使用する。 | [`axum`の`Router`](https://docs.rs/axum/latest/axum/struct.Router.html) | 名詞 | 通信 |
-| `handler` | 受け取った要求に対して、個別の処理そのものを実行する型または関数に使用する。要求の種類ごとに定義し、処理する対象を名前に含める。関連: `service`も参照。 | [`axum`の`Handler`](https://docs.rs/axum/latest/axum/handler/trait.Handler.html)、rust-analyzerの[`handle_workspace_reload`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/handlers/request.rs#L60-L67) | 名詞 | 通信 |
+| `handler` | 受け取った要求に対して、個別の処理そのものを実行する型または関数に使用する。要求の種類ごとに定義し、処理する対象を名前に含める。関連: `service`も参照。 | [`axum`の`Handler`](https://docs.rs/axum/latest/axum/handler/trait.Handler.html) | 名詞 | 通信 |
 | `interceptor` | 要求が処理へ届く前に検査し、必要なら内容を変更するか処理を中断する型に使用する。検査する内容を名前に含める。関連: `layer`も参照。 | [`tonic`の`Interceptor`](https://docs.rs/tonic/latest/tonic/service/interceptor/trait.Interceptor.html) | 名詞 | 通信 |
 | `widget` | 画面へ描画する部品を表す型に使用する。描画する対象を名前に含める。 | [`ratatui`の`Widget`](https://docs.rs/ratatui/latest/ratatui/widgets/trait.Widget.html) | 名詞 | 表示 |
 | `tokenizer` | 自然言語や検索対象の文字列を、単語、サブワード、検索語などの処理単位へ分割する型に使用する。 | [`tokenizers`の`Tokenizer`](https://docs.rs/tokenizers/latest/tokenizers/tokenizer/struct.Tokenizer.html) | 名詞 | 解析 |
@@ -497,26 +496,26 @@ impl UserRepo for InMemoryUserRepo {
 | `serializer` | プログラム内の構造化された値や型付きオブジェクトを、保存または転送できる表現へ変換する型に使用する。関連: `deserializer`も参照。 | [`serde`の`Serializer`](https://docs.rs/serde/latest/serde/trait.Serializer.html) | 名詞 | 変換 |
 | `deserializer` | 保存または転送された表現から、プログラム内で使用する構造化された値や型付きオブジェクトを生成する型に使用する。関連: `serializer`も参照。 | [`serde`の`Deserializer`](https://docs.rs/serde/latest/serde/trait.Deserializer.html) | 名詞 | 変換 |
 | `record` | CSVの1行、ログの1件、固定長データの1件など、複数のフィールドから構成される1つの論理単位を表す型に使用する。文字列のフィールドを保持する場合は `StringRecord`、未変換のバイト列を保持する場合は `ByteRecord` を使用する。 | [`StringRecord`](https://docs.rs/csv/latest/csv/struct.StringRecord.html)、[`ByteRecord`](https://docs.rs/csv/latest/csv/struct.ByteRecord.html) | 名詞 | データ |
-| `snapshot` | ある時点の状態を写した読み取り専用の値を表す型に使用する。写した後は、元の状態の変化に影響されない。 | [rust-analyzerの`GlobalStateSnapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L214-L228) | 名詞 | データ |
+| `snapshot` | ある時点の状態を写した読み取り専用の値を表す型に使用する。写した後は、元の状態の変化に影響されない。 | [`iceberg`の`Snapshot`](https://docs.rs/iceberg/latest/iceberg/spec/struct.Snapshot.html) | 名詞 | データ |
 | `id` | 識別子を表す型の名前は `id` で終える。識別する対象を名前に含め、生の文字列や整数のまま扱わない。 | [`quinn`の`ConnectionId`](https://docs.rs/quinn-proto/latest/quinn_proto/struct.ConnectionId.html) | 名詞 | データ |
 | `event` | すでに起きた出来事を表す型に使用する。名前は過去形にする。 | [`winit`の`Event`](https://docs.rs/winit/latest/winit/event/enum.Event.html) | 名詞 | データ |
 | `config` | 動作を決める設定値と、使用する実装の指定をまとめる型に使用する。 | [`config`の`Config`](https://docs.rs/config/latest/config/struct.Config.html)、[AWS SDK for Rustの`SdkConfig`](https://docs.rs/aws-config/latest/aws_config/struct.SdkConfig.html)、[`quinn`の`ClientConfig`](https://docs.rs/quinn/latest/quinn/struct.ClientConfig.html) | 名詞 | データ |
 | `formatter` | 値を人が読むための文字列表現へ整形する型に使用する。 | [`fmt::Formatter`](https://doc.rust-lang.org/std/fmt/struct.Formatter.html) | 名詞 | 変換 |
 | `validate` | 入力が形式、範囲、不変条件などの制約を満たすか検証する操作に使用する。検証専用の型を作らず、検証対象の型へ実装する。 | [`validator`の`Validate`](https://docs.rs/validator/latest/validator/trait.Validate.html) | 動詞 | 解析 |
-| `loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | [AWS SDK for Rustの`ConfigLoader`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L280)、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
+| `loader` | 外部の保存場所からデータを取得し、必要に応じて読み取り、解析、復号、デシリアライズを組み合わせて、利用可能な値を生成する高水準の型に使用する。 | [AWS SDK for Rustの`ConfigLoader`](https://docs.rs/aws-config/latest/aws_config/struct.ConfigLoader.html)、[`bevy`の`AssetLoader`](https://docs.rs/bevy_asset/latest/bevy_asset/trait.AssetLoader.html) | 名詞 | 入出力 |
 | `list` | 順序があり、重複を許可する要素の集合を表す型に使用する。 | [`LinkedList`](https://doc.rust-lang.org/std/collections/struct.LinkedList.html) | 名詞 | 集合 |
 | `set` | 重複を許可せず、順序を保証しない要素の集合を表す型に使用する。 | [`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)、[`BTreeSet`](https://doc.rust-lang.org/std/collections/struct.BTreeSet.html) | 名詞 | 集合 |
 | `map` | キーと値の対応を保持し、順序を保証しない集合を表す型に使用する。 | [`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html)、[`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) | 名詞 | 集合 |
-| `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。保持する対象を名前に含める。 | Zedの[`BufferStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/buffer_store.rs#L34)、[`GitStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/git_store.rs#L101)、[`TaskStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/task_store.rs#L26)、[`WorktreeStore`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/project/src/worktree_store.rs#L207) | 名詞 | データ |
-| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する契約に使用する。利用側が必要とする操作だけを公開し、保存方式は実装へ閉じ込める。実装の名前には保存先を含める。 | axumの[`UserRepo`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L154)、[`InMemoryUserRepo`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L156-L159) | 名詞 | データ |
+| `store` | 読み書きの両方が発生し、順序を問わない状態またはデータの保持場所を表す型に使用する。保持する対象を名前に含める。 | [`rustls`の`RootCertStore`](https://docs.rs/rustls/latest/rustls/struct.RootCertStore.html)、[`ClientSessionStore`](https://docs.rs/rustls/latest/rustls/client/trait.ClientSessionStore.html) | 名詞 | データ |
+| `repository` | データをDB、ファイルなどの永続化ストレージへ保存し、取得する契約に使用する。利用側が必要とする操作だけを公開し、保存方式は実装へ閉じ込める。実装の名前には保存先を含める。 | axumの[`UserRepo` / `InMemoryUserRepo`](https://github.com/tokio-rs/axum/blob/main/examples/dependency-injection/src/main.rs) | 名詞 | データ |
 | `registry` | 名前やキーによって要素を登録、照会し、何が登録されているかをメモリ上で管理する型に使用する。 | [`tracing_subscriber`の`Registry`](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/registry/struct.Registry.html) | 名詞 | データ |
 | `transaction` | 複数の操作をまとめて確定または取消しする境界を表す型に使用する。 | [`sqlx`の`Transaction`](https://docs.rs/sqlx/latest/sqlx/struct.Transaction.html) | 名詞 | データ |
-| `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | Wasmtimeの[`Clock`](https://github.com/bytecodealliance/wasmtime/blob/bf330493f4352546ee2a3435eeb85d75d6328f1b/examples/min-platform/embedding/src/wasi.rs#L233-L245) | 名詞 | リソース |
-| `provider` | 要求に応じて、値または使用する実装を取得、生成して供給する型に使用する。何を供給するかを名前に含める。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`CryptoProvider`](https://docs.rs/rustls/latest/rustls/crypto/struct.CryptoProvider.html)、[AWS SDK for Rustの`SharedCredentialsProvider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-credential-types/src/provider.rs#L79) | 名詞 | データ |
-| `generator` | 新しい値や表現を生成する型に使用する。生成する対象を名前に含めるか、生成対象が文脈から決まるモジュールへ置く。 | ruffの[`Generator`](https://github.com/astral-sh/ruff/blob/ac201b86aa37da5140ed716ebd4eca36d1fe32da/crates/ruff_python_codegen/src/generator.rs#L90-L104) | 名詞 | 生成 |
+| `clock` | 現在時刻または経過時間を供給する型に使用する。実装の名前には、供給元と時刻の性質を含める。 | [`wasmtime_wasi`の`HostWallClock`](https://docs.rs/wasmtime-wasi/latest/wasmtime_wasi/clocks/trait.HostWallClock.html)、[`HostMonotonicClock`](https://docs.rs/wasmtime-wasi/latest/wasmtime_wasi/clocks/trait.HostMonotonicClock.html) | 名詞 | リソース |
+| `provider` | 要求に応じて、値または使用する実装を取得、生成して供給する型に使用する。何を供給するかを名前に含める。 | [`rustls`の`TimeProvider`](https://docs.rs/rustls/latest/rustls/time_provider/trait.TimeProvider.html)、[`CryptoProvider`](https://docs.rs/rustls/latest/rustls/crypto/struct.CryptoProvider.html)、[AWS SDK for Rustの`SharedCredentialsProvider`](https://docs.rs/aws-credential-types/latest/aws_credential_types/provider/struct.SharedCredentialsProvider.html) | 名詞 | データ |
+| `generator` | 新しい値や表現を生成する型に使用する。生成する対象を名前に含めるか、生成対象が文脈から決まるモジュールへ置く。 | [`ruff_python_codegen`の`Generator`](https://docs.rs/ruff_python_codegen/latest/ruff_python_codegen/struct.Generator.html) | 名詞 | 生成 |
 | `rng` | 乱数を供給する型に使用する。再現可能な生成が必要な場合は、種を指定する生成手段を併せて提供する。 | [`Rng`](https://docs.rs/rand_core/latest/rand_core/trait.Rng.html) | 名詞 | 生成 |
-| `mock` | テストのために、本物の実装や値を差し替える型に使用する。差し替える対象を名前に含める。関連: `fake`も参照。 | axumの[`MockConnectInfo`](https://github.com/tokio-rs/axum/blob/194030d7d0c9395cd98c172d1cfd08777332d7b2/axum/src/extract/connect_info.rs#L206) | 名詞 | 検証 |
-| `fake` | テストのために本物の実装を置き換える、動作する簡易な代替実装に使用する。置き換える対象を名前に含める。関連: `mock`も参照。 | Zedの[`FakeAcpAgentServer`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/agent_servers/src/acp.rs#L2100)、[`FakeAcpConnectionHarness`](https://github.com/zed-industries/zed/blob/520d8bdaebe491fdb4a3656f6b76df53722165fd/crates/agent_servers/src/acp.rs#L2224) | 名詞 | 検証 |
+| `mock` | テストのために、本物の実装や値を差し替える型に使用する。差し替える対象を名前に含める。関連: `fake`も参照。 | [`axum`の`MockConnectInfo`](https://docs.rs/axum/latest/axum/extract/connect_info/struct.MockConnectInfo.html) | 名詞 | 検証 |
+| `fake` | テストのために本物の実装を置き換える、動作する簡易な代替実装に使用する。置き換える対象を名前に含める。関連: `mock`も参照。 | Zedの[`FakeAcpAgentServer` / `FakeAcpConnectionHarness`](https://github.com/zed-industries/zed/blob/main/crates/agent_servers/src/acp.rs) | 名詞 | 検証 |
 | `client` | 一つの外部サービスが提供するAPIを、そのサービスが定める要求と応答の単位で呼び出す型に使用する。接続先のサービスを名前に含める。境界は、外部サービスまたはAPIが定める契約の単位で決める。同じ提供者でもサービスが分かれていればサービスごとに定義し、一つのサービスの中を利用する機能ごとに分割しない。 | [`aws-sdk-s3`の`Client`](https://docs.rs/aws-sdk-s3/latest/aws_sdk_s3/struct.Client.html)、[`aws-sdk-dynamodb`の`Client`](https://docs.rs/aws-sdk-dynamodb/latest/aws_sdk_dynamodb/struct.Client.html)、[`reqwest`の`Client`](https://docs.rs/reqwest/latest/reqwest/struct.Client.html)、[`kube`の`Client`](https://docs.rs/kube/latest/kube/struct.Client.html) | 名詞 | 通信 |
 | `transport` | メッセージを運ぶ経路と手段を表す型に使用する。運ぶ内容の意味は扱わず、経路と手段ごとに実装を分ける。関連: `client`も参照。 | [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html)、[`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) | 名詞 | 通信 |
 | `publisher` | メッセージをトピックまたは購読者へ公開する型に使用する。公開先の方式を実装の名前に含める。関連: `subscriber`、`producer`も参照。 | [`zenoh`の`Publisher`](https://docs.rs/zenoh/latest/zenoh/pubsub/struct.Publisher.html) | 名詞 | 通信 |
@@ -528,7 +527,7 @@ impl UserRepo for InMemoryUserRepo {
 | `buffer`、`buf` | バイト列や要素を一時的に蓄積する型に使用する。短縮形の`buf`も同じ意味で使用し、標準ライブラリや外部crateの慣例に合わせる場合に使う。 | [`arrow`の`MutableBuffer`](https://docs.rs/arrow-buffer/latest/arrow_buffer/buffer/struct.MutableBuffer.html)、[`tokio`の`ReadBuf`](https://docs.rs/tokio/latest/tokio/io/struct.ReadBuf.html)、[`bytes`の`BufMut`](https://docs.rs/bytes/latest/bytes/buf/trait.BufMut.html) | 名詞 | データ |
 | `table` | 行またはエントリの集合を、テーブル構造として参照、検索する型に使用する。 | [`datafusion`の`MemTable`](https://docs.rs/datafusion/latest/datafusion/datasource/memory/struct.MemTable.html) | 名詞 | データ |
 | `queue` | FIFOが保証され、順序が意味を持つ集合を表す型に使用する。 | [`crossbeam`の`SegQueue`](https://docs.rs/crossbeam/latest/crossbeam/queue/struct.SegQueue.html) | 名詞 | 集合 |
-| `stack` | 重なり順のように、前後の並び自体が意味を持つ集合を表す型に使用する。並べる対象を名前に含める。 | Bevyの[`UiStack`](https://github.com/bevyengine/bevy/blob/9c218dae30a1ba0b01133d0ca0094f2ae3771595/crates/bevy_ui/src/stack.rs#L30-L35) | 名詞 | データ |
+| `stack` | 重なり順のように、前後の並び自体が意味を持つ集合を表す型に使用する。並べる対象を名前に含める。 | [`bevy`の`UiStack`](https://docs.rs/bevy_ui/latest/bevy_ui/struct.UiStack.html) | 名詞 | データ |
 | `new` | 型を生成する標準的なコンストラクターに使用する。 | [`String::new`](https://doc.rust-lang.org/std/string/struct.String.html#method.new) | 形容詞 | 生成 |
 | `options` | 生成や実行時に指定する任意設定をまとめる型に使用する。既定値を持ち、必要な項目だけを変更できる構造にする。 | [`OpenOptions`](https://doc.rust-lang.org/std/fs/struct.OpenOptions.html)、[`sqlx`の`PgConnectOptions`](https://docs.rs/sqlx/latest/sqlx/postgres/struct.PgConnectOptions.html) | 名詞 | 生成 |
 | `builder` | 値を段階的に組み立てて生成する型に使用する。組み立てる対象を名前に含める。 | [`thread::Builder`](https://doc.rust-lang.org/std/thread/struct.Builder.html)、[`tokio`の`runtime::Builder`](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html)、[`reqwest`の`ClientBuilder`](https://docs.rs/reqwest/latest/reqwest/struct.ClientBuilder.html) | 名詞 | 生成 |
@@ -629,10 +628,11 @@ impl UserRepo for InMemoryUserRepo {
 
 | 項目 | タイミング | 説明 |
 | --- | --- | --- |
-| エラーログ | 失敗が誰のどの操作に対するものか判断できる最外郭の処理へ到達したとき | ハンドラー、エントリーポイントなどの境界で、一つの失敗につき1回だけ出力する。下位では出力せず、エラーを上位へ伝播させる。 |
+| エラーログ | 失敗が誰のどの操作に対するものか判断できる最外郭の処理へ到達したとき | ハンドラー、エントリーポイントなどの境界で、一つの失敗につき1回だけ出力する。下位では出力せず、エラーを上位へ伝播させる。エラーの種類とメッセージは別々の項目として記録し、スタックトレースを取得できる環境ではこれも別の項目として出力する。種類が項目として分かれていないと、発生箇所と種類による絞り込みができない。 |
 | 監視のイベントログ | 監視対象の出来事を観測したとき | エラーログの回数制限の対象外とし、センサーの異常などを出来事ごとに記録する。 |
 | 性能分析のイベントログ | 計測対象の出来事を観測したとき | エラーログの回数制限の対象外とし、処理時間や資源の利用状況に関わる出来事ごとに記録する。 |
-| 監査のイベントログ | 後から操作者と操作内容を説明する必要がある出来事を観測したとき | エラーログの回数制限の対象外とし、出来事ごとに記録する。記録内容は「監査ログ」に従う。 |
+| 監査のイベントログ | ログイン、権限の変更、設定の変更、データの更新と削除など、後から誰の操作かを説明する必要がある出来事を観測したとき | エラーログの回数制限の対象外とし、操作者、対象、変更前後の値とともに出来事ごとに記録する。業務上の記録であり、調査用のログと同じ扱いで無効化しない。 |
+| UIの操作ログ | 画面遷移、押下、入力の確定など、利用者の操作を観測したとき | 画面と操作した要素の識別子を項目として出力する。識別子がないと、どの画面のどの操作から処理が始まったのかを後から特定できない。 |
 | 完了までに時間がかかる処理 | 開始時、完了時、失敗時 | タスクなどの開始、完了、失敗をそれぞれ別のイベントとして記録する。例: `import.started`、`import.completed`、`import.failed` |
 | 外部システムの呼び出し | 開始時、完了時、失敗時 | 通信の開始、完了、失敗をそれぞれ別のイベントとして記録する。 |
 
@@ -640,39 +640,31 @@ impl UserRepo for InMemoryUserRepo {
 
 ログは、項目ごとに分けて機械処理できる形式で出力し、値をメッセージの文章へ埋め込まない。形式はJSONに限らず、出力経路と収集先が扱えるものを選ぶ。出力帯域やメモリが限られる環境では、識別子と値だけを送り、文字列化を受信側で行う方式（辞書方式、遅延フォーマット）を使う。
 
-1件のログには1つの出来事だけを記録する。記録するのは観測した事実に限り、原因の推測や対処の提案は書かない。
-
 ### 記録する項目
 
-| 項目 | 要否 | 説明 |
-| --- | --- | --- |
-| 時刻 | 実時刻を取得できる場合は必須 | 出来事が発生した時刻を、タイムゾーンを含めて記録する。 |
-| 起動からの経過時間 | 実時刻を取得できない場合は必須 | 起動後に経過した時間を記録する。 |
-| 起動識別子 | 実時刻を取得できない場合は必須 | 起動からの経過時間とともに、起動ごとに変わる識別子を記録する。 |
-| レベル | 必須 | 出来事の重大度を「ログレベル」の区分で記録する。 |
-| イベント名 | 必須 | 出来事の種類を表す固定の識別子を記録する。命名方法は「イベント名」に従う。 |
-| 実行単位の名前 | 必須 | ログを出力したアプリケーション、サービス、プロセスなどを識別する固定の名前を記録する。 |
-| トレースID | 条件付き | 複数の処理や外部システムの呼び出しをまたぐ一連の処理を追跡する場合に記録する。 |
-| リクエストID | 条件付き | 一つの要求に対する処理を追跡する場合に記録する。 |
-| セッションID | 条件付き | 一つの利用セッションに属する処理を追跡する場合に記録する。 |
-| 利用者ID | 条件付き | 処理を要求した利用者を識別する必要がある場合に記録する。 |
-| テナントID | 条件付き | 処理が属するテナントを識別する必要がある場合に記録する。 |
-| デバイスID | 条件付き | 処理または出来事が発生したデバイスを識別する必要がある場合に記録する。 |
-| ノードID | 条件付き | 分散して動作するノードを識別する必要がある場合に記録する。 |
-| タスクID | 条件付き | 非同期タスクやジョブを識別する必要がある場合に記録する。 |
-| 所要時間 | 条件付き | 完了した処理にかかった時間を性能分析や監視に使用する場合に記録する。 |
-| 件数 | 条件付き | 処理した対象や結果の数量を記録する必要がある場合に記録する。 |
-| 応答コード | 条件付き | 外部システムの応答や処理結果をコードで識別する場合に記録する。 |
-
-### イベント名
-
-イベント名は、出来事を表す固定の識別子にする。`user.created`、`sensor.read.failed`のように、過去形または結果を表す語を使い、小文字とドット区切りで名前空間を付ける。IDや件数などの可変値を名前へ入れない。
-
-### UIの操作を記録する
-
-画面遷移、押下、入力の確定など利用者の操作を記録する場合は、画面と操作した要素の識別子を項目として出力する。識別子がないと、どの画面のどの操作から処理が始まったのかを後から特定できない。画面名や表示文言は表示言語で変わるため、識別子の代わりにしない。
+| 項目 | 要否 | 説明 | 例 |
+| --- | --- | --- | --- |
+| 時刻 | 実時刻を取得できる場合は必須 | 出来事が発生した時刻を、タイムゾーンを含めて記録する。 | `2026-01-31T09:12:45.123+09:00` |
+| 起動からの経過時間 | 実時刻を取得できない場合は必須 | 起動後に経過した時間を記録する。 | `12345`（ミリ秒） |
+| 起動識別子 | 実時刻を取得できない場合は必須 | 起動からの経過時間とともに、起動ごとに変わる識別子を記録する。 | `boot-7f3a1c9e` |
+| レベル | 必須 | 出来事の重大度を「ログレベル」の区分で記録する。 | `ERROR` |
+| イベント名 | 必須 | 出来事の種類を表す固定の識別子を記録する。過去形または結果を表す語を使い、小文字とドット区切りで名前空間を付ける。 | `user.created`、`sensor.read.failed` |
+| 実行単位の名前 | 必須 | ログを出力したアプリケーション、サービス、プロセスなどを識別する固定の名前を記録する。 | `payment-api` |
+| トレースID | 条件付き | 複数の処理や外部システムの呼び出しをまたぐ一連の処理を追跡する場合に記録する。 | `4bf92f3577b34da6a3ce929d0e0e4736` |
+| リクエストID | 条件付き | 一つの要求に対する処理を追跡する場合に記録する。 | `req-8f4a2b` |
+| セッションID | 条件付き | 一つの利用セッションに属する処理を追跡する場合に記録する。 | `sess-3f9c1a` |
+| 利用者ID | 条件付き | 処理を要求した利用者を識別する必要がある場合に記録する。 | `user-10482` |
+| テナントID | 条件付き | 処理が属するテナントを識別する必要がある場合に記録する。 | `tenant-acme` |
+| デバイスID | 条件付き | 処理または出来事が発生したデバイスを識別する必要がある場合に記録する。 | `device-0a1b2c` |
+| ノードID | 条件付き | 分散して動作するノードを識別する必要がある場合に記録する。 | `node-03` |
+| タスクID | 条件付き | 非同期タスクやジョブを識別する必要がある場合に記録する。 | `task-2481` |
+| 所要時間 | 条件付き | 完了した処理にかかった時間を性能分析や監視に使用する場合に記録する。 | `1250`（ミリ秒） |
+| 件数 | 条件付き | 処理した対象や結果の数量を記録する必要がある場合に記録する。 | `120` |
+| 応答コード | 条件付き | 外部システムの応答や処理結果をコードで識別する場合に記録する。 | `503` |
 
 ### ログレベル
+
+プラットフォームやフレームワークが提供する定義を優先する。
 
 | レベル | 用途 | 本番の既定 |
 | --- | --- | --- |
@@ -682,12 +674,6 @@ impl UserRepo for InMemoryUserRepo {
 | INFO | 業務上または運用上意味のある出来事。ログイン、注文の作成、タスクの開始と完了など | 有効 |
 | DEBUG | 調査に使う内部情報 | 無効 |
 | TRACE | 関数の入出力、問い合わせの開始と終了など、最も細かい追跡情報 | 無効 |
-
-DEBUGとTRACEは調査するときだけ有効化する。プラットフォームが提供するレベルが少ない場合は、その区分へ対応付けて使う。
-
-### 失敗の記録
-
-失敗のログには、エラーの種類とメッセージをそれぞれ別の項目として記録する。スタックトレースを取得できる環境では、これも別の項目として出力する。種類が項目として分かれていないと、発生箇所と種類による絞り込みができない。
 
 ### 出力量を抑える
 
@@ -699,10 +685,6 @@ DEBUGとTRACEは調査するときだけ有効化する。プラットフォー�
 - 個人情報は識別子で代替する。やむを得ず含める場合はマスクする。例: `abcd****xyz`
 - 問い合わせ文、要求と応答の本文をそのまま出力しない。対象、件数、所要時間など、調査に必要な項目へ置き換える
 - 調査のために一時的に追加したログをリリースコードへ残さない
-
-### 監査ログ
-
-ログイン、権限の変更、設定の変更、データの更新と削除など、後から誰の操作かを説明する必要がある事象は、操作者、対象、変更前後の値とともに記録する。監査ログは業務上の記録であり、調査用のログと同じ扱いで無効化しない。
 
 ---
 
