@@ -433,12 +433,13 @@ impl UserRepo for InMemoryUserRepo {
 
 | ルール | 内容 |
 | --- | --- |
-| 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Do`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
+| 名前の具体性 | 名前空間、型名、メソッド名を合わせて、役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Do`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
 | 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: [`tower`の`Timeout`](https://docs.rs/tower/latest/tower/timeout/struct.Timeout.html)、[`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html) |
 | 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: [`github`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`s3`](https://github.com/apache/opendal/tree/main/core/services/s3) |
 | 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
 | 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
 | 短く命名する | 文脈上明らかな語は省き、意味を損なわない範囲で簡潔にする。型名が4単語以上、関数名が5単語以上になる場合は見直す。 |
+| 名前の間で概念を繰り返さない | 名前空間、型名、メソッド名のどこかで既に表現されている概念を、隣接する層で繰り返さない。名前空間で領域、型名で役割、メソッド名で動作を表し、それらを合わせて意味が伝わる名前にする。操作対象、入力形式、実行方式などを区別するために必要な語は残す。 |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `ITransport` / `TransportImpl`、OK: [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
 | データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: [`tungstenite`の`Message`](https://docs.rs/tungstenite/latest/tungstenite/protocol/enum.Message.html)、[`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) |
 | 真偽値 | 真偽値を返す関数は、その判定内容を表す自然な動詞または `is` / `has` / `can` / `should` を使用する。 |
@@ -446,6 +447,22 @@ impl UserRepo for InMemoryUserRepo {
 | イベント待受属性名 | 要求またはイベントの発生を待ち受ける属性名は`on_`で始め、その後に対応するイベント名を続ける。例：`on_init_request`、`on_initialized` |
 | イベント処理関数名 | 要求またはイベントを受け取って処理する関数名は`handle_`で始め、その後に対応するイベント名を続ける。例：`handle_init_request`、`handle_initialized` |
 | 定数、マジックナンバー | マジックナンバーを避け、意味を持つ名前付き定数にする。 |
+
+### 名前の間で概念を繰り返さない例
+
+以下はRustの表記による命名の比較であり、NG欄は重複を示すための仮の名前である。名前空間に直接属する関数にも同じ考え方を適用する。
+
+| 比較する名前 | OK | NG | 説明 |
+| --- | --- | --- | --- |
+| 名前空間と型名 | `aws_sdk_s3::Client` | `aws_sdk_s3::S3Client`、`aws_sdk_s3::AwsS3Client` | 接続先のS3は`aws_sdk_s3`で分かるため、型名は役割を表す`Client`にする。 |
+| 名前空間と型名 | `reqwest::Client` | `reqwest::ReqwestClient` | ライブラリ名の`reqwest`を型名で繰り返さない。 |
+| 型名と生成関数名 | `aws_sdk_s3::Client::new` | `aws_sdk_s3::Client::new_s3_client` | 生成する型は`aws_sdk_s3::Client`で分かるため、生成関数名でS3とClientを繰り返さない。 |
+| 型名とメソッド名 | `reqwest::ClientBuilder::build` | `reqwest::ClientBuilder::build_client` | 構築対象のClientは型名で分かるため、メソッド名は`build`にする。 |
+| 型名とメソッド名 | `reqwest::RequestBuilder::send` | `reqwest::RequestBuilder::send_request` | 送信対象のRequestは型名で分かるため、メソッド名は`send`にする。 |
+| 名前空間と関数名 | `serde_json::from_str` | `serde_json::from_json_str`、`serde_json::json_from_str` | JSONは名前空間で分かるため繰り返さず、入力形式を示す`str`は残す。 |
+| 型名とメソッド名 | `tokio::runtime::Runtime::spawn` | `tokio::runtime::Runtime::runtime_spawn`、`tokio::runtime::Runtime::spawn_tokio_task` | メソッド名でRuntimeやTokioを繰り返さない。 |
+
+たとえば`Client::list_buckets`の`buckets`は操作対象、`Runtime::spawn_blocking`の`blocking`は実行方式を区別するために残す。外部ライブラリが公開する`tokio::runtime::Runtime`のような名前はそのまま使い、自分たちが定義する名前で重複を避ける。
 
 ### 単語
 
