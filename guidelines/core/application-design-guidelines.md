@@ -86,21 +86,19 @@ Featureの名前には、`user`のように業務上の対象だけを表す語�
 
 ## 4. セキュリティ
 
-### 外部入力
+### 準拠する文書
 
-すべての外部入力は、受け取った境界で形式、サイズ、構文を検証する。業務上の制約は業務ロジックで検証する。検証済みであることを型で表現し、未検証の値がそのまま内部処理へ流れ込まない構造にする。
+セキュリティの設計は、次の3つの文書に従う。
+
+| 対象 | 準拠する文書 | 決めること |
+| --- | --- | --- |
+| セキュリティ要求 | [OWASP Application Security Verification Standard (ASVS)](https://owasp.org/www-project-application-security-verification-standard/) | アプリケーションが満たす検証レベルと、機能ごとに満たすべきセキュリティ要求。 |
+| 認証要件 | [SP 800-63-4, Digital Identity Guidelines](https://csrc.nist.gov/pubs/sp/800/63/4/final) | 本人確認と認証に求める保証レベルと、採用する認証方式に求める強度。 |
+| 実装方法 | [Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) | 認証情報の保存、多要素認証、認証失敗時の応答など、認証の実装方法。 |
 
 ### 機密情報
 
 APIキー、アクセストークン、パスワード、秘密鍵、接続文字列をソースコードへ記述しない。実行環境の環境変数または機密情報管理サービスから取得し、`.env`をバージョン管理の対象外にする。機密情報は、ログへ出力されない型または仕組みで保護する。
-
-### 認証
-
-リクエストを受信した境界で認証情報を検証し、利用者を確定する。検証に失敗したリクエストは業務処理へ渡さない。
-
-### 認可
-
-認証済みの利用者が対象の操作を実行できるか、業務処理を開始する前に判定する。役割、所有関係、付与された権限を操作ごとに検証する。
 
 ---
 
@@ -139,6 +137,8 @@ Shell スクリプト以外の CLI に適用する。
 | 2. フォルダ構成 | [Guide to app architecture \| Android Developers](https://developer.android.com/topic/architecture) | 層の間で依存の向きを一方向に保つ構成を確認する。 |
 | 2. フォルダ構成 | [Flutterの`TextField`](https://github.com/flutter/flutter/blob/540a2711c83a08d5c40443058448782e4dfe34aa/packages/flutter/lib/src/material/text_field.dart#L1253)、[compass_appの`ErrorIndicator`](https://github.com/flutter/samples/blob/463e365e4842f252ffab9c6198594a504d69469f/compass_app/app/lib/ui/core/ui/error_indicator.dart#L10-L18) | 共有UI部品と文言の関係を確認する。`TextField`は文字数カウンタなど部品自身が生成する文言を`MaterialLocalizations`から取り、`ErrorIndicator`は表示する`title`と`label`を引数で受け取る。 |
 | 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みを分離する条件と構成を確認する。 |
+| 4. セキュリティ | [OWASP Application Security Verification Standard (ASVS)](https://owasp.org/www-project-application-security-verification-standard/) | アプリケーションが満たす検証レベルと、機能ごとのセキュリティ要求を確認する。 |
+| 4. セキュリティ | [SP 800-63-4, Digital Identity Guidelines](https://csrc.nist.gov/pubs/sp/800/63/4/final) | 本人確認と認証に求める保証レベルと、認証方式ごとの強度を確認する。 |
 | 4. セキュリティ | [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) | 外部入力を受け取る境界で検証する項目と方法を確認する。 |
 | 4. セキュリティ | [Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | 機密情報の保存、利用、記録を安全に扱う方法を確認する。 |
 | 4. セキュリティ | [Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) | 認証情報を検証し、利用者を確定する方法を確認する。 |
