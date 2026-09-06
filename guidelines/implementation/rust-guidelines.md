@@ -1,4 +1,4 @@
-# Rust固有規約
+# Rust実装ガイドライン
 
 ## 目次
 
@@ -12,7 +12,7 @@
 
 ## 1. 概要
 
-本書は、Rust固有の規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)を前提とする。
+本書は、Rust実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)を前提とする。
 
 記述方法は、「参考資料」のThe Rust Style GuideとRust API Guidelinesに従う。
 
@@ -22,7 +22,7 @@
 
 `<crate>`は`Cargo.toml`を置くcrateのルートを表す。Cargoの標準配置ではソースルートを`src/`とし、`Cargo.toml`でtargetのパスを指定した場合はその設定に従う。
 
-[アプリケーション設計規則](../core/application-design-guidelines.md)のソース構成をソースルート内のモジュールとして表す。次の表では、RustとCargoに固有の配置だけを示す。
+[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)のソース構成をソースルート内のモジュールとして表す。次の表では、RustとCargoに固有の配置だけを示す。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |

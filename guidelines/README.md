@@ -1,28 +1,30 @@
-# 規則の選び方
+# ガイドラインの選び方
 
-規則文書の一覧と適用条件をまとめた索引である。作業内容に一致する文書が複数ある場合は、そのすべてを適用する。
+ガイドラインの一覧と適用条件をまとめた索引である。作業内容に一致する文書が複数ある場合は、そのすべてを適用する。
 
-## 規則一覧
+## ガイドライン一覧
 
 | 分類 | 文書 | 概要 | 先に読む文書 |
 | --- | --- | --- | --- |
-| 共通 | [共通設計原則](core/software-design-guidelines.md) | 責務の分離、依存関係の管理、複雑性の制御など、ソフトウェア開発に共通する設計原則。 | なし |
-| 共通 | [アプリケーション設計規則](core/application-design-guidelines.md) | アプリケーションの設計規則。 | 共通設計原則 |
-| 共通 | [リポジトリ規則](core/repository-guidelines.md) | リポジトリに共通するファイル、ディレクトリの役割。 | なし |
-| 共通 | [Git規則](core/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
-| 実装 | [TypeScript](implementation/typescript-guidelines.md) | TypeScript固有の追加規則。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Rust](implementation/rust-guidelines.md) | Rust固有の規則。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Flutter](implementation/flutter-guidelines.md) | Flutterアプリケーションの言語、フレームワーク固有規則。 | 共通設計原則、アプリケーション設計規則 |
-| 実装 | [Windows PowerShellモジュール](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュールの開発に関する規則。 | 共通設計原則、リポジトリ規則 |
-| デザイン | [デザインシステム](ui/design-system.md) | UIを持つWebプロジェクトの視覚表現、レイアウト、状態、動きを変更する。 | 実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
-| デザイン | [Web UI](ui/web-ui-guidelines.md) | 特定のフレームワーク、ライブラリ、言語に依存しないWebデザイン基盤。 | デザインシステム。実装を伴う場合は共通設計原則、アプリケーション設計規則、該当する実装規則 |
-| 仕様書 | [仕様書共通規則](specifications/specification-guidelines.md) | 仕様書全般に共通する規則。 | なし |
-| 仕様書 | [UI仕様書](specifications/ui-specification-guidelines.md) | UI仕様書の作成規則。 | 仕様書共通規則 |
+| ソフトウェア設計 | [ソフトウェア設計ガイドライン](software/software-design-guidelines.md) | ソフトウェア開発の設計ガイドライン。 | なし |
+| ソフトウェア設計 | [アプリケーション設計ガイドライン](software/application-design-guidelines.md) | アプリケーション設計のガイドライン。 | ソフトウェア設計ガイドライン |
+| 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリのファイルとディレクトリの役割を定めるガイドライン。 | なし |
+| 開発 | [Git規則](development/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
+| 開発 | [バージョニング規則](development/versioning-guidelines.md) | バージョン番号を決める。 | なし |
+| 実装 | [TypeScript実装ガイドライン](implementation/typescript-guidelines.md) | TypeScript実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
+| 実装 | [Rust実装ガイドライン](implementation/rust-guidelines.md) | Rust実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
+| 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
+| 実装 | [Windows PowerShellモジュール実装ガイドライン](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュール実装のガイドライン。 | ソフトウェア設計ガイドライン、リポジトリガイドライン |
+| UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現、レイアウト、状態、動きのガイドライン。 | なし |
+| UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
+| 文書 | [仕様書作成ガイドライン](documentation/specification-guidelines.md) | 仕様書作成のガイドライン。 | なし |
+| 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
+| 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載内容を定めるガイドライン。 | リポジトリガイドライン |
 
 ## 適用手順
 
-1. 作業対象がコード、デザイン、仕様書のどれに当たるか特定する。
-2. 規則一覧から一致する文書と、その「先に読む文書」を読む。
+1. 作業内容と対象の成果物を確認する。
+2. ガイドライン一覧から一致する文書と、その「先に読む文書」を読む。
 3. 利用側プロジェクトの要件、採用技術、既存の仕様、ADRを確認する。
-4. 規則を実装または成果物へ反映する。
+4. ガイドラインを実装または成果物へ反映する。
 5. 完了前に、各文書の検証項目とレビュー項目を確認する。
