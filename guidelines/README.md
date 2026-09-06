@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | 共通 | [共通設計原則](core/software-design-guidelines.md) | 責務の分離、依存関係の管理、複雑性の制御など、ソフトウェア開発に共通する設計原則。 | なし |
 | 共通 | [アプリケーション設計規則](core/application-design-guidelines.md) | アプリケーションの設計規則。 | 共通設計原則 |
-| 共通 | [リポジトリ規則](core/repository-guidelines.md) | リポジトリに共通するファイル、ディレクトリの役割と、新規プロジェクトの既定ライセンス。 | なし |
+| 共通 | [リポジトリ規則](core/repository-guidelines.md) | リポジトリに共通するファイル、ディレクトリの役割。 | なし |
 | 共通 | [Git規則](core/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 実装 | [TypeScript](implementation/typescript-guidelines.md) | TypeScript固有の追加規則。 | 共通設計原則、アプリケーション設計規則 |
 | 実装 | [Rust](implementation/rust-guidelines.md) | Rust固有の規則。 | 共通設計原則、アプリケーション設計規則 |
@@ -26,7 +26,3 @@
 3. 利用側プロジェクトの要件、採用技術、既存の仕様、ADRを確認する。
 4. 規則を実装または成果物へ反映する。
 5. 完了前に、各文書の検証項目とレビュー項目を確認する。
-
-## 適用例
-
-新規プロジェクトを作成する場合は、リポジトリ規則を読み、ファイル構成とライセンスを決める。
