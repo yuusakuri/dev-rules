@@ -22,8 +22,6 @@ git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
 実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当規則に従うこと。
 ```
 
-導入先の `AGENTS.md`、`.gitmodules`、`dev-rules` をコミットに含めることで、他の利用者も同じ規則とバージョンを参照できる。
-
 ### ネット経由で参照する
 
 URLの内容を取得できるエージェントに、次の指示を渡す。
@@ -67,6 +65,7 @@ Git submoduleで組み込んだ場合は、導入先のリポジトリのルー�
 .
 ├── AGENTS.md                 # AIエージェント向けの入口
 ├── README.md                 # 人向けの概要と導入方法
+├── CONTRIBUTING.md           # このリポジトリへの貢献方法
 └── guidelines/
     ├── README.md             # 規則一覧と適用手順
     ├── core/                 # 共通の設計規則
@@ -77,4 +76,4 @@ Git submoduleで組み込んだ場合は、導入先のリポジトリのルー�
 
 ## 貢献方法
 
-規則の編集前に [`AGENTS.md`](AGENTS.md) を読み、作業に該当する文書を確認する。ブランチ、コミット、PRの進め方は [Git規則](guidelines/core/git-guidelines.md) に従う。
+貢献の手順は [`CONTRIBUTING.md`](CONTRIBUTING.md) を参照する。
