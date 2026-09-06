@@ -48,7 +48,3 @@ git -C <path> fetch --tags
 git -C <path> checkout <release-tag>
 git add <path>
 ```
-
-## バージョン
-
-バージョンはSemantic Versioningで管理する。既存規則の意味または必須条件を変える場合はメジャーバージョンを上げ、後方互換性のある規則を加える場合はマイナーバージョンを上げ、誤記や曖昧さを訂正する場合はパッチバージョンを上げる。
