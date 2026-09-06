@@ -2,6 +2,21 @@
 
 ソフトウェア開発で使用する、プロジェクトに依存しない設計規則、技術固有規則、UI規則、仕様書作成規則を管理する。
 
+## 構成
+
+```text
+.
+├── AGENTS.md                 # AIエージェント向けの入口
+├── README.md                 # 人向けの概要と導入方法
+├── CONTRIBUTING.md           # このリポジトリへの貢献方法
+└── guidelines/
+    ├── README.md             # 規則一覧と適用手順
+    ├── core/                 # 共通の設計規則
+    ├── implementation/       # 技術固有の実装規則
+    ├── ui/                   # UIデザイン規則
+    └── specifications/       # 仕様書作成規則
+```
+
 ## 利用方法
 
 プロジェクトに組み込む場合はGit submoduleを使う。エージェントから直接参照する場合は、ネット上のURLまたはローカルの保存先を指定する。いずれの場合も、エージェントは `AGENTS.md` から読み始め、作業に必要な規則をたどる。
@@ -58,21 +73,6 @@ Git submoduleで組み込んだ場合は、導入先のリポジトリのルー�
 | `git add dev-rules` | 採用するバージョンを導入先のコミットに含めるため、ステージする。 |
 
 ローカルにcloneしたリポジトリのルートで、`git pull --ff-only` を実行して現在のブランチを更新できる。
-
-## 構成
-
-```text
-.
-├── AGENTS.md                 # AIエージェント向けの入口
-├── README.md                 # 人向けの概要と導入方法
-├── CONTRIBUTING.md           # このリポジトリへの貢献方法
-└── guidelines/
-    ├── README.md             # 規則一覧と適用手順
-    ├── core/                 # 共通の設計規則
-    ├── implementation/       # 技術固有の実装規則
-    ├── ui/                   # UIデザイン規則
-    └── specifications/       # 仕様書作成規則
-```
 
 ## 貢献方法
 
