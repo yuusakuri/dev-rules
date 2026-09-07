@@ -10,11 +10,10 @@
 
 ## 取得方法
 
-導入先のリポジトリのルートで次のコマンドを実行し、テンプレートを`docs/specifications/`へ取得する。
+文書を置くディレクトリで次のコマンドを実行し、テンプレートを取得する。配置先は[リポジトリガイドライン](../guidelines/development/repository-guidelines.md)の構成に従う。
 
 ```bash
-mkdir -p docs/specifications
-curl -o docs/specifications/要件定義書.md \
+curl -o 要件定義書.md \
   https://raw.githubusercontent.com/yuusakuri/dev-rules/main/templates/documentation/%E8%A6%81%E4%BB%B6%E5%AE%9A%E7%BE%A9%E6%9B%B8.md
 ```
 
