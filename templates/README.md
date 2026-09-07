@@ -6,15 +6,14 @@
 
 | 工程 | テンプレート | 記載内容 |
 | --- | --- | --- |
-| 要件定義 | [要件定義書](<documentation/要件定義書.md>) | 解決する課題、目的と成功指標、利用者とユースケース、機能要件と非機能要件、リリース計画、リスク、体制。 |
+| 要件定義 | [Requirements Definition Document (RDD)](documentation/requirements-definition-document.md) | 解決する課題、目的と成功指標、利用者とユースケース、機能要件と非機能要件、リリース計画、リスク、体制。 |
 
 ## 取得方法
 
 文書を置くディレクトリで次のコマンドを実行し、テンプレートを取得する。配置先は[リポジトリガイドライン](../guidelines/development/repository-guidelines.md)の構成に従う。
 
 ```bash
-curl -o 要件定義書.md \
-  https://raw.githubusercontent.com/yuusakuri/dev-rules/main/templates/documentation/%E8%A6%81%E4%BB%B6%E5%AE%9A%E7%BE%A9%E6%9B%B8.md
+curl -O https://raw.githubusercontent.com/yuusakuri/dev-rules/main/templates/documentation/requirements-definition-document.md
 ```
 
 特定のバージョンを取得する場合は、URL中の`main`をタグ名へ置き換える。

@@ -1,4 +1,4 @@
-# 要件定義書 <プロダクト名>
+# Requirements Definition Document <プロダクト名>
 
 ## 文書情報
 
