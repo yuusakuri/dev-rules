@@ -20,7 +20,7 @@
 │   └── documentation/        # READMEと仕様書の作成ガイドライン
 └── templates/
     ├── README.md             # テンプレート一覧と取得方法
-    └── documentation/        # 設計書のテンプレート
+    └── documentation/        # 要件定義書のテンプレート
 ```
 
 ## 利用方法
