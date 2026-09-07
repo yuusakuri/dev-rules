@@ -17,7 +17,7 @@
     ├── development/          # リポジトリ、Git、バージョン管理のガイドライン
     ├── implementation/       # 技術固有の実装ガイドライン
     ├── ui/                   # UIデザインガイドライン
-    └── documentation/        # READMEと仕様書の作成ガイドライン
+    └── documentation/        # ドキュメント作成ガイドライン
 ```
 
 ## 利用方法
