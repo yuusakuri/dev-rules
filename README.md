@@ -22,23 +22,7 @@
 
 ## 利用方法
 
-プロジェクトに組み込む場合はGit submoduleを使う。エージェントから直接参照する場合は、ネット上のURLまたはローカルの保存先を指定する。いずれの場合も、エージェントは `AGENTS.md` から読み始め、作業に必要なガイドラインをたどる。
-
-### Gitリポジトリに組み込む
-
-導入先のリポジトリのルートから、次のコマンドを実行する。
-
-```bash
-git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
-```
-
-導入先の `AGENTS.md` に次の内容を記載する。配置先を変える場合は、コマンドと参照先の `dev-rules` を同じパスに置き換える。
-
-```md
-## 開発ガイドライン
-
-実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
-```
+エージェントに参照させる場合は、ネット上のURLまたはローカルの保存先を指定して `AGENTS.md` から読ませる。プロジェクトのGitリポジトリに含める場合は、Git submoduleとして導入する。どちらの場合も、エージェントは `AGENTS.md` を入口として、作業に必要なガイドラインをたどる。
 
 ### ネット経由で参照する
 
@@ -60,6 +44,22 @@ git clone https://github.com/yuusakuri/dev-rules.git
 ローカルのファイルを読めるエージェントに、次の指示を渡す。
 
 ```text
+実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
+```
+
+### Gitリポジトリに組み込む
+
+導入先のリポジトリのルートから、次のコマンドを実行する。
+
+```bash
+git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
+```
+
+導入先の `AGENTS.md` に次の内容を記載する。配置先を変える場合は、コマンドと参照先の `dev-rules` を同じパスに置き換える。
+
+```md
+## 開発ガイドライン
+
 実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
 ```
 

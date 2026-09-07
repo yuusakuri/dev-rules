@@ -1,28 +1,61 @@
 # READMEガイドライン
 
-本書は、リポジトリの `README.md` に記載する内容を定めます。
+本書は、リポジトリの `README.md` に記載する内容と見出しの構成を定めます。
 [リポジトリガイドライン](../development/repository-guidelines.md)を前提とします。
 
-## 記載する内容
+## 記載の方針
 
-冒頭にプロジェクト名と短い説明を記載します。
-本文では、次の情報からプロジェクトに関連する項目を選びます。
+READMEを読んだ人が、そのプロジェクトが何をするものか、なぜ役に立つのか、どう使い始めるのか、どこで助けを得られるのかを短時間で理解できるようにまとめます。
+説明は簡潔にし、古い情報、誤った情報、ほかの文書と重複した説明は残しません。
+プロジェクトに関係のない見出しは省きます。
 
-| 内容 | 記載する情報 |
-| --- | --- |
-| プロジェクトの説明 | 主な機能と、解決する問題を説明します。 |
-| 利用開始方法 | プロジェクトを使い始める方法を示します。 |
-| 問い合わせ先 | ヘルプを得られる場所を案内します。 |
-| 関係者 | 保守担当者と貢献者を示します。 |
+## 見出しの構成
 
-READMEは短くまとめ、古い情報、誤った情報、重複した説明を取り除きます。
+見出しは次の順序で並べ、名前は表に示したとおりに記載します。
+日本語で書くREADMEでは、見出しの名前を対応する日本語へ置き換えて構いませんが、順序と役割は変えません。
+
+| 見出し | 記載 | 内容 |
+| --- | --- | --- |
+| `# <プロジェクト名>` | 必須 | 文書の先頭に、プロジェクト名だけをH1見出しとして記載します。 |
+| バナー画像 | 任意 | 見出しを付けず、プロジェクト名の直後に画像を置きます。 |
+| バッジ | 任意 | 見出しを付けず、ビルドやバージョンなどの状態を示すバッジを並べます。 |
+| 短い説明 | 必須 | 見出しを付けず、そのプロジェクトが何をするものかを1段落で説明します。 |
+| 詳しい説明 | 任意 | 見出しを付けず、短い説明を補う内容を続けます。 |
+| `## Table of Contents` | 100行を超える場合は必須 | この見出しより後にあるすべての見出しへのリンクを並べます。 |
+| `## Security` | 任意 | 利用時に注意すべき安全上の事項を記載します。 |
+| `## Background` | 任意 | プロジェクトが生まれた経緯や、読む前に必要な前提知識を記載します。 |
+| `## Install` | 必須 | 入手とインストールの手順を記載します。 |
+| `## Usage` | 必須 | 使い方を記載します。 |
+| 独自の見出し | 任意 | `## Usage` と `## API` の間に、プロジェクト固有の内容を独自の名前の見出しで追加します。 |
+| `## API` | 任意 | 公開しているインターフェースの仕様を記載します。 |
+| `## Maintainers` | 任意 | 保守担当者を記載します。 |
+| `## Contributing` | 必須 | 貢献の方法を記載します。 |
+| `## License` | 必須 | 最後の見出しとして、採用しているライセンスを記載します。 |
+
+必須の見出しだけで構成した場合は、次のようになります。
+
+```markdown
+# <プロジェクト名>
+
+<プロジェクトが何をするものかを説明する1段落>
+
+## Table of Contents
+
+## Install
+
+## Usage
+
+## Contributing
+
+## License
+```
 
 ## 利用方法
 
-入手、インストール、設定、実行に必要な手順を記載します。
+`## Install` には、入手、インストール、設定、実行に必要な手順を記載します。
 手動で導入する依存関係や、特定の環境で必要な設定がある場合は、併せて説明します。
 
-使い方は、サンプルコードやコピーして実行できるコマンドで示すか、その説明へリンクします。
+`## Usage` には、使い方をサンプルコードやコピーして実行できるコマンドで示すか、その説明へリンクします。
 CLIの使用例には代表的なコマンドを、インポートして使う場合の使用例には読み込みと呼び出しを含めます。
 コード例には、プロジェクトのコードと同じlintを適用します。
 
@@ -36,11 +69,11 @@ CLIの使用例には代表的なコマンドを、インポートして使う�
 記載例を次に示します。
 
 ```markdown
-## 貢献方法
+## Contributing
 
 貢献の手順は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 
-## ライセンス
+## License
 
 ライセンスは [LICENSE.md](LICENSE.md) を参照してください。
 ```
@@ -48,31 +81,21 @@ CLIの使用例には代表的なコマンドを、インポートして使う�
 ## リンク
 
 同じリポジトリのファイルへは、READMEがあるディレクトリを基準とした相対リンクを使用します。
-GitHubは現在のブランチに応じて相対リンクを解決します。
+リポジトリの外にある文書へは、その文書のURLを指定します。
 リンク切れがないことを確認します。
 
 リンクの文字列は途中で改行せず、1行で記載します。
-見出しへ直接リンクする場合は、GitHubが見出しに生成するアンカーを使用できます。
-
-## 目次とバッジ
-
-GitHubは、READMEの見出しから目次を自動生成します。
-表示されたページのアウトラインメニューから、その目次を開けます。
-
-GitHub Actionsのワークフローの成功・失敗を表示する場合は、状態バッジをREADMEに画像として埋め込めます。
-特定のブランチやイベントの状態を表示する場合は、バッジのURLに `branch` または `event` パラメーターを指定します。
 
 ## 参考資料
 
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
-| 記載する内容<br>リンク<br>目次とバッジ | [リポジトリの README ファイルについて - GitHub Docs](https://docs.github.com/ja/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) | READMEに含める情報、相対リンク、見出しへのリンク、自動生成される目次を説明しています。 |
+| 記載の方針 | [リポジトリの README ファイルについて - GitHub Docs](https://docs.github.com/ja/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) | READMEで読者に伝える情報と、相対リンクの使い方を説明しています。 |
+| 見出しの構成<br>リンク | [Standard Readme — Specification](https://github.com/RichardLitt/standard-readme/blob/main/spec.md) | 見出しの名前、順序、必須と任意の区別、リンク切れとlintに関する規定を示しています。 |
 | 利用方法<br>専用文書との分担 | [READMEs - Google Style Guides](https://google.github.io/styleguide/docguide/READMEs.html) | 使用例と、利用者・開発チーム向けの文書へのリンクを示しています。 |
-| 記載する内容<br>専用文書との分担 | [Documentation Best Practices - Google Style Guides](https://google.github.io/styleguide/docguide/best_practices.html) | 簡潔で正確な記述と、詳細文書や別の場所にある文書への案内を説明しています。 |
+| 記載の方針<br>専用文書との分担 | [Documentation Best Practices - Google Style Guides](https://google.github.io/styleguide/docguide/best_practices.html) | 簡潔で正確な記述と、詳細文書や別の場所にある文書への案内を説明しています。 |
 | 専用文書との分担 | [リポジトリコントリビューターのためのガイドラインを定める - GitHub Docs](https://docs.github.com/ja/communities/setting-up-your-project-for-healthy-contributions/setting-guidelines-for-repository-contributors) | 貢献の手順を専用ファイルで管理する方法を説明しています。 |
 | 専用文書との分担 | [リポジトリのライセンス - GitHub Docs](https://docs.github.com/ja/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) | ライセンスファイルの配置と、`LICENSE.md` を含むファイル名の例を示しています。 |
-| 目次とバッジ | [ワークフロー状態バッジの追加 - GitHub Docs](https://docs.github.com/ja/actions/how-tos/monitor-workflows/add-a-status-badge) | バッジの埋め込みと、ブランチ・イベントの指定方法を説明しています。 |
-| 記載する内容<br>利用方法 | [Best-README-Template](https://github.com/othneildrew/Best-README-Template/blob/main/README.md) | 冒頭の説明、導入手順、使用例とデモの記載方法を示しています。 |
+| 記載の方針<br>利用方法 | [Best-README-Template](https://github.com/othneildrew/Best-README-Template/blob/main/README.md) | 冒頭の説明、導入手順、使用例とデモの記載方法を示しています。 |
 | 利用方法 | [Awesome README](https://github.com/matiassingers/awesome-readme) | スクリーンショットやGIFを使ったREADMEの実例を紹介しています。 |
-| 記載する内容<br>利用方法<br>リンク | [Standard Readme — Specification](https://github.com/RichardLitt/standard-readme/blob/main/spec.md) | 名前と短い説明、依存関係、CLI・ライブラリの使用例、lint、リンク切れに関する規定を示しています。 |
-| 記載する内容<br>利用方法 | [Zalando's README Template](https://github.com/zalando/zalando-howto-open-source/blob/master/READMEtemplate.md) | 関連する項目の選択、機能の説明、導入手順、画像・動画の利用を示すテンプレートです（アーカイブ済み）。 |
+| 記載の方針<br>利用方法 | [Zalando's README Template](https://github.com/zalando/zalando-howto-open-source/blob/master/READMEtemplate.md) | 関連する項目の選択、機能の説明、導入手順、画像・動画の利用を示すテンプレートです（アーカイブ済み）。 |
