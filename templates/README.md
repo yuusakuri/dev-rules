@@ -10,22 +10,15 @@
 
 ## 取得方法
 
-導入先のリポジトリのルートで次のコマンドを実行すると、`docs/specifications/`へテンプレート一式が展開される。
+導入先のリポジトリのルートで次のコマンドを実行し、テンプレートを`docs/specifications/`へ取得する。
 
 ```bash
 mkdir -p docs/specifications
-curl -L https://github.com/yuusakuri/dev-rules/archive/refs/heads/main.tar.gz \
-  | tar -xz -f - -C docs/specifications --strip-components=3 dev-rules-main/templates/documentation
-```
-
-1ファイルだけを取得する場合は、次のコマンドを実行する。
-
-```bash
 curl -o docs/specifications/要件定義書.md \
   https://raw.githubusercontent.com/yuusakuri/dev-rules/main/templates/documentation/%E8%A6%81%E4%BB%B6%E5%AE%9A%E7%BE%A9%E6%9B%B8.md
 ```
 
-特定のバージョンを取得する場合は、URL中の`main`をタグ名へ置き換える。アーカイブを展開するコマンドでは、`dev-rules-main`も`dev-rules-<タグ名>`へ置き換える。
+特定のバージョンを取得する場合は、URL中の`main`をタグ名へ置き換える。
 
 ## 使い方
 
