@@ -11,13 +11,16 @@
 ├── AGENTS.md                 # AIエージェント向けの入口
 ├── README.md                 # 人向けの概要と導入方法
 ├── CONTRIBUTING.md           # このリポジトリへの貢献方法
-└── guidelines/
-    ├── README.md             # ガイドライン一覧と適用手順
-    ├── software/             # ソフトウェアとアプリケーションの設計ガイドライン
-    ├── development/          # リポジトリ、Git、バージョン管理のガイドライン
-    ├── implementation/       # 技術固有の実装ガイドライン
-    ├── ui/                   # UIデザインガイドライン
-    └── documentation/        # READMEと仕様書の作成ガイドライン
+├── guidelines/
+│   ├── README.md             # ガイドライン一覧と適用手順
+│   ├── software/             # ソフトウェアとアプリケーションの設計ガイドライン
+│   ├── development/          # リポジトリ、Git、バージョン管理のガイドライン
+│   ├── implementation/       # 技術固有の実装ガイドライン
+│   ├── ui/                   # UIデザインガイドライン
+│   └── documentation/        # READMEと仕様書の作成ガイドライン
+└── templates/
+    ├── README.md             # テンプレート一覧と取得方法
+    └── specifications/       # 仕様書とUI仕様書のテンプレート
 ```
 
 ## 利用方法
@@ -61,6 +64,16 @@ git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
 ## 開発ガイドライン
 
 実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
+```
+
+## テンプレートの利用
+
+ガイドラインに沿った仕様書を書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。Git submoduleとして組み込んでいる場合は該当ファイルをコピーし、組み込んでいない場合は次のコマンドでUI仕様書一式を取得する。取得できるテンプレートの一覧と、個別ファイルの取得方法は [`templates/README.md`](templates/README.md) に記載する。
+
+```bash
+mkdir -p docs/specifications/ui
+curl -L https://github.com/yuusakuri/dev-rules/archive/refs/heads/main.tar.gz \
+  | tar -xz -f - -C docs/specifications/ui --strip-components=4 dev-rules-main/templates/specifications/ui
 ```
 
 ## 更新方法

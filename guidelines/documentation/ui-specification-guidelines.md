@@ -71,6 +71,8 @@ docs/specifications/ui/
 
 ファイル名は対象の識別子を含める（`SCR-AUTH-001-login.md`）。ファイル名がそのまま識別子を兼ねるため、ファイル内に`id`フィールドを重複させる必要はない。
 
+この構成のひな形を [`templates/specifications/ui/`](../../templates/specifications/ui/README.md) に用意している。取得方法は [テンプレート](../../templates/README.md) を参照する。
+
 ### 3-2. 各ファイルの責務の例
 
 | ファイル | 記載内容 |
@@ -194,7 +196,7 @@ docs/specifications/ui/
 
 ## 7. 個別画面仕様のテンプレート
 
-個別画面仕様は `screens/*.md` として独立ファイルで管理する。次は目次の一例であり、プロジェクトの規模や性質に応じて過不足を調整してよい。
+個別画面仕様は `screens/*.md` として独立ファイルで管理する。次の目次に沿ったひな形は [`templates/specifications/ui/screens/SCR-DOMAIN-NNN-screen-name.md`](../../templates/specifications/ui/screens/SCR-DOMAIN-NNN-screen-name.md) にある。次は目次の一例であり、プロジェクトの規模や性質に応じて過不足を調整してよい。
 
 ### 目次の例
 
