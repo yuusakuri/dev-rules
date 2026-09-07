@@ -18,7 +18,7 @@
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現、レイアウト、状態、動きのガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
-| 文書 | [文書作成ガイドライン](documentation/document-guidelines.md) | 文書へ載せる参考資料の表の作り方を定めるガイドライン。 | なし |
+| 文書 | [ドキュメント作成ガイドライン](documentation/document-guidelines.md) | 文書の文体、説明の組み立て方、根拠の示し方、参考資料の表の作り方を定めるガイドライン。 | なし |
 | 文書 | [仕様書作成ガイドライン](documentation/specification-guidelines.md) | 仕様書作成のガイドライン。 | なし |
 | 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載内容と見出しの構成を定めるガイドライン。 | リポジトリガイドライン |
