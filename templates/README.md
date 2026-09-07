@@ -1,65 +1,74 @@
 # テンプレート
 
-ガイドラインに沿った成果物を作り始めるためのひな形を提供する。各ファイルの`<>`で囲んだ箇所をプロジェクトの内容へ置き換えて使う。
+設計工程で作成する設計書のひな形である。各ファイルの`<>`で囲んだ箇所をプロジェクトの内容へ置き換えて使う。
 
 ## テンプレート一覧
 
-| テンプレート | 用途 | 準拠するガイドライン |
-| --- | --- | --- |
-| [`specifications/specification.md`](specifications/specification.md) | 1つの対象領域（リソース、インターフェース、サブシステムなど）の仕様書。 | [仕様書作成ガイドライン](../guidelines/documentation/specification-guidelines.md) |
-| [`specifications/ui/`](specifications/ui/) | UI仕様書一式。共通規約、画面遷移、画面一覧、メッセージ、権限、レスポンシブ、アクセシビリティ、個別画面、共通部品を含む。 | [UI仕様書作成ガイドライン](../guidelines/documentation/ui-specification-guidelines.md) |
+| 工程 | 分類 | テンプレート | 記載内容 |
+| --- | --- | --- | --- |
+| 要件定義 | 画面設計 | [画面一覧](<documentation/010_要件定義/040_画面設計/画面一覧.md>) | 機能ごとの画面IDと画面名の一覧。 |
+| アプリ設計 | システム機能設計 | [システム機能一覧](<documentation/030_アプリ設計/010_システム機能設計/システム機能一覧.md>) | 機能と取引の一覧、および処理方式。 |
+| アプリ設計 | システム機能設計 | [リクエスト一覧](<documentation/030_アプリ設計/010_システム機能設計/リクエスト一覧.md>) | HTTPメソッドとURLの一覧。 |
+| アプリ設計 | システム機能設計 | [システム機能設計書(画面)](<documentation/030_アプリ設計/010_システム機能設計/システム機能設計書(画面).md>) | 画面の項目定義、入出力、画面イベントとその詳細。 |
+| アプリ設計 | システム機能設計 | [システム機能設計書(バッチ)](<documentation/030_アプリ設計/010_システム機能設計/システム機能設計書(バッチ).md>) | バッチの起動パラメータ、処理結果、入出力データ定義、処理詳細。 |
+| アプリ設計 | システム機能設計 | [システム機能設計書(Webサービス)](<documentation/030_アプリ設計/010_システム機能設計/システム機能設計書(Webサービス).md>) | APIの入出力、HTTPステータスコード別の処理結果、処理詳細。 |
+| アプリ設計 | インタフェース設計 | [外部インタフェース一覧](<documentation/030_アプリ設計/030_インタフェース設計/外部インタフェース一覧.md>) | 授受するファイルと電文の一覧。 |
+| アプリ設計 | インタフェース設計 | [外部インタフェース設計書](<documentation/030_アプリ設計/030_インタフェース設計/外部インタフェース設計書.md>) | ファイルまたは電文の仕様、レコード構成、データレイアウト。 |
+| アプリ設計 | メッセージ設計 | [メッセージ設計書](<documentation/030_アプリ設計/050_メッセージ設計/メッセージ設計書.md>) | メッセージIDと表示文言。 |
+| アプリ設計 | コード設計 | [コード設計書](<documentation/030_アプリ設計/060_コード設計/コード設計書.md>) | コードID、コード値、名称、パターン。 |
+| アプリ設計 | データモデル設計 | [テーブル一覧](<documentation/030_アプリ設計/070_データモデル設計/テーブル一覧.md>) | 論理テーブル名と物理テーブル名の一覧。 |
+| アプリ設計 | データモデル設計 | [テーブル定義書](<documentation/030_アプリ設計/070_データモデル設計/テーブル定義書.md>) | テーブルごとの項目定義、主キー、索引。 |
+| アプリ設計 | データモデル設計 | [ドメイン定義書](<documentation/030_アプリ設計/070_データモデル設計/ドメイン定義書.md>) | 項目の型と桁数を横断的に定めるドメインと、そのバリデーション。 |
+| アプリ設計 | データモデル設計 | [採番一覧](<documentation/030_アプリ設計/070_データモデル設計/採番一覧.md>) | 採番対象ごとのフォーマットとシーケンス定義。 |
+| アプリ設計 | テスト仕様書 | [単体テスト仕様書](<documentation/030_アプリ設計/110_テスト仕様書/単体テスト仕様書.md>) | リクエスト単体と取引単体のテストケース。 |
 
-`specifications/ui/`の構成は次のとおりとする。
+## ディレクトリ構成
 
 ```text
-specifications/ui/
-├── README.md                              # 仕様書の目的、対象システム、管理方法、関連資料
-├── 00-glossary.md                         # 用語、表記、業務上の意味
-├── 01-common-rules.md                     # 全画面共通のUI挙動
-├── 02-navigation.md                       # 画面遷移、URL、ディープリンク、戻る操作
-├── 03-screen-catalog.md                   # 全画面の一覧
-├── 04-message-catalog.md                  # 表示メッセージの一元管理
-├── 05-permission-matrix.md                # ロール別の閲覧権限と操作権限
-├── 06-responsive-rules.md                 # ブレークポイントと画面幅別の共通ルール
-├── 07-accessibility-rules.md              # キーボード操作、フォーカス、読み上げ、代替テキスト
-├── components/
-│   └── CMP-CATEGORY-NNN.md                # 再利用するUI部品の仕様
-└── screens/
-    └── SCR-DOMAIN-NNN-screen-name.md      # 個別画面の仕様
+templates/
+└── documentation/
+    ├── 010_要件定義/
+    │   └── 040_画面設計/
+    │       └── 画面一覧.md
+    └── 030_アプリ設計/
+        ├── 010_システム機能設計/
+        │   ├── システム機能一覧.md
+        │   ├── リクエスト一覧.md
+        │   ├── システム機能設計書(画面).md
+        │   ├── システム機能設計書(バッチ).md
+        │   └── システム機能設計書(Webサービス).md
+        ├── 030_インタフェース設計/
+        │   ├── 外部インタフェース一覧.md
+        │   └── 外部インタフェース設計書.md
+        ├── 050_メッセージ設計/
+        │   └── メッセージ設計書.md
+        ├── 060_コード設計/
+        │   └── コード設計書.md
+        ├── 070_データモデル設計/
+        │   ├── テーブル一覧.md
+        │   ├── テーブル定義書.md
+        │   ├── ドメイン定義書.md
+        │   └── 採番一覧.md
+        └── 110_テスト仕様書/
+            └── 単体テスト仕様書.md
 ```
 
 ## 取得方法
 
-このリポジトリをGit submoduleとして組み込んでいる場合は、`dev-rules/templates/`から目的のファイルをコピーする。組み込んでいない場合は、導入先のリポジトリのルートで次のいずれかのコマンドを実行する。
-
-UI仕様書一式を`docs/specifications/ui/`へ展開する場合は、次のコマンドを実行する。
+導入先のリポジトリのルートで次のコマンドを実行すると、`docs/specifications/`へ一式が展開される。
 
 ```bash
-mkdir -p docs/specifications/ui
+mkdir -p docs/specifications
 curl -L https://github.com/yuusakuri/dev-rules/archive/refs/heads/main.tar.gz \
-  | tar -xz -f - -C docs/specifications/ui --strip-components=4 dev-rules-main/templates/specifications/ui
+  | tar -xz -f - -C docs/specifications --strip-components=3 dev-rules-main/templates/documentation
 ```
 
-テンプレート全体を取得する場合は、次のコマンドを実行する。
-
-```bash
-curl -L https://github.com/yuusakuri/dev-rules/archive/refs/heads/main.tar.gz \
-  | tar -xz -f - --strip-components=1 dev-rules-main/templates
-```
-
-1ファイルだけを取得する場合は、次のコマンドの取得先と保存先を目的のファイルへ置き換えて実行する。
-
-```bash
-curl -o docs/specifications/ui/screens/SCR-USER-001-user-list.md \
-  https://raw.githubusercontent.com/yuusakuri/dev-rules/main/templates/specifications/ui/screens/SCR-DOMAIN-NNN-screen-name.md
-```
-
-特定のバージョンを取得する場合は、URL中の`main`をタグ名へ置き換える。アーカイブを展開するコマンドでは、`dev-rules-main`もタグ名に応じた`dev-rules-<タグ名>`へ置き換える。
+特定のバージョンを取得する場合は、URL中の`main`をタグ名へ置き換え、`dev-rules-main`も`dev-rules-<タグ名>`へ置き換える。
 
 ## 使い方
 
-1. 取得したファイルを、導入先の`docs/specifications/`配下へ配置する。
-2. ファイル名の`SCR-DOMAIN-NNN-screen-name`のような箇所を、対象の識別子と名称へ置き換える。
+1. 取得したファイルのうち、作成する設計書のテンプレートを、対象の識別子と名称を付けたファイル名へ変更する。
+2. 文書情報と変更履歴を記入する。
 3. 本文の`<>`で囲んだ箇所を、プロジェクトの内容へ置き換える。
-4. 該当しない項目は削除せず、「対象外」と理由を記載する。検討漏れと記入漏れを区別できるようにするため。
-5. 準拠するガイドラインを読み、記述内容が規則を満たしているか確認する。
+4. 該当しない項目は行を削除せず、`-`または「なし」と記載する。検討漏れと記入漏れを区別できるようにするため。
+5. 1つの文書に同じ構成の対象が複数含まれる場合は、対象ごとに章を複製する。

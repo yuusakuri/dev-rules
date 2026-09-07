@@ -20,7 +20,7 @@
 │   └── documentation/        # READMEと仕様書の作成ガイドライン
 └── templates/
     ├── README.md             # テンプレート一覧と取得方法
-    └── specifications/       # 仕様書とUI仕様書のテンプレート
+    └── documentation/        # 設計書のテンプレート
 ```
 
 ## 利用方法
@@ -68,13 +68,7 @@ git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
 
 ## テンプレートの利用
 
-ガイドラインに沿った仕様書を書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。Git submoduleとして組み込んでいる場合は該当ファイルをコピーし、組み込んでいない場合は次のコマンドでUI仕様書一式を取得する。取得できるテンプレートの一覧と、個別ファイルの取得方法は [`templates/README.md`](templates/README.md) に記載する。
-
-```bash
-mkdir -p docs/specifications/ui
-curl -L https://github.com/yuusakuri/dev-rules/archive/refs/heads/main.tar.gz \
-  | tar -xz -f - -C docs/specifications/ui --strip-components=4 dev-rules-main/templates/specifications/ui
-```
+設計書を書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。テンプレートの一覧と取得方法は [`templates/README.md`](templates/README.md) に記載する。
 
 ## 更新方法
 

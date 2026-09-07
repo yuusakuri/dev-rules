@@ -72,7 +72,7 @@ NG: 一定時間応答がなければ警告する OK: 5秒以内に応答がな�
 
 ファイル名は、対象を指す既存の識別子や名称をそのまま使う。仕様書の外からでも、どのファイルを見ればよいかが一意に判断できるようにする。
 
-本書に沿ったひな形を [`templates/specifications/specification.md`](../../templates/specifications/specification.md) に用意している。取得方法は [テンプレート](../../templates/README.md) を参照する。
+設計工程で作成する設計書のひな形は [テンプレート](../../templates/README.md) にある。
 
 ---
 
