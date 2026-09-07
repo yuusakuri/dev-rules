@@ -11,13 +11,16 @@
 ├── AGENTS.md                 # AIエージェント向けの入口
 ├── README.md                 # 人向けの概要と導入方法
 ├── CONTRIBUTING.md           # このリポジトリへの貢献方法
-└── guidelines/
-    ├── README.md             # ガイドライン一覧と適用手順
-    ├── software/             # ソフトウェアとアプリケーションの設計ガイドライン
-    ├── development/          # リポジトリ、Git、バージョン管理のガイドライン
-    ├── implementation/       # 技術固有の実装ガイドライン
-    ├── ui/                   # UIデザインガイドライン
-    └── documentation/        # ドキュメント作成ガイドライン
+├── guidelines/
+│   ├── README.md             # ガイドライン一覧と適用手順
+│   ├── software/             # ソフトウェアとアプリケーションの設計ガイドライン
+│   ├── development/          # リポジトリ、Git、バージョン管理のガイドライン
+│   ├── implementation/       # 技術固有の実装ガイドライン
+│   ├── ui/                   # UIデザインガイドライン
+│   └── documentation/        # ドキュメント作成ガイドライン
+└── templates/
+    ├── README.md             # テンプレート一覧と取得方法
+    └── documentation/        # ドキュメントのテンプレート
 ```
 
 ## 利用方法
@@ -62,6 +65,10 @@ git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
 
 実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
 ```
+
+## テンプレートの利用
+
+設計書を書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。
 
 ## 更新方法
 
