@@ -17,7 +17,7 @@
 │   ├── development/          # リポジトリ、Git、バージョン管理のガイドライン
 │   ├── implementation/       # 技術固有の実装ガイドライン
 │   ├── ui/                   # UIデザインガイドライン
-│   └── documentation/        # READMEと仕様書の作成ガイドライン
+│   └── documentation/        # ドキュメント作成ガイドライン
 └── templates/
     ├── README.md             # テンプレート一覧と取得方法
     └── documentation/        # 要件定義書のテンプレート
@@ -68,7 +68,7 @@ git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
 
 ## テンプレートの利用
 
-設計書を書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。テンプレートの一覧と取得方法は [`templates/README.md`](templates/README.md) に記載する。
+設計書を書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。
 
 ## 更新方法
 
