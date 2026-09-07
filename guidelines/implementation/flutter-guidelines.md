@@ -1,4 +1,4 @@
-# Flutter固有規約
+# Flutter実装ガイドライン
 
 ## 目次
 
@@ -12,13 +12,13 @@
 
 ## 1. 概要
 
-本書は、Dartで実装するFlutterアプリケーションの言語、フレームワーク固有規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)を前提とする。
+本書は、Dartで実装するFlutterアプリケーションの実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)を前提とする。
 
 ---
 
 ## 2. フォルダ構成
 
-ソースルートは`lib/`とし、「アプリケーション設計規則」のフォルダ構成をその下へ置く。Flutter固有の配置を次に示す。
+ソースルートは`lib/`とし、「アプリケーション設計ガイドライン」のフォルダ構成をその下へ置く。Flutter固有の配置を次に示す。
 
 本書において、表示状態の管理にはBLoCを使用する前提で記載する。Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定める配置へ置き換える。方式が配置を定めない場合は、「参考資料」のFlutterアーキテクチャガイドに合わせて`view_models/`を使用する。
 
@@ -48,7 +48,7 @@
 
 ## 3. 依存の向き
 
-依存の向きは[アプリケーション設計規則](../core/application-design-guidelines.md)に従う。Flutter固有の依存関係を次に示す。
+依存の向きは[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)に従う。Flutter固有の依存関係を次に示す。
 
 | 依存元 | 依存先 |
 | --- | --- |

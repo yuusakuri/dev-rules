@@ -1,4 +1,4 @@
-# Windows PowerShell モジュール開発規約
+# Windows PowerShellモジュール実装ガイドライン
 
 ## 目次
 
@@ -31,7 +31,7 @@
 
 ## 1. 概要
 
-本書は、Windows PowerShell 5.1向けモジュールの開発に関する規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)と[リポジトリ規則](../core/repository-guidelines.md)を前提とする。
+本書は、Windows PowerShell 5.1向けモジュールの実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)と[リポジトリガイドライン](../development/repository-guidelines.md)を前提とする。
 
 ---
 
@@ -115,7 +115,7 @@ C#プロジェクトを含むリポジトリでは、ビルド時に .NET SDK �
 
 ## 3. リポジトリ構成
 
-本章は、リポジトリ規則に加えて必要となる、Windows PowerShellモジュール固有の配置を定義する。
+本章は、リポジトリガイドラインに加えて必要となる、Windows PowerShellモジュール固有の配置を定義する。
 
 ### 3.1 製品コード
 

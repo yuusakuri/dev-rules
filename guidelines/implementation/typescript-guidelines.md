@@ -1,4 +1,4 @@
-# TypeScript固有規約
+# TypeScript実装ガイドライン
 
 ## 目次
 
@@ -12,13 +12,13 @@
 
 ## 1. 概要
 
-本書は、TypeScript固有の追加規則を定義する。本書は、[共通設計原則](../core/software-design-guidelines.md)、[アプリケーション設計規則](../core/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
+本書は、TypeScript実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
 ---
 
 ## 2. フォルダ構成
 
-ソースルートは`src/`とし、「アプリケーション設計規則」のフォルダ構成をその下へ置く。TypeScript固有の配置を次に示す。
+ソースルートは`src/`とし、「アプリケーション設計ガイドライン」のフォルダ構成をその下へ置く。TypeScript固有の配置を次に示す。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |

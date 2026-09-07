@@ -1,6 +1,8 @@
-# 開発規則
+# ソフトウェア開発ガイドライン
 
-ソフトウェア開発で使用する、プロジェクトに依存しない設計規則、技術固有規則、UI規則、仕様書作成規則を管理する。
+ソフトウェア開発ガイドラインを定義する。
+
+[ガイドライン一覧](guidelines/README.md) · [AIエージェント向けの入口](AGENTS.md)
 
 ## 構成
 
@@ -10,39 +12,24 @@
 ├── README.md                 # 人向けの概要と導入方法
 ├── CONTRIBUTING.md           # このリポジトリへの貢献方法
 └── guidelines/
-    ├── README.md             # 規則一覧と適用手順
-    ├── core/                 # 共通の設計規則
-    ├── implementation/       # 技術固有の実装規則
-    ├── ui/                   # UIデザイン規則
-    └── specifications/       # 仕様書作成規則
+    ├── README.md             # ガイドライン一覧と適用手順
+    ├── software/             # ソフトウェアとアプリケーションの設計ガイドライン
+    ├── development/          # リポジトリ、Git、バージョン管理のガイドライン
+    ├── implementation/       # 技術固有の実装ガイドライン
+    ├── ui/                   # UIデザインガイドライン
+    └── documentation/        # READMEと仕様書の作成ガイドライン
 ```
 
 ## 利用方法
 
-プロジェクトに組み込む場合はGit submoduleを使う。エージェントから直接参照する場合は、ネット上のURLまたはローカルの保存先を指定する。いずれの場合も、エージェントは `AGENTS.md` から読み始め、作業に必要な規則をたどる。
-
-### Gitリポジトリに組み込む
-
-導入先のリポジトリのルートから、次のコマンドを実行する。
-
-```bash
-git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
-```
-
-導入先の `AGENTS.md` に次の内容を記載する。配置先を変える場合は、コマンドと参照先の `dev-rules` を同じパスに置き換える。
-
-```md
-## 開発規則
-
-実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当規則に従うこと。
-```
+エージェントに参照させる場合は、ネット上のURLまたはローカルの保存先を指定して `AGENTS.md` から読ませる。プロジェクトのGitリポジトリに含める場合は、Git submoduleとして導入する。どちらの場合も、エージェントは `AGENTS.md` を入口として、作業に必要なガイドラインをたどる。
 
 ### ネット経由で参照する
 
 URLの内容を取得できるエージェントに、次の指示を渡す。
 
 ```text
-実装、設計、レビューの前に、次の文書を読み、同文書が案内する該当規則に従うこと。
+実装、設計、レビューの前に、次の文書を読み、同文書が案内する該当ガイドラインに従うこと。
 https://raw.githubusercontent.com/yuusakuri/dev-rules/main/AGENTS.md
 ```
 
@@ -57,7 +44,23 @@ git clone https://github.com/yuusakuri/dev-rules.git
 ローカルのファイルを読めるエージェントに、次の指示を渡す。
 
 ```text
-実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当規則に従うこと。
+実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
+```
+
+### Gitリポジトリに組み込む
+
+導入先のリポジトリのルートから、次のコマンドを実行する。
+
+```bash
+git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
+```
+
+導入先の `AGENTS.md` に次の内容を記載する。配置先を変える場合は、コマンドと参照先の `dev-rules` を同じパスに置き換える。
+
+```md
+## 開発ガイドライン
+
+実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
 ```
 
 ## 更新方法
