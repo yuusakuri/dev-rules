@@ -189,9 +189,9 @@ fn search_preprocessor(
 }
 ```
 
-### 通信の共通処理をサービスごとのClientから分離する
+### 通信の共通処理と設定を下位の層へまとめる
 
-外部サービスや機能ごとの`Client`は、その対象に固有の操作と、接続先など対象ごとに異なる設定を担当する。認証、リトライ、タイムアウト、共通ヘッダー、通信エラーの変換など、複数の`Client`に共通する通信処理は下位の通信層へ分離し、各`Client`から必要な設定を渡す。サービスごとに異なる設定まで一つの共通`Client`へ集約しない。
+外部サービスや機能ごとの`Client`は、その対象に固有の操作と、接続先など対象ごとに異なる設定を担当する。認証、リトライ、タイムアウト、共通ヘッダー、通信エラーの変換など、複数の`Client`に共通する通信処理と、その動作を決める設定や実装の指定は下位の通信層へ分離し、Configへまとめて各`Client`へ渡す。サービスごとに異なる設定まで一つの共通`Client`へ集約しない。
 
 次は、サービスごとのClientが共通して使う通信設定を、下位の層が一つの型へまとめた例である。資格情報の供給元、再試行とタイムアウトの方針、HTTP通信の実装をこの型が持つため、各Clientはこれらを自前で用意せず、対象に固有の操作だけを担当する。`credentials_provider`と`http_client`が示すとおり、まとめているのは設定値だけではなく、値を供給する仕組みと通信に使う資源も含む。
 
@@ -206,10 +206,6 @@ pub struct SdkConfig {
     // ...
 }
 ```
-
-### 共有可能な通信資源を再利用する
-
-複数のClientが共有する認証、接続、Retryなどの動作を決める設定や、実装の指定などは、Configにまとめて各Clientへ渡す。
 
 次は、その設定を組み立ててClientへ渡す側の例である。`load_defaults`が環境変数、共有設定ファイル、実行環境のメタデータなどを順に探索して設定を一度だけ作り、各サービスのClientは`Client::new(&config)`で同じ値を受け取る。扱うサービスが増えても資格情報の解決はやり直されず、接続に使う資源もClient間で共有される。
 
@@ -725,8 +721,8 @@ impl UserRepo for InMemoryUserRepo {
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。状態から読み取り用の値を写す箇所。 |
 | 3. 依存関係の管理 | [rust-analyzer `GlobalState::update_tests`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L792-L819) | 所有した値を取り出して使うコード例の抜粋元。タスクプールへ、状態から作った読み取り用の値を渡して実行する。 |
 | 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。`AppStateDyn`の構成と`create_user_dyn`への受け渡し。 |
-| 3. 依存関係の管理 | [AWS SDK for Rust `SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137) | 「通信の共通処理をサービスごとのClientから分離する」のコード例の抜粋元。 |
-| 3. 依存関係の管理 | [AWS SDK for Rust `load_defaults`の実行例](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L40-L41) | 「共有可能な通信資源を再利用する」のコード例の抜粋元。組み立てた設定をサービスのClientへ渡す箇所。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137) | 「通信の共通処理と設定を下位の層へまとめる」のコード例の抜粋元。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `load_defaults`の実行例](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L40-L41) | 同じコード例の抜粋元。組み立てた設定をサービスのClientへ渡す箇所。 |
 | 3. 依存関係の管理 | [AWS SDK for Rust `CredentialsProviderChain`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/credentials.rs#L189-L193) | 資格情報を環境変数、プロファイル、実行環境のメタデータの順に解決する構成を確認する。 |
 | 3. 依存関係の管理 | [AWS SDK for Rust `region::default_provider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/region.rs#L19-L21) | 接続先リージョンの探索元と順序を確認する。 |
 | 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「保存先を交換する場合はRepositoryへ分離する」のコード例の抜粋元。 |
