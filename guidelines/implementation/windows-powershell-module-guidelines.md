@@ -74,6 +74,8 @@ Windows PowerShell 5.1へ `Microsoft.PowerShell.PSResourceGet` を導入し、�
 Install-PackageProvider -Name NuGet -Scope CurrentUser -Force
 Install-Module -Name PowerShellGet -Scope CurrentUser -Repository PSGallery -Force -AllowClobber
 Install-Module -Name Microsoft.PowerShell.PSResourceGet -Scope CurrentUser -Repository PSGallery
+Import-Module -Name Microsoft.PowerShell.PSResourceGet
+Set-PSResourceRepository -Name PSGallery -Trusted
 ```
 
 ### 2.3 開発ツール
