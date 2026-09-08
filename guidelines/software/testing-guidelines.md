@@ -33,11 +33,17 @@
 
 すべての組み合わせを同じ深さで検証せず、故障の起こりやすさと、故障したときの影響が大きい箇所を厚く検証する。限られた時間の中で、重大な欠陥から先に見つけられる。
 
+### 自分たちが書いていない振る舞いはテストしない
+
+フレームワークやライブラリが提供する動作、生成されたGetterやSetter、判断を持たないデータ構造の値の入れ替えは、テスト対象にしない。これらのテストは自分たちのコードの欠陥を見つけず、実装をなぞった写しとして保守の手間だけを増やす。
+
+自分たちが書いた処理と組み合わせて初めて成立する振る舞いは、その組み合わせを対象として検証する。
+
 ---
 
 ## 3. テストの種別
 
-テストは次の種別に分け、同じ振る舞いは確認できる最も下位の種別で検証する。上位の種別ほど実行に時間がかかり、変更で壊れやすいため、下位で確認できる振る舞いを上位で重ねると、費用だけが増える。
+テストは次の種別に分け、同じ振る舞いは確認できる最も下位の種別で検証する。上位の種別ほど実行に時間がかかって結果が返るまで待たされ、変更で壊れやすく、失敗しても原因の箇所を絞り込みにくい。
 
 | 種別 | 担当する範囲 |
 | --- | --- |
@@ -90,7 +96,7 @@
 | 実物やFakeを使えず、結果を状態として観測できない | メール送信、イベント発行、決済要求など、外部への作用が期待する振る舞いである処理 |
 | 呼び出しの回数や順序の違いが望まない振る舞いを生む | 重複した送信、余分なディスク読み取り、順序の誤りによるデッドロック |
 | 出力の内容だけでなく、その求め方が仕様に含まれる | 特定のアルゴリズムを使うことが仕様で決まっている処理 |
-| 描画の詳細を分離したUIで、表示側への指示が対象の責務である | MVCやMVPのControllerやPresenter |
+| 描画の詳細を分離したUIで、表示側への指示が対象の責務である | 画面を描画する部品へ表示内容を渡すPresenter、ViewModel、Controller |
 
 応答時間のように達成すべき値だけが要求されている場合は、内部の呼び出しではなく、その値を満たしていることを検証する。
 
@@ -124,17 +130,17 @@ Test Doubleには、テストで果たす役割ごとに次の種類がある。
 | Spy | Stubとして応答しながら、呼び出された内容を記録する。 |
 | Mock | 期待する呼び出しをあらかじめ設定し、そのとおりに呼ばれたかを判定する。 |
 
-### 実物に近いものから選ぶ
+### 実物を優先し、代わりはテストの目的で選ぶ
 
-依存先には実物の実装を優先し、使えない場合は実物 → Fake → Stubの順で選ぶ。実物に近いほどテストは本番の動作を再現するため、対象が正しく動いていることを確かめられる。
+依存先には実物の実装を優先する。実物に近いほどテストは本番の動作を再現するため、対象が正しく動いていることを確かめられる。
 
-### 検証手段としてSpyとMockを使う
+実物を使えない場合は、依存先の振る舞いが結果に影響するならFakeを使い、特定の値、異常、応答の遅延など、実物やFakeでは作りにくい状況を再現するならStubを使う。
 
-SpyとMockは実物の置き換え先ではなく、インタラクションを観測する手段である。使うのは、インタラクションを検証する場合に限る。
+SpyとMockも依存先を置き換えるが、選ぶ理由は振る舞いの再現ではなく、やり取りの記録と判定にある。使うのは、インタラクションを検証する場合に限る。
 
-### 外部サービスの置き換えはContract Testで裏付ける
+### 独立して変更される依存先はContract Testで裏付ける
 
-外部サービスをTest Doubleへ置き換える場合は、Contract Testを設け、Test Doubleの応答が実際のサービスの契約と一致していることを定期的に確認する。外部サービスの変更にTest Doubleが追随できないと、テストは通るのに本番では動かない状態になる。
+自分たちの変更とは別に更新される依存先をTest Doubleへ置き換える場合は、Contract Testを設け、Test Doubleの応答が実物の契約と一致していることを定期的に確認する。依存先の変更にTest Doubleが追随できないと、テストは通るのに本番では動かない状態になる。
 
 ---
 
@@ -149,6 +155,6 @@ SpyとMockは実物の置き換え先ではなく、インタラクションを�
 | 5. 検証の方針<br>6. 内部実装の呼び出し | [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html) | 状態検証と振る舞い検証の違いと、呼び出しを検証するテストが実装へ結び付くことを説明する。 |
 | 5. 検証の方針 | [Google Testing Blog: Testing on the Toilet: Testing State vs. Testing Interactions](https://testing.googleblog.com/2013/03/testing-on-toilet-testing-state-vs.html) | 状態の検証を既定とする理由と、インタラクションを検証する場合を示す。 |
 | 5. 検証の方針<br>7. Test Doubleの選び方 | [Software Engineering at Google](https://abseil.io/resources/swe-book/html/ch13.html) | 第13章で、実物を優先すること、状態の検証を既定とすること、インタラクションを検証する場合、Stubに頼るテストの弊害を示す。 |
-| 6. 内部実装の呼び出し | [Google Testing Blog: Testing on the Toilet: Change-Detector Tests Considered Harmful](https://testing.googleblog.com/2015/01/testing-on-toilet-change-detector-tests.html) | 実装の写しになったテストが欠陥を捉えず、保守の費用だけを増やすことを示す。 |
+| 2. テスト対象の決定<br>6. 内部実装の呼び出し | [Google Testing Blog: Testing on the Toilet: Change-Detector Tests Considered Harmful](https://testing.googleblog.com/2015/01/testing-on-toilet-change-detector-tests.html) | 実装の写しになったテストが欠陥を捉えず、保守の費用だけを増やすことを示す。 |
 | 7. Test Doubleの選び方 | [Test Double](https://martinfowler.com/bliki/TestDouble.html) | Test Doubleの種類と、それぞれの役割を説明する。 |
 | 7. Test Doubleの選び方 | [Contract Test](https://martinfowler.com/bliki/ContractTest.html) | Test Doubleが実際のサービスの振る舞いと一致していることを確認する方法を説明する。 |
