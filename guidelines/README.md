@@ -8,6 +8,7 @@
 | --- | --- | --- | --- |
 | ソフトウェア設計 | [ソフトウェア設計ガイドライン](software/software-design-guidelines.md) | ソフトウェア開発の設計ガイドライン。 | なし |
 | ソフトウェア設計 | [アプリケーション設計ガイドライン](software/application-design-guidelines.md) | アプリケーション設計のガイドライン。 | ソフトウェア設計ガイドライン |
+| ソフトウェア設計 | [テストガイドライン](software/testing-guidelines.md) | テスト対象、テストケースの設計、検証方法を定めるガイドライン。 | ソフトウェア設計ガイドライン |
 | 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリのファイルとディレクトリの役割を定めるガイドライン。 | なし |
 | 開発 | [Git規則](development/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 開発 | [バージョニング規則](development/versioning-guidelines.md) | バージョン番号を決める。 | なし |
