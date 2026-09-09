@@ -1,6 +1,6 @@
 # テンプレート
 
-文書と設定ファイルを書き始めるためのひな形である。各ファイルの`<>`で囲んだ箇所をプロジェクトの内容へ置き換えて使う。
+文書と設定ファイルを書き始めるためのひな形である。
 
 ## テンプレート一覧
 
@@ -9,7 +9,7 @@
 | 要件定義 | [Requirements Definition Document](documentation/requirements-definition-document.md) | 何を作り、なぜ作るのかを関係者と合意するためのテンプレート。 | なし |
 | 要件定義 | [Software Requirements Specification](documentation/software-requirements-specification.md) | 合意した内容を、実装と検証ができる要求へ落とし込むためのテンプレート。 | IEEE 830とISO/IEC/IEEE 29148に準拠する。 |
 | 設計 | [Software Design Description](documentation/software-design-description.md) | その要求をどのような構造で実現するのかを示すためのテンプレート。 | IEEE 1016とISO/IEC/IEEE 42010に準拠する。 |
-| 開発環境 | [Claude Codeの設定ファイル](claude/settings.json) | Claude Codeがプロジェクト全体へ適用する権限とサンドボックスを定めるためのテンプレート。 | リポジトリへコミットして共有する。個人の設定は`.claude/settings.local.json`へ書き、コミットしない。 |
+| 開発環境 | [Claude Codeの設定ファイル](claude/settings.json) | Claude Codeへ確認を求めさせずにツールを実行させるためのテンプレート。 | `mcp__*__send_later`だけを禁止する。リポジトリへコミットして共有し、個人の設定は`.claude/settings.local.json`へ書く。 |
 
 ## 取得方法
 
@@ -32,5 +32,6 @@ curl -O https://raw.githubusercontent.com/yuusakuri/dev-rules/main/templates/<�
 ## 設定ファイルのテンプレートの使い方
 
 1. 取得したファイルを`.claude/settings.json`へ配置する。
-2. `<>`で囲んだ箇所を、プロジェクトで使うコマンドとドメインへ置き換える。
-3. 使わないキーは削除する。JSONにはコメントを書けないため、文書のテンプレートのように「対象外」と残す方法は使えない。
+2. 実行させないツールがある場合は、`permissions.deny`へツール名を書き足す。禁止は`bypassPermissions`でも適用されるため、確認を求めない設定と併用できる。
+
+`defaultMode`を`bypassPermissions`にすると、Claude Codeは権限の確認を求めずにツールを実行する。この設定では`permissions.allow`は働かないため、許可する対象を挙げる必要はない。取り消しの効かない操作もそのまま実行されるため、コンテナや使い捨ての環境のように、被害が及ばない場所で使う。
