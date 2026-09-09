@@ -19,7 +19,8 @@
 │   ├── ui/                   # UIデザインガイドライン
 │   └── documentation/        # ドキュメント作成ガイドライン
 └── templates/
-    ├── README.md             # テンプレート一覧と取得方法
+    ├── README.md             # テンプレート一覧
+    ├── claude/               # Claude Codeの設定ファイルのテンプレート
     └── documentation/        # ドキュメントのテンプレート
 ```
 
@@ -68,7 +69,7 @@ git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
 
 ## テンプレートの利用
 
-設計書を書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。
+文書と設定ファイルを書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。
 
 ## 更新方法
 
