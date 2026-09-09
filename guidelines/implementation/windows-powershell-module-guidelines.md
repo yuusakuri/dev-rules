@@ -74,6 +74,8 @@ Windows PowerShell 5.1へ `Microsoft.PowerShell.PSResourceGet` を導入し、�
 Install-PackageProvider -Name NuGet -Scope CurrentUser -Force
 Install-Module -Name PowerShellGet -Scope CurrentUser -Repository PSGallery -Force -AllowClobber
 Install-Module -Name Microsoft.PowerShell.PSResourceGet -Scope CurrentUser -Repository PSGallery
+Import-Module -Name Microsoft.PowerShell.PSResourceGet
+Set-PSResourceRepository -Name PSGallery -Trusted
 ```
 
 ### 2.3 開発ツール
@@ -447,6 +449,10 @@ if ($PSBoundParameters.ContainsKey('Limit')) {
 追加した同名関数は通常のコマンド解決で隠す。元のCmdletを実行できるモジュール修飾名をHelpに記載する。
 
 Contract Testでは追加した同名関数が優先されること、元のCmdletがモジュール修飾名で呼び出せること、元のCmdletとパラメーター名が一致することを確認する。
+
+### 8.12 スクリプトブロック
+
+`ScriptBlock` を変数へ代入して関数として利用することは避け、名前付き関数を定義して利用することを優先する。ただし、`Where-Object`、`ForEach-Object`、`ValidateScript()` など、コマンドが引数として `ScriptBlock` を要求する場合は `ScriptBlock` を使用する。
 
 ---
 

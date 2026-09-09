@@ -19,7 +19,7 @@
 │   ├── ui/                   # UIデザインガイドライン
 │   └── documentation/        # ドキュメント作成ガイドライン
 └── templates/
-    ├── README.md             # テンプレート一覧と取得方法
+    ├── README.md             # テンプレート一覧
     ├── claude/               # Claude Codeの設定ファイルのテンプレート
     └── documentation/        # ドキュメントのテンプレート
 ```
