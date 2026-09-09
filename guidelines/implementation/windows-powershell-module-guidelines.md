@@ -450,6 +450,10 @@ if ($PSBoundParameters.ContainsKey('Limit')) {
 
 Contract Testでは追加した同名関数が優先されること、元のCmdletがモジュール修飾名で呼び出せること、元のCmdletとパラメーター名が一致することを確認する。
 
+### 8.12 スクリプトブロック
+
+`ScriptBlock` を変数へ代入して関数として利用することは避け、名前付き関数を定義して利用することを優先する。ただし、`Where-Object`、`ForEach-Object`、`ValidateScript()` など、コマンドが引数として `ScriptBlock` を要求する場合は `ScriptBlock` を使用する。
+
 ---
 
 ## 9. パイプライン
