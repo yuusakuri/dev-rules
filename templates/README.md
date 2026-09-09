@@ -4,13 +4,11 @@
 
 ## テンプレート一覧
 
-| 工程 | テンプレート | 記載内容 |
+| テンプレート | 書く目的 | 準拠する規格 |
 | --- | --- | --- |
-| 要件定義 | [Requirements Definition Document](documentation/requirements-definition-document.md) | 解決する課題、目的と成功指標、利用者とユースケース、機能要件と非機能要件、リリース計画、リスク、体制。 |
-| 要件定義 | [Software Requirements Specification](documentation/software-requirements-specification.md) | 製品の範囲と前提、外部インターフェース、機能要求、サービス品質、法令と規格への適合、設計と実装の制約、AIと機械学習の要求、検証。 |
-| 設計 | [Software Design Description](documentation/software-design-description.md) | 設計の対象範囲、利害関係者の関心事、選択したビューポイント、設計ビュー、設計上の決定。 |
-
-Requirements Definition Documentは、何を作り、なぜ作るのかを関係者と合意するために書く。Software Requirements Specificationは、合意した内容を実装と検証ができる要求へ落とし込むために書く。Software Design Descriptionは、その要求をどのような構造で実現するのかを示すために書く。
+| [Requirements Definition Document](documentation/requirements-definition-document.md) | 何を作り、なぜ作るのかを関係者と合意する。 | なし |
+| [Software Requirements Specification](documentation/software-requirements-specification.md) | 合意した内容を、実装と検証ができる要求へ落とし込む。 | IEEE 830<br>ISO/IEC/IEEE 29148 |
+| [Software Design Description](documentation/software-design-description.md) | その要求をどのような構造で実現するのかを示す。 | IEEE 1016<br>ISO/IEC/IEEE 42010 |
 
 ## 取得方法
 
