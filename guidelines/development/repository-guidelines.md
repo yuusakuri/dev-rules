@@ -39,6 +39,7 @@
 | `scripts/` | 任意 | タスクランナーへ集約するほどではない、個別の開発支援スクリプトを配置する。 |
 | `justfile` | 任意 | `just`コマンドで実行する、開発、検証処理をサブコマンド単位で定義するタスクランナー。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。`dev.sh`と役割が重なるため、どちらか一方だけを使う。 |
 | `dev.sh` | 任意 | シェルスクリプトで実装する、開発、検証処理をサブコマンド単位で実行するタスクランナー。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。`justfile`と役割が重なるため、どちらか一方だけを使う。 |
+| `.claude/settings.json` | 任意 | Claude Codeがプロジェクト全体へ適用する権限、サンドボックス、フック、環境変数を定義する。リポジトリへコミットして共有し、個人の設定は`.claude/settings.local.json`へ書いてコミットしない。ひな形は[テンプレート](../../templates/README.md)にある。 |
 | `.github/ISSUE_TEMPLATE/` | 推奨 | Issue作成時のひな形（バグ報告、機能要望など）を提供し、必要な情報の記入漏れを防ぐ。 |
 | `.github/PULL_REQUEST_TEMPLATE.md` | 推奨 | PR作成時のひな形を提供し、変更内容とテスト方法の記載を促す。 |
 | `.github/CODEOWNERS` | 推奨 | ファイル、ディレクトリごとの責任者を定義し、該当箇所を変更するPRへ自動的にレビューを依頼する。 |
@@ -58,6 +59,7 @@
 | [Creating a default community health file - GitHub Docs](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file) |
 | [About issue and pull request templates - GitHub Docs](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/about-issue-and-pull-request-templates) |
 | [Keep a Changelog](https://keepachangelog.com/) |
+| [Settings files and precedence - Claude Code Docs](https://code.claude.com/docs/en/settings) |
 | [Diátaxis](https://diataxis.fr/) |
 | [REUSE Software](https://reuse.software/) |
 | [OpenSSF Best Practices Badge](https://www.bestpractices.dev/) |

@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(<フォーマットを実行するコマンド> *)",
+      "Bash(<静的解析を実行するコマンド> *)",
+      "Bash(<テストを実行するコマンド> *)"
+    ],
+    "ask": [
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "network": {
+      "allowedDomains": [
+        "<依存関係の取得元ドメイン>"
+      ]
+    }
+  }
+}
