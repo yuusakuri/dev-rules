@@ -1,27 +1,10 @@
 # テンプレート
 
-文書を書き始めるためのひな形である。各ファイルの`<>`で囲んだ箇所をプロジェクトの内容へ置き換えて使う。
+文書と設定ファイルを書き始めるためのひな形である。文書のテンプレートは、`<>`で囲んだ箇所をプロジェクトの内容へ置き換えて使う。
 
 ## テンプレート一覧
 
-| 工程 | テンプレート | 記載内容 |
-| --- | --- | --- |
-| 要件定義 | [Requirements Definition Document (RDD)](documentation/requirements-definition-document.md) | 解決する課題、目的と成功指標、利用者とユースケース、機能要件と非機能要件、リリース計画、リスク、体制。 |
-
-## 取得方法
-
-文書を置くディレクトリで次のコマンドを実行し、テンプレートを取得する。配置先は[リポジトリガイドライン](../guidelines/development/repository-guidelines.md)の構成に従う。
-
-```bash
-curl -O https://raw.githubusercontent.com/yuusakuri/dev-rules/main/templates/documentation/requirements-definition-document.md
-```
-
-特定のバージョンを取得する場合は、URL中の`main`をタグ名へ置き換える。
-
-## 使い方
-
-1. 取得したファイルを、対象を指す名称を付けたファイル名へ変更する。
-2. 文書情報と変更履歴を記入する。
-3. 本文の`<>`で囲んだ箇所を、プロジェクトの内容へ置き換える。
-4. 該当しない項目は行を削除せず、「対象外」と理由を記載する。検討漏れと記入漏れを区別できるようにするため。
-5. 同じ構成の対象が複数ある場合は、対象ごとに章を複製する。
+| 分類 | テンプレート | 概要 | 備考 |
+| --- | --- | --- | --- |
+| 要件定義 | [Requirements Definition Document](documentation/requirements-definition-document.md) | 解決する課題、目的と成功指標、対象の利用者、リリースまでの計画を定め、何をなぜ作るのかを関係者が承認できるようにするテンプレート。 | なし |
+| 開発環境 | [Claude Codeの設定ファイル](claude/settings.json) | Claude Codeがプロジェクト全体へ適用する権限、フック、環境変数を定義するテンプレート。 |  |
