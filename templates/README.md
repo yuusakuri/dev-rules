@@ -4,11 +4,11 @@
 
 ## テンプレート一覧
 
-| テンプレート | 書く目的 | 準拠する規格 |
-| --- | --- | --- |
-| [Requirements Definition Document](documentation/requirements-definition-document.md) | 何を作り、なぜ作るのかを関係者と合意する。 | なし |
-| [Software Requirements Specification](documentation/software-requirements-specification.md) | 合意した内容を、実装と検証ができる要求へ落とし込む。 | IEEE 830<br>ISO/IEC/IEEE 29148 |
-| [Software Design Description](documentation/software-design-description.md) | その要求をどのような構造で実現するのかを示す。 | IEEE 1016<br>ISO/IEC/IEEE 42010 |
+| 分類 | テンプレート | 概要 | 備考 |
+| --- | --- | --- | --- |
+| 要件定義 | [Requirements Definition Document](documentation/requirements-definition-document.md) | 何を作り、なぜ作るのかを関係者と合意するためのテンプレート。 | なし |
+| 要件定義 | [Software Requirements Specification](documentation/software-requirements-specification.md) | 合意した内容を、実装と検証ができる要求へ落とし込むためのテンプレート。 | IEEE 830とISO/IEC/IEEE 29148に準拠する。 |
+| 設計 | [Software Design Description](documentation/software-design-description.md) | その要求をどのような構造で実現するのかを示すためのテンプレート。 | IEEE 1016とISO/IEC/IEEE 42010に準拠する。 |
 
 ## 取得方法
 
