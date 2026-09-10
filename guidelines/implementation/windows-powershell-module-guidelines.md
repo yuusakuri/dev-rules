@@ -854,11 +854,27 @@ Windows PowerShell 5.1 では、既定のDOM解析がInternet Explorerのコン�
 
 Internet Explorerを利用できない環境では、`-UseBasicParsing` を指定する。`-UseBasicParsing` を指定した場合はDOM解析を行わないため、HTML要素を解析できない。
 
-Windows PowerShell 5.1 では、`Invoke-WebRequest` によるファイルのダウンロードが進捗表示によって大幅に遅くなる場合があるため、`$ProgressPreference = 'SilentlyContinue'` を設定する。
+Windows PowerShell 5.1 では、`Invoke-WebRequest` によるファイルのダウンロードが進捗表示によって大幅に遅くなる場合があるため、プロセス全体の進捗表示設定を変更するより、コマンド個別に制御する。PowerShell 7.4 以降では `ProgressAction` が共通パラメーターとして利用可能であるため、影響範囲を正確に限定できる。
 
 ```powershell
+Invoke-WebRequest `
+    -UseBasicParsing `
+    -Uri $Uri `
+    -OutFile $Path `
+    -ProgressAction SilentlyContinue
+```
+
+Windows PowerShell 5.1 では `ProgressAction` が利用できないため、プロセスの進捗表示設定を一時的に変更する場合は、狭い範囲に限定する。
+
+```powershell
+$previousProgressPreference = $ProgressPreference
 $ProgressPreference = 'SilentlyContinue'
-Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Path
+try {
+    Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Path
+}
+finally {
+    $ProgressPreference = $previousProgressPreference
+}
 ```
 
 #### 15.1.3 System.Net.Http.HttpClient
