@@ -680,9 +680,9 @@ function Set-MyModuleMonitorInternal {
 
 ### 13.1 実行
 
-外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。確認した結果が `$null` の場合は、関数を続行できないため終了エラーにする。
+外部実行ファイルの存在確認には、モジュール固有の接頭辞を付けた `Test-<Prefix>Command` と `Assert-<Prefix>Command` を用意する。`Get-Command`、`-ErrorAction Ignore`、エラーメッセージはこの2つのヘルパーに閉じ込め、呼び出し側で同じ確認や `throw` を繰り返さない。`Assert-<Prefix>Command` で表現できる前提条件は、直接 `throw` せずアサート関数を呼び出す。PowerShellに標準搭載されるコマンドは、サポート環境を満たしていれば存在するため、製品コードで存在確認しない。
 
-外部実行ファイルは、基本的に呼び出し演算子 `&` でコマンド名を直接指定することで実行する。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
+外部実行ファイルは、基本的に呼び出し演算子 `&` でコマンド名を直接指定することで実行する。コマンド名を変数へ代入したり、`Get-Command` の結果の `Source` や `Path` を取り出して実行したりしない。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
 
 ### 13.2 引数
 
@@ -784,6 +784,8 @@ if (-not [MyModule.NativeMethods]::CloseHandle($Handle)) {
 | リテラルパス | ワイルドカードを入力仕様としない場合は `-LiteralPath` を使用する。 |
 | ワイルドカードパス | ワイルドカードを入力仕様とする場合だけ `-Path` を使用する。 |
 | パス結合 | `Join-Path` を使用する。 |
+
+`Test-Path` で存在だけを確認する場合は `-PathType` を指定しない。ファイルとディレクトリで処理を分ける必要がある場合だけ、`-PathType Leaf` または `-PathType Container` を指定する。パスの前提条件を関数の責務として検証する場合は、利用可能な `Assert-*` ヘルパーを優先する。
 
 ### 14.2 エンコーディング
 
@@ -1077,7 +1079,7 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 
 ## 20. 静的解析
 
-静的解析には PSScriptAnalyzer の `Invoke-ScriptAnalyzer` を使用し、リポジトリ直下の `PSScriptAnalyzerSettings.psd1` を使用する。既定ルールを使用し、重大度が `Error` または `Warning` の指摘を検査する。
+静的解析には PSScriptAnalyzer の `Invoke-ScriptAnalyzer` を使用し、リポジトリ直下の `PSScriptAnalyzerSettings.psd1` を使用する。既定ルールを使用し、重大度が `Error` または `Warning` の指摘を検査する。PSScriptAnalyzerで検出できない制御構造のネスト深度は、PSCodeHealthまたは同等の静的解析で検査する。条件分岐や反復処理のネストは3段までを基準とし、超える場合は早期returnまたは関数抽出を検討する。
 
 ```powershell
 @{
