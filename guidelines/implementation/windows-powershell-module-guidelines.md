@@ -1077,7 +1077,16 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 
 ## 20. 静的解析
 
-静的解析には PSScriptAnalyzer の `Invoke-ScriptAnalyzer` を使用し、リポジトリ直下の `PSScriptAnalyzerSettings.psd1` を使用する。既定ルールを使用し、重大度が `Error` または `Warning` の指摘を検査する。
+PowerShellコードの静的解析で使用するツールと検査対象を次の表に示す。
+
+| 目的 | 検査対象 | ツール |
+| --- | --- | --- |
+| PowerShellの構文エラーを防ぐ。 | 製品コード、テストコード、設定スクリプト。 | `System.Management.Automation.Language.Parser` の `ParseFile()` または `ParseInput()` |
+| 承認済み動詞、エイリアス、危険な構文、未使用要素などを検出する。 | 製品コード、テストコード。 | PSScriptAnalyzerの `Invoke-ScriptAnalyzer` と `PSScriptAnalyzerSettings.psd1` |
+| 関数の複雑度とネスト深度を抑える。 | PowerShellの関数。 | PSCodeHealthの `Invoke-PSCodeHealth` と `Test-PSCodeHealthCompliance` |
+| コードの書式を統一する。 | フォーマット対象のPowerShellファイル。 | PSScriptAnalyzerの `Invoke-Formatter` |
+
+次の設定例は、PSScriptAnalyzerで検査する重大度と除外ルールを指定する。
 
 ```powershell
 @{
@@ -1094,15 +1103,6 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 
 }
 ```
-
-| 項目 | 検査 |
-| --- | --- |
-| 承認済み動詞 | 公開関数を検査する。内部関数も同じ命名方針を適用する。 |
-| エイリアス | 正式なコマンド名を使用していることを検査する。 |
-| `ShouldProcess` | 状態変更を行う公開関数で `SupportsShouldProcess` が有効であり、公開関数または委譲先の内部関数で `ShouldProcess()` が1回だけ使用されていることを検査する。 |
-| 危険な構文 | `Invoke-Expression` などを検査する。 |
-| 未使用 | 未使用変数など PSScriptAnalyzer で検出可能なものを検査する。 |
-| BOM | PowerShellソースは UTF-8（BOMなし）かつ ASCII-only とするため、`PSUseBOMForUnicodeEncodedFile` は除外する。 |
 
 ## 21. テスト
 
@@ -1262,6 +1262,7 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 19. 構文チェック | [Parser Class (System.Management.Automation.Language) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.parser?view=powershellsdk-7.4.0) |
 | 20. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) |
 | 5. モジュールマニフェスト<br>20. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) |
+| 20. 静的解析 | [PSCodeHealth](https://pscodehealth.readthedocs.io/en/latest/) |
 | 21. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) |
 | 21. テスト | [Mocking with Pester \| Pester](https://pester.dev/docs/usage/mocking) |
 | 21. テスト | [Best practices for writing unit tests - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices) |
