@@ -966,6 +966,14 @@ Get-Content @parameters
 
 `$null` を比較する場合は `$null` を左辺に置く。
 
+### 16.9 出力の破棄
+
+コマンドの出力を意図的に破棄する場合は、`$null =` よりも `Out-Null` を優先してください。`Out-Null` は意図が明確で、パイプラインの標準的な手段として認識しやすくなります。
+
+```powershell
+Get-ChildItem -Path $Path | Out-Null
+```
+
 ---
 
 ## 17. ヘルプ
