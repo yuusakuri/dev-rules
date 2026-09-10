@@ -1077,7 +1077,16 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 
 ## 20. 静的解析
 
-静的解析は、コードの性質に応じたツールを表のとおりに実行する。各ツールはリポジトリでバージョンを固定し、CIでも同じ設定を使用する。
+PowerShellコードの静的解析で使用するツールと検査対象を次の表に示す。
+
+| 目的 | 検査対象 | ツール |
+| --- | --- | --- |
+| PowerShellの構文エラーを防ぐ。 | 製品コード、テストコード、設定スクリプト。 | `System.Management.Automation.Language.Parser` の `ParseFile()` または `ParseInput()` |
+| 承認済み動詞、エイリアス、危険な構文、未使用要素などを検出する。 | 製品コード、テストコード。 | PSScriptAnalyzerの `Invoke-ScriptAnalyzer` と `PSScriptAnalyzerSettings.psd1` |
+| 関数の複雑度とネスト深度を抑える。 | PowerShellの関数。 | PSCodeHealthの `Invoke-PSCodeHealth` と `Test-PSCodeHealthCompliance` |
+| コードの書式を統一する。 | フォーマット対象のPowerShellファイル。 | PSScriptAnalyzerの `Invoke-Formatter` |
+
+次の設定例は、PSScriptAnalyzerで検査する重大度と除外ルールを指定する。
 
 ```powershell
 @{
@@ -1094,15 +1103,6 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 
 }
 ```
-
-| 目的 | 検査対象 | ツール |
-| --- | --- | --- |
-| PowerShellの構文エラーを防ぐ。 | 製品コード、テストコード、設定スクリプト。 | `System.Management.Automation.Language.Parser` の `ParseFile()` または `ParseInput()` |
-| 承認済み動詞、エイリアス、危険な構文、未使用要素などを検出する。 | 製品コード、テストコード。 | PSScriptAnalyzerの `Invoke-ScriptAnalyzer` と `PSScriptAnalyzerSettings.psd1` |
-| 関数の複雑度とネスト深度を抑える。 | PowerShellの関数。 | PSCodeHealthの `Invoke-PSCodeHealth` と `Test-PSCodeHealthCompliance` |
-| コードの書式を統一する。 | フォーマット対象のPowerShellファイル。 | PSScriptAnalyzerの `Invoke-Formatter` |
-
-PSCodeHealthの既定値をそのまま採用せず、プロジェクトの規模と保守性に合わせて`MaximumNestingDepth`などのしきい値を設定する。しきい値を超えた場合は、早期returnまたは関数抽出を検討する。
 
 ## 21. テスト
 
