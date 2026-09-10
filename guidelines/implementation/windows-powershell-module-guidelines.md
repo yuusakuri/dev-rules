@@ -578,6 +578,8 @@ function Measure-MyModuleValue {
 
 `Write-Host` は使用しない。
 
+メッセージ出力では呼び出し元の設定を尊重する。`Write-Information`、`Write-Verbose`、`Write-Debug` などに `-InformationAction Continue` や `-Verbose` を指定して、利用者が非表示にしたメッセージを強制表示しない。常に表示する必要がある結果は、メッセージストリームではなく関数の戻り値として返す。
+
 ### 10.3 表示形式
 
 公開関数では、通常の戻り値を `Format-Table`、`Format-List` などの `Format-*` で加工しない。表示形式を定義する必要がある場合は `.format.ps1xml` を使用し、関数自体は元のオブジェクトを返す。
@@ -622,6 +624,12 @@ foreach ($pathItem in $Path) {
     # Processing
 }
 ```
+
+### 11.3 プリファレンス変数
+
+`$ErrorActionPreference` などのプリファレンス変数を、関数の広い範囲で変更して処理を通す設計にしない。呼び出し元の設定を維持し、必要なコマンドレットには `-ErrorAction` などの共通パラメーターを個別に指定する。
+
+Windows PowerShell 5.1で外部実行ファイルの標準エラーを出力として取得し、終了コードを直後に判定する必要がある場合だけ、呼び出し直前に元の値を保存して狭い `try/finally` の範囲で一時変更してよい。`finally` で必ず元の値へ戻し、変更範囲の外で処理を続ける。
 
 ---
 
@@ -705,6 +713,8 @@ Windows PowerShell 5.1 では、外部実行ファイルの非0終了コード�
 $output = & example.exe $arguments
 $exitCode = $LASTEXITCODE
 ```
+
+外部実行ファイルの診断出力をメッセージストリームへ転送する場合も、呼び出し元の表示設定を上書きしない。成功ストリームへ混在させず、`Write-Information` または `Write-Verbose` を使用して、利用者が必要なときだけ表示できるようにする。
 
 標準出力を公開 API の出力として扱う場合は、必要に応じて解析し、構造化オブジェクトへ変換する。
 
