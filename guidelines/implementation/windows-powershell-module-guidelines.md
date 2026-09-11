@@ -684,22 +684,12 @@ function Set-MyModuleMonitorInternal {
 
 外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。確認した結果が `$null` の場合は、関数を続行できないため終了エラーにする。
 
-実行方法は、外部実行ファイルの出力をデータとして扱うかどうかで選ぶ。
+外部実行ファイルの実行方法は、以下の表のように用途別で選ぶ。
 
-| 出力の扱い | 実行方法 |
-| --- | --- |
-| 解析して戻り値や判定に使う | 呼び出し演算子 `&` でコマンド名を直接指定し、出力を変数へ受ける。 |
-| 利用者へ経過を見せるだけで、後続の処理では使わない | `Start-Process` に `-NoNewWindow`、`-Wait`、`-PassThru` を指定する。 |
-
-別ウィンドウ、資格情報などのプロセス制御が必要な場合も `Start-Process` を使用する。
-
-`Start-Process` は PowerShell のストリームを経由せず、子プロセスの標準出力と標準エラーをコンソールへ直接渡す。外部実行ファイルの出力が関数の戻り値へ混入せず、PowerShell が出力を文字列オブジェクトへ変換しないため、出力量に応じた変換コストも生じない。
-
-`Start-Process` で実行した外部実行ファイルの出力は、呼び出し元がリダイレクト演算子で受け取れず、`Start-Transcript` にも記録されない。出力を記録する必要がある場合は `&` で実行し、出力を受け取る。
-
-`Start-Process` の既定の作業ディレクトリは起動する実行ファイルの場所であり、PowerShell の現在の場所ではない。作業ディレクトリに依存する外部実行ファイルには `-WorkingDirectory` を明示する。
-
-`Start-Process` はコマンドレットであるため、Unit Test では `Mock` で呼び出し境界を分離できる。
+| 実行方法 | 用途 | 出力先 | 既定の作業ディレクトリ | プロセス制御 |
+| --- | --- | --- | --- | --- |
+| 呼び出し演算子 `&` でコマンド名を直接指定する。 | 出力を解析して戻り値や判定に使う。 | PowerShell のストリーム。標準出力を変数へ受けられる。 | PowerShell の現在の場所。 | 指定できない。 |
+| `Start-Process` に `-NoNewWindow`、`-Wait`、`-PassThru` を指定する。作業ディレクトリに依存する外部実行ファイルには `-WorkingDirectory` を明示する。 | 利用者へ経過を見せるだけで、後続の処理では使わない。 | コンソール。PowerShell のストリームを経由しないため、関数の戻り値へ混入しない。 | 起動する実行ファイルの場所。 | 別ウィンドウ、資格情報などを指定できる。 |
 
 ### 13.2 引数
 
@@ -716,51 +706,37 @@ $arguments = @(
 
 ### 13.3 終了コードの判定
 
-Windows PowerShell 5.1 では、外部実行ファイルの非0終了コードを PowerShell の終了エラーとして扱わない。成否は、その実行ファイル固有の終了コード仕様に従って判定する。
+外部実行ファイルの終了コードは、以下の表のように実行方法に応じた方法で取得する。
 
-終了コードは、実行方法に応じた方法で取得する。
-
-| 実行方法 | 終了コードの取得 |
+| 実行方法 | 終了コードの取得方法 |
 | --- | --- |
-| `&` | 実行直後に `$LASTEXITCODE` を変数へ保存する。 |
+| `&` | `$LASTEXITCODE` を参照する。実行から参照までの間に、他の外部実行ファイルを呼び出さない。 |
 | `Start-Process -PassThru` | 戻り値の `ExitCode` を参照する。 |
-
-`$LASTEXITCODE` は直近に実行した外部実行ファイルの終了コードを保持する自動変数であり、次の外部実行ファイルを実行すると上書きされる。実行から保存までの間に、他の外部実行ファイルを呼び出さない。
 
 ```powershell
 $output = & example.exe $arguments
-$exitCode = $LASTEXITCODE
+if ($LASTEXITCODE -ne 0) {
+    throw "example.exe failed with exit code $LASTEXITCODE."
+}
 ```
-
-`Start-Process` の戻り値は個別のプロセスに対応するため、続けて別の外部実行ファイルを実行しても `ExitCode` は変わらない。
 
 ```powershell
 $process = Start-Process -FilePath 'example.exe' -ArgumentList $arguments -NoNewWindow -Wait -PassThru
-$exitCode = $process.ExitCode
+if ($process.ExitCode -ne 0) {
+    throw "example.exe failed with exit code $($process.ExitCode)."
+}
 ```
 
 ### 13.4 標準出力と標準エラーの扱い
 
-`&` で実行した外部実行ファイルの標準出力は成功ストリームへ、標準エラーはエラーストリームへ流れる。正常時にも標準エラーへ書く外部実行ファイルでは、利用者の画面へ意図しないエラーが表示されるため、標準エラーの扱いを呼び出しごとに明示する。
+`&` で実行した外部実行ファイルの標準出力は成功ストリームへ、標準エラーはエラーストリームへ流れる。標準出力を公開 API の出力として扱う場合は、必要に応じて解析し、構造化オブジェクトへ変換する。
 
-| 標準エラーの扱い | 記述 | 用途 |
+| 記述 | 用途 | 説明 |
 | --- | --- | --- |
-| 破棄する | `2>$null` | 正常時にも警告や進捗を標準エラーへ書く外部実行ファイルを呼び出す。 |
-| 標準出力とまとめて受け取る | `2>&1` | 失敗した理由を自前のエラーメッセージへ含める。 |
+| `2>$null` | 標準エラーの内容が不要な場合。 | 標準エラーを破棄する。 |
+| `2>&1` | 標準エラーの内容を利用したい場合。 | 標準出力と標準エラーをまとめて受け取る。 |
 
-`2>&1` で受け取った結果は、標準出力の行が `String`、標準エラーの行が `ErrorRecord` となる配列である。エラーメッセージへ含める場合は `ToString()` で文字列へそろえる。
-
-```powershell
-$output = & example.exe $arguments 2>&1 | ForEach-Object { $_.ToString() }
-$exitCode = $LASTEXITCODE
-
-if ($exitCode -ne 0) {
-    $detail = $output -join [System.Environment]::NewLine
-    throw "example.exe failed with exit code $exitCode. $detail"
-}
-```
-
-標準出力を公開 API の出力として扱う場合は、必要に応じて解析し、構造化オブジェクトへ変換する。外部実行ファイルの出力をそのまま成功ストリームへ流さない。
+`2>&1` で受け取った結果は、標準出力の行が `String`、標準エラーの行が `ErrorRecord` となる配列であるため、文字列として利用する場合は `ToString()` で文字列に変換する。
 
 ### 13.5 標準入出力の文字コード
 
