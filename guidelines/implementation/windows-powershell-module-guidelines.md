@@ -578,6 +578,8 @@ function Measure-MyModuleValue {
 
 `Write-Host` は使用しない。
 
+メッセージを表示するかどうかは呼び出し元の設定に従い、`-InformationAction Continue` や `-Verbose` を指定して、利用者が非表示にしたメッセージを強制表示しない。外部実行ファイルの診断出力をメッセージストリームへ転送する場合も、呼び出し元の表示設定を上書きしない。
+
 ### 10.3 表示形式
 
 公開関数では、通常の戻り値を `Format-Table`、`Format-List` などの `Format-*` で加工しない。表示形式を定義する必要がある場合は `.format.ps1xml` を使用し、関数自体は元のオブジェクトを返す。
@@ -682,7 +684,22 @@ function Set-MyModuleMonitorInternal {
 
 外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。確認した結果が `$null` の場合は、関数を続行できないため終了エラーにする。
 
-外部実行ファイルは、基本的に呼び出し演算子 `&` でコマンド名を直接指定することで実行する。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
+実行方法は、外部実行ファイルの出力をデータとして扱うかどうかで選ぶ。
+
+| 出力の扱い | 実行方法 |
+| --- | --- |
+| 解析して戻り値や判定に使う | 呼び出し演算子 `&` でコマンド名を直接指定し、出力を変数へ受ける。 |
+| 利用者へ経過を見せるだけで、後続の処理では使わない | `Start-Process` に `-NoNewWindow`、`-Wait`、`-PassThru` を指定する。 |
+
+別ウィンドウ、資格情報などのプロセス制御が必要な場合も `Start-Process` を使用する。
+
+`Start-Process` は PowerShell のストリームを経由せず、子プロセスの標準出力と標準エラーをコンソールへ直接渡す。外部実行ファイルの出力が関数の戻り値へ混入せず、PowerShell が出力を文字列オブジェクトへ変換しないため、出力量に応じた変換コストも生じない。
+
+`Start-Process` で実行した外部実行ファイルの出力は、呼び出し元がリダイレクト演算子で受け取れず、`Start-Transcript` にも記録されない。出力を記録する必要がある場合は `&` で実行し、出力を受け取る。
+
+`Start-Process` の既定の作業ディレクトリは起動する実行ファイルの場所であり、PowerShell の現在の場所ではない。作業ディレクトリに依存する外部実行ファイルには `-WorkingDirectory` を明示する。
+
+`Start-Process` はコマンドレットであるため、Unit Test では `Mock` で呼び出し境界を分離できる。
 
 ### 13.2 引数
 
@@ -697,18 +714,55 @@ $arguments = @(
 & example.exe $arguments
 ```
 
-### 13.3 終了コードと出力
+### 13.3 終了コードの判定
 
-Windows PowerShell 5.1 では、外部実行ファイルの非0終了コードを PowerShell の終了エラーとして扱わない。外部実行ファイルの実行直後に `$LASTEXITCODE` を保存し、成否はその実行ファイル固有の終了コード仕様に従って判定する。
+Windows PowerShell 5.1 では、外部実行ファイルの非0終了コードを PowerShell の終了エラーとして扱わない。成否は、その実行ファイル固有の終了コード仕様に従って判定する。
+
+終了コードは、実行方法に応じた方法で取得する。
+
+| 実行方法 | 終了コードの取得 |
+| --- | --- |
+| `&` | 実行直後に `$LASTEXITCODE` を変数へ保存する。 |
+| `Start-Process -PassThru` | 戻り値の `ExitCode` を参照する。 |
+
+`$LASTEXITCODE` は直近に実行した外部実行ファイルの終了コードを保持する自動変数であり、次の外部実行ファイルを実行すると上書きされる。実行から保存までの間に、他の外部実行ファイルを呼び出さない。
 
 ```powershell
 $output = & example.exe $arguments
 $exitCode = $LASTEXITCODE
 ```
 
-標準出力を公開 API の出力として扱う場合は、必要に応じて解析し、構造化オブジェクトへ変換する。
+`Start-Process` の戻り値は個別のプロセスに対応するため、続けて別の外部実行ファイルを実行しても `ExitCode` は変わらない。
 
-### 13.4 標準入出力の文字コード
+```powershell
+$process = Start-Process -FilePath 'example.exe' -ArgumentList $arguments -NoNewWindow -Wait -PassThru
+$exitCode = $process.ExitCode
+```
+
+### 13.4 標準出力と標準エラーの扱い
+
+`&` で実行した外部実行ファイルの標準出力は成功ストリームへ、標準エラーはエラーストリームへ流れる。正常時にも標準エラーへ書く外部実行ファイルでは、利用者の画面へ意図しないエラーが表示されるため、標準エラーの扱いを呼び出しごとに明示する。
+
+| 標準エラーの扱い | 記述 | 用途 |
+| --- | --- | --- |
+| 破棄する | `2>$null` | 正常時にも警告や進捗を標準エラーへ書く外部実行ファイルを呼び出す。 |
+| 標準出力とまとめて受け取る | `2>&1` | 失敗した理由を自前のエラーメッセージへ含める。 |
+
+`2>&1` で受け取った結果は、標準出力の行が `String`、標準エラーの行が `ErrorRecord` となる配列である。エラーメッセージへ含める場合は `ToString()` で文字列へそろえる。
+
+```powershell
+$output = & example.exe $arguments 2>&1 | ForEach-Object { $_.ToString() }
+$exitCode = $LASTEXITCODE
+
+if ($exitCode -ne 0) {
+    $detail = $output -join [System.Environment]::NewLine
+    throw "example.exe failed with exit code $exitCode. $detail"
+}
+```
+
+標準出力を公開 API の出力として扱う場合は、必要に応じて解析し、構造化オブジェクトへ変換する。外部実行ファイルの出力をそのまま成功ストリームへ流さない。
+
+### 13.5 標準入出力の文字コード
 
 Windows PowerShell 5.1 では、PowerShell と外部実行ファイルの間で使用される文字コードが UTF-8 に統一されていない。
 
@@ -722,11 +776,11 @@ $OutputEncoding = $utf8
 $output = & example.exe $arguments
 ```
 
-### 13.5 C#アセンブリによるWindows API呼び出し
+### 13.6 C#アセンブリによるWindows API呼び出し
 
 PowerShell や .NET Framework が必要な Windows API を直接公開していない場合は、P/Invoke を C# プロジェクトへ実装し、ビルド済み DLL を PowerShell モジュールから使用する。保守対象となる C# コードは `.ps1` 内の `Add-Type -TypeDefinition` へ埋め込まず、`.csproj` に属する `.cs` ファイルとして管理する。
 
-#### 13.5.1 C#プロジェクト
+#### 13.6.1 C#プロジェクト
 
 C#プロジェクトには少なくとも次の設定を行う。
 
@@ -745,7 +799,7 @@ C#プロジェクトには少なくとも次の設定を行う。
 
 `TargetFramework` は、モジュールが対象とする Windows PowerShell 5.1 が読み込めるフレームワークに合わせて決定する。
 
-#### 13.5.2 Windows API呼び出し
+#### 13.6.2 Windows API呼び出し
 
 P/Invoke の型はモジュール固有の名前空間へ配置する。`StructLayout`、`DllImport`、引数型、戻り値型を明示し、戻り値のステータスを適切な終了エラーへ変換する。
 
@@ -769,9 +823,9 @@ if (-not [MyModule.NativeMethods]::CloseHandle($Handle)) {
 
 状態変更関数では `ShouldProcess()` の承認後に Windows API 呼び出しを行う。Unit Test では呼び出し境界を `Mock` し、`-WhatIf` を指定した呼び出しで Windows API が呼び出されていないことを確認する。
 
-### 13.6 関数設計の原則
+### 13.7 関数の責務
 
-原則として、外部コマンド呼び出しそのものを共通化するだけの関数定義は避け、機能責務単位で定義してください。外部コマンドを複数呼び出す場合、それらを単純にラップする関数よりも、実行したい機能を明確に表現した関数設計を優先します。これにより、利用者にとって意図が明確なAPI、テストしやすい設計、将来の保守性が向上します。
+外部実行ファイルの呼び出しをそのまま包むだけの関数は定義せず、機能の責務ごとに関数を定義する。呼び出し方をそろえるためだけの関数は、利用者から見て何を行うのかが分からず、Unit Test で検証する振る舞いも持たない。
 
 ---
 
@@ -984,7 +1038,7 @@ Get-Content @parameters
 
 ### 16.9 出力の破棄
 
-コマンドの出力を意図的に破棄する場合は、`$null =` よりも `Out-Null` を優先してください。`Out-Null` は意図が明確で、パイプラインの標準的な手段として認識しやすくなります。
+コマンドの出力を意図的に破棄する場合は、`$null` への代入ではなく `Out-Null` を使用する。パイプラインの終端へ置くことで、出力を破棄する意図が読み取れる。
 
 ```powershell
 Get-ChildItem -Path $Path | Out-Null
