@@ -4,6 +4,7 @@
 
 1. [概要](#1-概要)
 2. [開発フロー](#2-開発フロー)
+3. [参考資料](#3-参考資料)
 
 ---
 
@@ -19,7 +20,7 @@ PR マージ前にフォーマットチェック、静的解析 / lint、全テ�
 
 ### ブランチ戦略：GitHub Flow
 
-本プロジェクトは [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow) を採用する。`main` は常にデプロイ可能な状態を保つ。直接プッシュは禁止。PR は最低1名のレビュー承認が必須。Squash merge で履歴を線形に保つ。
+本プロジェクトは [GitHub フロー](https://docs.github.com/ja/get-started/using-github/github-flow) を採用する。`main` は常にデプロイ可能な状態を保つ。直接プッシュは禁止。PR は最低1名のレビュー承認が必須。
 
 ```
 main
@@ -34,7 +35,7 @@ main
 
 ### コミットメッセージ：Conventional Commits
 
-タイトルは1行50文字以内とし、[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) の形式に従う。
+タイトルは1行50文字以内とし、[Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/) の形式に従う。
 
 ```
 feat(order): add place order use case
@@ -54,3 +55,26 @@ PRへ変更を追加したときは、タイトルと説明も変更後の内容
 ### コミットのamend
 
 未マージの既存コミットのタイトルで説明できる変更は、そのコミットへamendする。関係のない変更は、新規コミットとして作成する。
+
+### マージ方式
+
+マージ方式は、以下の表のように用途別で選ぶ。
+
+| マージ方式 | 用途 |
+| --- | --- |
+| Merge commit | 完全な履歴を残す。個々のコミットがそれ単体で意味を持つ。 |
+| Squash and merge | PRが1つの論理的な変更を表す。細かい修正コミットが多い。 |
+| Rebase and merge | 線形な履歴を保つ。コミットが既に整理されている。 |
+
+本プロジェクトはSquash and mergeを使用し、1つのPRを1つの論理的な変更として`main`へ記録する。
+
+---
+
+## 3. 参考資料
+
+| 本書の章 | 参考資料 | 説明 |
+| --- | --- | --- |
+| 2. 開発フロー | [GitHub フロー - GitHubドキュメント](https://docs.github.com/ja/get-started/using-github/github-flow) | ブランチの作成からPRのマージまでの開発の流れを示す。 |
+| 2. 開発フロー | [Conventional Branch — A Git Branch Naming Convention](https://conventional-branch.github.io/) | ブランチ名の接頭辞と構成を定義する。 |
+| 2. 開発フロー | [Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/) | コミットメッセージの型、スコープ、本文の形式を定義する。 |
+| 2. 開発フロー | [プル要求のマージ - GitHubドキュメント](https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges) | Merge commit、Squash and merge、Rebase and mergeが残す履歴と、それぞれを選ぶ場合を示す。 |
