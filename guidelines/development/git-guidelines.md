@@ -40,9 +40,8 @@ main
 ```
 feat(order): add place order use case
 fix(auth): correct token expiration check
-refactor(order): extract validated value types
+refactor(order): extract use-case extraction
 test(order): add repository integration tests
-docs(readme): update setup instructions
 chore(deps): upgrade dependency version
 ```
 
@@ -65,8 +64,6 @@ PRへ変更を追加したときは、タイトルと説明も変更後の内容
 | Merge commit | 完全な履歴を残す。個々のコミットがそれ単体で意味を持つ。 |
 | Squash and merge | PRが1つの論理的な変更を表す。細かい修正コミットが多い。 |
 | Rebase and merge | 線形な履歴を保つ。コミットが既に整理されている。 |
-
-本プロジェクトはSquash and mergeを使用し、1つのPRを1つの論理的な変更として`main`へ記録する。
 
 ---
 
