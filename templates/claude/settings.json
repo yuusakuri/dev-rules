@@ -4,5 +4,9 @@
     "deny": [
       "mcp__*__send_later"
     ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
   }
 }
