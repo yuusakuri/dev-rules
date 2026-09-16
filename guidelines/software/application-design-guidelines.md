@@ -29,45 +29,25 @@
 | --- | --- | --- |
 | `apps/<app-name>/` | [`app/`](https://github.com/android/nowinandroid/tree/main/app) | 実行単位ごとのアプリケーション。`<app-name>`は任意のアプリ名を指定する。`<project-name>-<responsibility>`を推奨する。 |
 | `apps/<app-name>/config/` | [`config/`](https://github.com/juspay/hyperswitch/tree/main/config) | アプリケーションが読み込む設定値をまとめる必要がある場合だけ使用する。ビルドツールの設定ファイルは、そのツールが期待する位置へ置く。 |
-| `apps/<app-name>/<generated-dir>/` | [`target/`](https://doc.rust-lang.org/cargo/guide/build-cache.html) | ビルドやコード生成による生成物。ソースコードと同じディレクトリへ混在させない。 |
 
 ### ソース構成
 
-アプリケーションのソース構成の例として、Feature単位でまとめるFeature First構成を示す。Featureは、一つの利用者目的または業務能力を表す。
+フォルダとモジュールは責務で分け、その責務が提供する内容を表す名前を付けてソースルート直下へ並べる。責務の境界は、外部資源、機能、概念の順に確認する。分類のためだけの階層を挟まずに責務の名前を直接並べると、読み手は目的のモジュールを名前だけで選べる。
 
-Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念や外部システムの実装も、それを最も強く所有するFeatureへ配置し、そのFeatureの公開APIを通じて参照する。
+`<technical-resource>`には、`postgres`、`stripe`、`s3`、`sentry`のような製品、サービス、プロトコルの名前、または`logging`、`clock`のような技術機能の名前を使用する。
 
-`<technical-resource>`には、`postgres`、`stripe`、`s3`、`sentry`のような製品、サービス、プロトコルの名前、または`logging`のような技術機能の名前を使用する。Featureの型に依存しない構築処理は`infra/`へ、Featureの型に依存する実装はそのFeatureの下へ置く。
+Featureの名前には、`user`のように業務上の対象だけを表す語を使わず、`auth`、`search`、`checkout`のように何を提供するかが分かる語を使う。複数のFeatureで使う業務概念や外部システムの実装は、一つのFeatureが強く所有する場合はそのFeatureへ置き、公開APIを通じて参照する。どのFeatureにも寄らない場合は、それ自体を一つの責務として分ける。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `<source-root>/app/` | [`routing/`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | ルーティングと、アプリケーション全体の実行経路との接続を配置する。 |
-| `<source-root>/core/<name>/` | [`core/errors`](https://github.com/juspay/hyperswitch/blob/main/crates/common_utils/src/errors.rs)、[`core/clock`](https://github.com/zed-industries/zed/tree/main/crates/clock/src)、[`core/id`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 複数のFeatureが共有する基盤を、対象ごとにまとめて配置する。時刻、乱数、識別子の発番のように通信を伴わない供給は、契約と実装をここへ置く。 |
-| `<source-root>/infra/<technical-resource>/` | [hyperswitchの`router_env/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[sqlxの`pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool)、[hyperswitchの`storage_impl/database`](https://github.com/juspay/hyperswitch/tree/main/crates/storage_impl/src/database)、[hyperswitchの`redis_interface`](https://github.com/juspay/hyperswitch/tree/main/crates/redis_interface) | ロガー、DB接続プール、キャッシュ接続のように、Featureの型や業務ルールに依存しない構築処理を配置し、起動点から呼び出す。同じ技術資源で接続先が複数ある場合もディレクトリは一つとし、接続先ごとの違いは起動点で設定を与えて生成し分ける。 |
-| `<source-root>/features/<feature>/` | [`feature`](https://developer.android.com/topic/modularization/patterns) | Featureに必要な型、処理、状態、境界、外部接続を配置する。HTTP、RPC、メッセージ、CLIなど外部からの要求を受け取る処理は、業務ロジックを持たず、Feature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/presentation/` | [`presentation`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用し、業務ロジックはFeature内の処理へ委譲する。 |
-| `<source-root>/features/<feature>/<technical-resource>/` | [OpenDALの`github/`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql/`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`postgresql/`](https://github.com/apache/opendal/tree/main/core/services/postgresql)、[`s3/`](https://github.com/apache/opendal/tree/main/core/services/s3)、[Vectorの`postgres/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/postgres)、[`aws_s3/`](https://github.com/vectordotdev/vector/tree/master/src/sinks/aws_s3) | Featureの型に依存する、外部システム、サービス、データストアの実装と外部データ形式を配置する。永続化の実装もここへ置く。 |
-| `<source-root>/ui/` | [`ui/`](https://docs.flutter.dev/app-architecture/case-study) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。アプリケーションが決める文言は引数で受け取り、部品自身が生成する文言だけ多言語対応とロケール書式を参照する。 |
-| `<source-root>/<localization>/` | [`l10n`](https://docs.flutter.dev/ui/internationalization) | 言語ごとの翻訳データと表示言語の選択を配置する。翻訳データ以外のコードと生成物を混在させない。 |
-| `<source-root>/locale_format/` | [`NumberFormat`](https://developer.android.com/reference/android/icu/text/NumberFormat) | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
-
-### 分割の単位
-
-処理が増えて一つのファイルで追いにくくなったら、対象ごとのモジュールへ分ける。複数の実行単位から使うようになったら、パッケージとして切り出す。
-
-### 依存の向き
-
-| 役割 | 依存してよい相手 |
-| --- | --- |
-| 起動と構成（起動点、`app/`） | 各Featureの公開API、共有基盤、技術基盤、共有UI部品、多言語対応、ロケール書式 |
-| Featureの表示（`features/<feature>/presentation/`） | 同じFeatureの処理と型、別Featureの公開API、共有基盤、共有UI部品、多言語対応、ロケール書式 |
-| Featureの受け口（`features/<feature>/`） | 同じFeatureの処理と型、共有基盤 |
-| Featureの処理（`features/<feature>/`） | 同じFeatureの型、同じFeatureの外部依存の契約、別Featureの公開API、共有基盤 |
-| Featureの外部依存の実装（`features/<feature>/<technical-resource>/`） | 同じFeatureの型、対応する契約、共有基盤、技術基盤、外部SDK、外部データ形式 |
-| 共有基盤（`core/<name>/`） | 標準ライブラリ、基盤の表現に必要な外部パッケージ |
-| 技術基盤（`infra/<technical-resource>/`） | 技術基盤の外部SDKとライブラリ |
-| 共有UI部品（`ui/`） | UIフレームワーク、多言語対応、ロケール書式 |
-| 多言語対応、ロケール書式（`<localization>/`、`locale_format/`） | 標準ライブラリ、翻訳と書式のライブラリ |
+| `<source-root>/<technical-resource>/` | [stdの`net`](https://github.com/rust-lang/rust/tree/master/library/std/src/net)、[hyperswitchの`router_env/logger`](https://github.com/juspay/hyperswitch/tree/main/crates/router_env/src/logger)、[sqlxの`pool`](https://github.com/launchbadge/sqlx/tree/main/sqlx-core/src/pool)、[hyperswitchの`redis_interface`](https://github.com/juspay/hyperswitch/tree/main/crates/redis_interface) | ロガー、DB接続プール、キャッシュ接続、現在時刻の取得のように、Featureの型や業務ルールに依存しない構築処理と供給を配置し、起動点から呼び出す。同じ技術資源で接続先が複数ある場合もディレクトリは一つとし、接続先ごとの違いは起動点で設定を与えて生成し分ける。 |
+| `<source-root>/<feature>/` | [Zedの`crates/search`](https://github.com/zed-industries/zed/tree/main/crates/search) | Featureに必要な型、処理、状態、境界、外部接続を配置する。HTTP、RPC、メッセージ、CLIなど外部からの要求を受け取る処理も、そのFeatureへ置く。 |
+| `<source-root>/<feature>/presentation/` | [mihonの`presentation-core`](https://github.com/mihonapp/mihon/tree/main/presentation-core) | FeatureがUIを描画する境界と、表示状態の制御を配置する。UIを持つFeatureだけで使用する。 |
+| `<source-root>/<concept>/` | [Rustの`core/src/time.rs`](https://github.com/rust-lang/rust/blob/master/library/core/src/time.rs)、[qdrantの`id_tracker`](https://github.com/qdrant/qdrant/tree/master/lib/segment/src/id_tracker) | 実行環境にも特定のFeatureにも依存しない型とロジックを、概念ごとに配置する。 |
+| `<source-root>/ui/` | [compass_appの`ui/core/ui`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/ui/core/ui) | 複数のFeatureで使用し、業務上の判断を持たないUI部品を配置する。UIを持つ実行単位だけで使用する。アプリケーションが決める文言は引数で受け取り、部品自身が生成する文言だけ多言語対応とロケール書式を参照する。 |
+| `<source-root>/<localization>/` | [mihonの`i18n`](https://github.com/mihonapp/mihon/tree/main/i18n) | 言語ごとの翻訳データと表示言語の選択を配置する。 |
+| `<source-root>/locale_format/` | [intlの`lib/src/intl`](https://github.com/dart-lang/i18n/tree/main/pkgs/intl/lib/src/intl) | 数値、日付、時刻、通貨、単位など、ロケールによって表記が変わる値の書式処理を配置する。 |
 
 ---
 
@@ -122,8 +102,11 @@ Shell スクリプト以外の CLI に適用する。
 | 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を確認する。 |
 | 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を確認する。 |
 | 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | モジュールへ分ける時期と、パッケージへ切り出す時期を確認する。 |
-| 2. フォルダ構成 | [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) | 依存の向きを内側へそろえる規則を確認する。 |
-| 2. フォルダ構成 | [Guide to app architecture \| Android Developers](https://developer.android.com/topic/architecture) | 層の間で依存の向きを一方向に保つ構成を確認する。 |
+| 2. フォルダ構成 | [core - Rust](https://doc.rust-lang.org/core/) | 実行環境に依存しない型とロジックが扱う範囲と、ヒープ確保、並行処理、I/Oを含めない理由を確認する。 |
+| 2. フォルダ構成 | [rust/library/std/src at master · rust-lang/rust](https://github.com/rust-lang/rust/tree/master/library/std/src) | 提供する機能の名前をそのままモジュール名とし、抽象的な名前の階層を挟まない配置を確認する。 |
+| 2. フォルダ構成 | [一般的なモジュール化のパターン \| Android Developers](https://developer.android.com/topic/modularization/patterns?hl=ja) | 機能を単位としてモジュールへ分ける考え方と、その粒度の決め方を確認する。 |
+| 2. フォルダ構成 | [Internationalizing Flutter apps](https://docs.flutter.dev/ui/internationalization) | 翻訳データの配置と、表示言語を選ぶ仕組みを確認する。 |
+| 2. フォルダ構成 | [NumberFormat \| Android Developers](https://developer.android.com/reference/android/icu/text/NumberFormat) | ロケールによって表記が変わる値を、書式処理として分けて扱う方法を確認する。 |
 | 2. フォルダ構成 | [Flutterの`TextField`](https://github.com/flutter/flutter/blob/540a2711c83a08d5c40443058448782e4dfe34aa/packages/flutter/lib/src/material/text_field.dart#L1253)、[compass_appの`ErrorIndicator`](https://github.com/flutter/samples/blob/463e365e4842f252ffab9c6198594a504d69469f/compass_app/app/lib/ui/core/ui/error_indicator.dart#L10-L18) | 共有UI部品と文言の関係を確認する。`TextField`は文字数カウンタなど部品自身が生成する文言を`MaterialLocalizations`から取り、`ErrorIndicator`は表示する`title`と`label`を引数で受け取る。 |
 | 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みを分離する条件と構成を確認する。 |
 | 4. セキュリティ | [OWASP Application Security Verification Standard (ASVS)](https://owasp.org/www-project-application-security-verification-standard/) | アプリケーションが満たす検証レベルと、機能ごとのセキュリティ要求を確認する。 |
