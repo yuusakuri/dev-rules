@@ -24,6 +24,8 @@
 
 [アプリケーション設計ガイドライン](../software/application-design-guidelines.md)のソース構成をソースルート内のモジュールとして表す。次の表では、RustとCargoに固有の配置だけを示す。
 
+crateは、コンパイル単位または依存境界を独立して保証する必要がある場合に分ける。`no_std`環境や別の実行環境への対応、独立した公開と再利用、依存できるライブラリの制限、複数の実行単位からの共有がこれに当たる。標準ライブラリがcoreクレートとstdクレートに分かれているのも、標準ライブラリなしで使える範囲を依存境界として固定するためである。
+
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `<crate>/src/lib.rs` | [Tokioの`tokio/src/lib.rs`](https://github.com/tokio-rs/tokio/blob/master/tokio/src/lib.rs) | ライブラリcrateのルート。公開するモジュールと再公開するAPIを定義する。 |
@@ -86,5 +88,7 @@ let using_generic = Router::new()
 | 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
 | 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
 | 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的なファイルとフォルダの配置を確認する。 |
+| 2. フォルダ構成 | [core - Rust](https://doc.rust-lang.org/core/) | coreクレートが、標準ライブラリにも実行環境にも依存しない基盤として定義されていることを確認する。 |
+| 2. フォルダ構成 | [rust/library/std/src at master · rust-lang/rust](https://github.com/rust-lang/rust/tree/master/library/std/src) | 提供する機能の名前をそのままモジュール名とし、抽象的な名前の階層を挟まない配置を確認する。 |
 | 3. ディスパッチ | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L149) | ジェネリクスで実装型を保持する構成と、trait objectで実装型を隠す構成を示す。 |
 | 4. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの実行方法とlintの設定を確認する。 |
