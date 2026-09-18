@@ -21,6 +21,7 @@
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
 | 文書 | [ドキュメント作成ガイドライン](documentation/document-guidelines.md) | 文書の記述方法と根拠の扱いを定めるガイドライン。 | なし |
 | 文書 | [仕様書作成ガイドライン](documentation/specification-guidelines.md) | 仕様書作成のガイドライン。 | なし |
+| 文書 | [規格・標準文書作成ガイドライン](documentation/standard-specification-guidelines.md) | 分野を限定しない規格・標準文書の構成、規定の表現、定義及び参照方法を定めるガイドライン。 | なし |
 | 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載内容と見出しの構成を定めるガイドライン。 | リポジトリガイドライン |
 
