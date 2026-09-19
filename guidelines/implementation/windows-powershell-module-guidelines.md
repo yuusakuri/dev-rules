@@ -682,18 +682,21 @@ function Set-MyModuleMonitorInternal {
 
 ### 13.1 実行
 
-外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。出力が `$null` の場合は、コマンドが利用できない。
+外部実行ファイルの存在確認が必要な場合は `Get-Command -CommandType Application` を使用する。実行方法は、引数の忠実性、出力、プロセス制御の要件から選ぶ。
 
-外部実行ファイルの実行方法は、以下の表のように用途別で選ぶ。
+| 実行方法 | 適する用途 | 注意点 |
+| --- | --- | --- |
+| 呼び出し演算子 `&` | PowerShell のストリームへ出力を流す単純な呼び出し。 | Windows PowerShell 5.1 の引数変換、標準エラーの扱いを確認する。 |
+| `System.Diagnostics.Process` と `ProcessStartInfo` | 引数の境界、標準出力と標準エラー、終了コードを明確に扱う呼び出し。 | `.exe` の引数と `.cmd` / `.bat` の引数は異なる規則で組み立てる。両方のストリームを捕捉する場合は、デッドロックを避けるため並行して読み取る。 |
+| `Start-Process` | 昇格、シェルによる関連付け、非同期起動、起動後のプロセス監視が必要な場合。 | 引数の境界が重要な用途で `-ArgumentList` の要素が自動的に個別引用されると仮定しない。作業ディレクトリが必要なら明示する。 |
 
-| 実行方法 | 用途 | 出力先 | 既定の作業ディレクトリ | プロセス制御 |
-| --- | --- | --- | --- | --- |
-| 呼び出し演算子 `&` でコマンド名を直接指定する。 | 出力を解析して戻り値や判定に使う。 | PowerShell のストリーム。標準出力を変数へ受けられる。 | PowerShell の現在の場所。 | 指定できない。 |
-| `Start-Process` に `-NoNewWindow`、`-Wait`、`-PassThru` を指定する。作業ディレクトリに依存する外部実行ファイルには `-WorkingDirectory` を明示する。 | 出力を処理せず、コンソールに表示する。 | コンソール。PowerShell のストリームを経由しないため、関数の戻り値へ混入しない。 | 起動する実行ファイルの場所。 | 別ウィンドウ、資格情報などを指定できる。 |
+複数の関数で同じ外部コマンド実行処理を使う場合は、引数、出力、終了コードの扱いを共通化する。ただし、単一の外部コマンドを同じ引数で呼ぶだけの関数は設けない。
 
 ### 13.2 引数
 
-コマンドと引数は分離し、引数は配列で管理する。
+コマンドと引数を分離し、引数は値ごとの配列で管理する。`ProcessStartInfo.Arguments` へ渡す際は、対象プログラムの引数解析規則に従って値を引用する。通常の Windows 実行ファイルで広く使われる規則では、引用符の直前と引用された引数の末尾にあるバックスラッシュを適切にエスケープする。ただし、実行ファイルが独自の引数解析を行う場合は、その仕様を確認する。
+
+`.cmd` / `.bat` は `cmd.exe` の解析を通る。通常の実行ファイル向けの引数引用をそのまま適用せず、値が正確かつ安全に渡せることを確認する。`cmd.exe` に対して安全に表現できない値は、変換したつもりで実行せず明示的に拒否する。環境変数に値を置くだけでは、任意の既存バッチの `%1` などの位置引数にはならない。
 
 ```powershell
 $arguments = @(
@@ -706,24 +709,18 @@ $arguments = @(
 
 ### 13.3 終了コードの判定
 
-外部実行ファイルの終了コードは、以下の表のように実行方法に応じた方法で取得する。
+外部実行ファイルの終了コードは、以下の表のように実行方法に応じた方法で取得する。非ゼロの終了コードを成功と扱う場合は、そのコマンドで許容する値を明示する。
 
 | 実行方法 | 終了コードの取得方法 |
 | --- | --- |
 | `&` | `$LASTEXITCODE` を参照する。実行から参照までの間に、他の外部実行ファイルを呼び出さない。 |
 | `Start-Process -PassThru` | 戻り値の `ExitCode` を参照する。 |
+| `System.Diagnostics.Process` | `WaitForExit()` の後に `ExitCode` を参照する。 |
 
 ```powershell
 $output = & example.exe $arguments
 if ($LASTEXITCODE -ne 0) {
     throw "example.exe failed with exit code $LASTEXITCODE."
-}
-```
-
-```powershell
-$process = Start-Process -FilePath 'example.exe' -ArgumentList $arguments -NoNewWindow -Wait -PassThru
-if ($process.ExitCode -ne 0) {
-    throw "example.exe failed with exit code $($process.ExitCode)."
 }
 ```
 
@@ -737,6 +734,8 @@ if ($process.ExitCode -ne 0) {
 | `2>&1` | 標準エラーの内容を利用したい場合。 | 標準出力と標準エラーをまとめて受け取る。 |
 
 `2>&1` で受け取った結果は、標準出力の行が `String`、標準エラーの行が `ErrorRecord` となる配列であるため、文字列として利用する場合は `ToString()` で文字列に変換する。
+
+`ProcessStartInfo` で出力を捕捉する場合は、`RedirectStandardOutput` と `RedirectStandardError` をそれぞれ指定し、実行結果では両者を区別する。捕捉しない場合は、利用者が実行中の出力を確認できるようにする。
 
 ### 13.5 標準入出力の文字コード
 
@@ -1293,6 +1292,9 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 13. 外部呼び出し | [about_Automatic_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1) | `$LASTEXITCODE`、`$PWD`、`$_` などの自動変数を定義する。 |
 | 13. 外部呼び出し | [Start-Process (Microsoft.PowerShell.Management) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-process?view=powershell-5.1) | `-NoNewWindow`、`-Wait`、`-PassThru`、`-WorkingDirectory` の動作と、戻り値のプロセスオブジェクトを示す。 |
 | 13. 外部呼び出し | [about_Redirection - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection?view=powershell-5.1) | `2>$null` と `2>&1` によるストリームのリダイレクトを定義する。 |
+| 13. 外部呼び出し | [CommandLineToArgvW function (shellapi.h) - Win32 apps \| Microsoft Learn](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-commandlinetoargvw) | Windows で広く使われる引用符とバックスラッシュの解析規則を示す。 |
+| 13. 外部呼び出し | [cmd \| Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cmd) | `cmd.exe` のメタ文字、環境変数展開、遅延展開の規則を示す。 |
+| 13. 外部呼び出し | [ProcessStartInfo.RedirectStandardOutput Property (System.Diagnostics) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.redirectstandardoutput?view=netframework-4.8.1) | 標準出力と標準エラーを同時に読み取る際のデッドロックを説明する。 |
 | 13. 外部呼び出し | [about_Preference_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1) | `$OutputEncoding`、`$ProgressPreference` などのプリファレンス変数を定義する。 |
 | 13. 外部呼び出し | [Add-Type (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/add-type?view=powershell-5.1) | アセンブリと型を読み込む方法を示す。 |
 | 14. ファイル | [about_Path_Syntax - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_path_syntax?view=powershell-5.1) | `-Path` と `-LiteralPath` が解釈するパスの違いを示す。 |
