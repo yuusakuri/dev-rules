@@ -609,19 +609,25 @@ $json = $value | ConvertTo-Json -Depth 10
 
 ### 11.2 エラーの捕捉と伝播
 
-下位コマンドレットのエラーを現在の処理で捕捉する場合は、対象呼び出しに `-ErrorAction Stop` を指定して `try/catch` を使用する。捕捉した `ErrorRecord` を非終了エラーとして伝播する場合は `Write-Error -ErrorRecord $_` を使用する。
+下位コマンドレットの非終了エラーを捕捉する場合は、対象呼び出しに `-ErrorAction Stop` を指定して `try/catch` を使用する。終了エラーをそのまま上位へ伝える場合は捕捉せず、捕捉後に元の終了エラーを再送出する場合は `catch` 内で引数のない `throw` を使用する。捕捉した `ErrorRecord` を非終了エラーとして伝える場合は `Write-Error -ErrorRecord $_` を使用する。
 
 ```powershell
-foreach ($pathItem in $Path) {
-    try {
-        $content = Get-Content -LiteralPath $pathItem -ErrorAction Stop
-    }
-    catch {
-        Write-Error -ErrorRecord $_
-        continue
-    }
+try {
+    Get-Content -LiteralPath $Path -ErrorAction Stop
+} catch {
+    Write-Error -ErrorRecord $_
+}
+```
 
-    # Processing
+### 11.3 原因を保持したエラーへの変換
+
+捕捉したエラーに処理の文脈を加えて新しい終了エラーを作る場合は、元の例外 `$_.Exception` を新しい例外の `InnerException` に渡し、原因をたどれるようにする。
+
+```powershell
+try {
+    Get-Content -LiteralPath $Path -ErrorAction Stop
+} catch {
+    throw [System.InvalidOperationException]::new("Failed to read the configuration file: $Path", $_.Exception)
 }
 ```
 
@@ -1289,6 +1295,8 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 10. 出力 | [about_Return - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_return?view=powershell-5.1) | `return` の動作と、値を出力することとの違いを示す。 |
 | 10. 出力 | [about_Format.ps1xml - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_format.ps1xml?view=powershell-5.1) | 表示形式を定義するファイルの記述方法を示す。 |
 | 11. エラー処理 | [about_Error_Handling - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_error_handling?view=powershell-5.1) | 終了エラーと非終了エラーの違いと、`try/catch` の動作を示す。 |
+| 11. エラー処理 | [about_Throw - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_throw?view=powershell-5.1) | `catch` 内の引数のない `throw` が現在のエラーを再送出することを示す。 |
+| 11. エラー処理 | [Exception.InnerException Property (System) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.exception.innerexception?view=netframework-4.8.1) | 新しい例外に元の例外を原因として保持する方法を示す。 |
 | 12. 状態変更 | [Everything you wanted to know about ShouldProcess - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-shouldprocess?view=powershell-5.1) | `SupportsShouldProcess` と、`-WhatIf`、`-Confirm` の動作を示す。 |
 | 13. 外部呼び出し | [about_Automatic_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1) | `$LASTEXITCODE`、`$PWD`、`$_` などの自動変数を定義する。 |
 | 13. 外部呼び出し | [Start-Process (Microsoft.PowerShell.Management) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-process?view=powershell-5.1) | `-NoNewWindow`、`-Wait`、`-PassThru`、`-WorkingDirectory` の動作と、戻り値のプロセスオブジェクトを示す。 |
