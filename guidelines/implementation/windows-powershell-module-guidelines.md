@@ -1068,7 +1068,7 @@ Get-Process |
     Select-Object -First 10
 ```
 
-行継続のためにバッククォートを使用しない。
+WARNING: 行継続のためにバッククォートを使用しない。複数の引数でコマンドが長くなる場合は、引数をハッシュテーブルにまとめてスプラッティングする。
 
 パイプ (`|`) や二項演算子 (`+`、`-eq` など) の後、配列のコンマ (`,`) の後、または `[`、`{`、`(` の開始文字の後で改行する。
 
@@ -1099,11 +1099,15 @@ $params = @{
 Get-Content @params
 ```
 
-### 16.8 比較
+### 16.8 ネストの深さ
+
+WARNING: 関数内の条件分岐や反復処理などのコードブロックが3段を超えてネストする場合は、早期returnまたは関数抽出によって判断と責務を整理する。
+
+### 16.9 比較
 
 `$null` を比較する場合は `$null` を左辺に置く。
 
-### 16.9 出力の破棄
+### 16.10 出力の破棄
 
 コマンドの出力を意図的に破棄する場合は、`$null` への代入ではなく `Out-Null` を使用する。
 
@@ -1226,6 +1230,36 @@ PowerShellコードの静的解析で使用するツールと検査対象を次�
 | 承認済み動詞、エイリアス、危険な構文、未使用要素などを検出する。 | 製品コード、テストコード。 | PSScriptAnalyzerの `Invoke-ScriptAnalyzer` と `PSScriptAnalyzerSettings.psd1` |
 | 関数の複雑度とネスト深度を抑える。 | PowerShellの関数。 | PSCodeHealthの `Invoke-PSCodeHealth` と `Test-PSCodeHealthCompliance` |
 | コードの書式を統一する。 | フォーマット対象のPowerShellファイル。 | PSScriptAnalyzerの `Invoke-Formatter` |
+
+PSScriptAnalyzerの組み込み `MisleadingBacktick` は、行末のバッククォートの後ろに空白がある場合を警告する。バッククォートによる行継続全般は検出しないため、16.3の規則を静的解析で警告する場合は別途カスタムルールを使用する。
+
+PSCodeHealthの `MaximumNestingDepth` は関数ごとの最大ネスト深度を検査する。既定の警告しきい値は4なので、16.8の「3段を超えたら警告」に合わせる場合は、利用するプロジェクトで次のカスタム設定を `PSCodeHealthSettings.json` として保存し、`Test-PSCodeHealthCompliance` に渡す。
+
+```json
+{
+    "PerFunctionMetrics": [
+        {
+            "MaximumNestingDepth": {
+                "WarningThreshold": 3,
+                "FailThreshold": 8,
+                "HigherIsBetter": false
+            }
+        }
+    ]
+}
+```
+
+```powershell
+$healthReport = Invoke-PSCodeHealth -Path './src' -Recurse
+$complianceParams = @{
+    HealthReport = $healthReport
+    CustomSettingsPath = './PSCodeHealthSettings.json'
+    SettingsGroup = 'PerFunctionMetrics'
+    MetricName = 'MaximumNestingDepth'
+}
+
+Test-PSCodeHealthCompliance @complianceParams
+```
 
 次の設定例は、PSScriptAnalyzerで検査する重大度と除外ルールを指定する。
 
@@ -1415,7 +1449,9 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 19. 構文チェック | [Parser Class (System.Management.Automation.Language) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.parser?view=powershellsdk-7.4.0) | PowerShell コードを解析し、構文エラーを取得する方法を示す。 |
 | 20. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) | 静的解析を実行するコマンドのパラメーターと、設定ファイルの指定方法を示す。 |
 | 5. モジュールマニフェスト<br>20. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) | 既定のルールと、その重大度を示す。 |
+| 20. 静的解析 | [PSScriptAnalyzer/docs/Rules/MisleadingBacktick.md at main · PowerShell/PSScriptAnalyzer · GitHub](https://github.com/PowerShell/PSScriptAnalyzer/blob/main/docs/Rules/MisleadingBacktick.md) | バッククォートの直後に空白がある場合だけ警告することを示す。 |
 | 20. 静的解析 | [PSCodeHealth](https://pscodehealth.readthedocs.io/en/latest/) | コードの品質指標を計測するモジュールの使用方法を示す。 |
+| 20. 静的解析 | [Customize compliance rules according to my metrics goals - PSCodeHealth](https://pscodehealth.readthedocs.io/en/latest/HowDoI/CustomizeComplianceRules/) | `MaximumNestingDepth` の既定値と、警告しきい値をカスタム設定で変更する方法を示す。 |
 | 21. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) | `InModuleScope` でモジュール内部の関数を検証する方法を示す。 |
 | 21. テスト | [Mocking with Pester \| Pester](https://pester.dev/docs/usage/mocking) | `Mock` で依存を置き換える方法と、呼び出しを検証する方法を示す。 |
 | 21. テスト | [Best practices for writing unit tests - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices) | Unit Test の設計で推奨される事項を示す。 |
