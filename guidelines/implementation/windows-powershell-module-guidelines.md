@@ -686,11 +686,11 @@ function Set-MyModuleMonitorInternal {
 
 外部実行ファイルの実行方法は、以下の表のように用途別で選ぶ。
 
-| 実行方法 | 用途 | 出力先 | 既定の作業ディレクトリ | プロセス制御 |
+| 実行方法 | 用途 | 出力先 | 作業ディレクトリ | プロセス制御 |
 | --- | --- | --- | --- | --- |
-| 呼び出し演算子 `&` でコマンド名を直接指定する。 | 出力を解析して戻り値や判定に使う。 | PowerShell のストリーム。標準出力を変数へ受けられる。 | PowerShell の現在の場所。 | 指定できない。 |
-| `System.Diagnostics.Process` に `ProcessStartInfo` を指定する。 | 引数の境界、標準出力と標準エラーの区別、終了コードを正確に扱う。 | 標準出力と標準エラーをリダイレクトした場合は `StandardOutput` と `StandardError`。リダイレクトしない場合はコンソール。 | PowerShell プロセスのカレントディレクトリ。PowerShell の現在の場所と一致するとは限らない。 | 作業ディレクトリ、環境変数、ウィンドウ、資格情報などを `ProcessStartInfo` で指定できる。 |
-| `Start-Process` に `-NoNewWindow`、`-Wait`、`-PassThru` を指定する。作業ディレクトリに依存する外部実行ファイルには `-WorkingDirectory` を明示する。 | 出力を処理せず、コンソールに表示する。昇格や関連付けられたプログラムでの起動が必要な場合にも使う。 | コンソール、または `-RedirectStandardOutput` と `-RedirectStandardError` で指定したファイル。PowerShell のストリームを経由しないため、関数の戻り値へ混入しない。 | 起動する実行ファイルの場所。 | 別ウィンドウ、資格情報、`-Verb` による昇格などを指定できる。 |
+| 呼び出し演算子 `&` でコマンド名を直接指定する。 | 出力を解析して戻り値や判定に使う。 | PowerShell のストリーム。標準出力を変数へ受けられる。 | PowerShell のファイルシステム上の現在の場所。 | 指定できない。 |
+| `System.Diagnostics.Process` に `ProcessStartInfo` を指定する。 | 引数の境界、標準出力と標準エラーの区別、終了コードを正確に扱う。 | 標準出力と標準エラーをリダイレクトした場合は `StandardOutput` と `StandardError`。リダイレクトしない場合はコンソール。 | 既定は PowerShell プロセスのカレントディレクトリで、PowerShell の現在の場所と一致するとは限らない。作業ディレクトリに依存する外部実行ファイルには `WorkingDirectory` を明示する。 | 環境変数、ウィンドウ、資格情報などを `ProcessStartInfo` で指定できる。 |
+| `Start-Process` | 出力を処理せず、コンソールに表示する。昇格や関連付けられたプログラムでの起動が必要な場合にも使う。 | `-NoNewWindow` を指定した場合は現在のコンソール、指定しない場合は新しいウィンドウ。`-RedirectStandardOutput` と `-RedirectStandardError` を指定した場合はファイル。PowerShell のストリームを経由しないため、関数の戻り値へ混入しない。 | 既定は起動する実行ファイルの場所。作業ディレクトリに依存する外部実行ファイルには `-WorkingDirectory` を明示する。 | `-Wait` で子孫プロセスを含む終了を待機し、`-PassThru` でプロセスオブジェクトを取得する。資格情報、`-Verb` による昇格などを指定できる。 |
 
 ### 13.2 呼び出し演算子 `&`
 
