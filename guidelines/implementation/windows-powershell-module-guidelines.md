@@ -967,6 +967,7 @@ foreach ($path in $paths) {
 | --- | --- |
 | インデント | 半角スペース4文字とする。 |
 | 波括弧 | 開始波括弧は宣言、制御文と同じ行に置く。 |
+| キーワードと演算子 | `if`、`foreach`、`function` などのキーワードと、`-eq`、`-and` などの演算子は小文字で記述する。 |
 
 ### 16.3 改行
 
@@ -979,11 +980,13 @@ Get-Process |
     Select-Object -First 10
 ```
 
-行継続のためにバッククォートを使用しない。パイプ、括弧、配列、ハッシュテーブル、スプラッティングなど、PowerShell が自然に継続できる構文を使用する。
+行継続のためにバッククォートを使用しない。
+
+パイプ (`|`) や二項演算子 (`+`、`-eq` など) の後、配列のコンマ (`,`) の後、または `[`、`{`、`(` の開始文字の後で改行する。
 
 ### 16.4 コマンド名
 
-エイリアスではなく正式なコマンド名を使用する。
+PowerShell のコマンド名は、定義された大文字・小文字に合わせて完全な名前で記述する。エイリアスは使用しない。
 
 ### 16.5 動的コード実行
 
@@ -995,17 +998,17 @@ Get-Process |
 
 ### 16.7 引数指定
 
-コマンド呼び出しでは位置引数に依存せず、パラメーター名を明示する。
+PowerShell のコマンド呼び出しでは位置引数に依存せず、パラメーター名を明示する。
 
 複数のパラメーターをまとめることでコマンド呼び出しが読みやすくなる場合はスプラッティングを使用する。
 
 ```powershell
-$parameters = @{
+$params = @{
     LiteralPath = $Path
     ErrorAction = 'Stop'
 }
 
-Get-Content @parameters
+Get-Content @params
 ```
 
 ### 16.8 比較
@@ -1025,6 +1028,10 @@ Get-ChildItem -Path $Path | Out-Null
 ## 17. ヘルプ
 
 公開関数にはコメントベースのヘルプを記述する。
+
+コピーして実行するコード例には、プロンプト文字列を含めない。
+
+Markdown では、実行するコードと実行結果を別々のコードブロックに記載する。
 
 | セクション | 規則 |
 | --- | --- |
@@ -1303,6 +1310,8 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 | 15. 通信 | [Transport Layer Security (TLS) best practices with .NET Framework \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls) | .NET Framework で TLS のバージョンを選択させる設定を示す。 |
 | 15. 通信 | [AngleSharp](https://github.com/AngleSharp/AngleSharp) | HTML を解析するライブラリの使用方法を示す。 |
 | 16. コードスタイル | [about_Scopes - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scopes?view=powershell-5.1) | 変数のスコープと、`$script:` の有効範囲を定義する。 |
+| 16. コードスタイル | [about_Parsing - PowerShell \| Microsoft Learn](https://learn.microsoft.com/ja-jp/powershell/module/microsoft.powershell.core/about/about_parsing?view=powershell-5.1) | バッククォートによる行継続の構文と、それを避ける理由を説明する。構文上改行できる位置と、引数が多い場合にスプラッティングを使う方法を示す。 |
+| 16. コードスタイル<br>17. ヘルプ | [PowerShell ドキュメントのスタイル ガイド - PowerShell \| Microsoft Learn](https://learn.microsoft.com/ja-jp/powershell/scripting/community/contributing/powershell-style-guide?view=powershell-7.6) | Microsoft の PowerShell ドキュメントのコード例で、行継続文字を避ける書き方、名前の正式な表記、キーワードと演算子の小文字表記を定める。プロンプト文字列の扱いと、実行するコードと実行結果を分ける方法を示す。 |
 | 16. コードスタイル | [about_Splatting - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_splatting?view=powershell-5.1) | ハッシュテーブルでパラメーターをまとめて渡す方法を示す。 |
 | 16. コードスタイル | [about_Comparison_Operators - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comparison_operators?view=powershell-5.1) | 比較演算子の動作と、`$null` を比較する場合の注意を示す。 |
 | 17. ヘルプ | [about_Comment_Based_Help - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1) | コメントベースのヘルプのセクションと、記述する位置を定義する。 |
