@@ -1,7 +1,5 @@
 # Test Plan
 
-> 汎用的なソフトウェアテスト計画テンプレート。プロジェクトの規模、テストレベル、テストタイプに応じて不要な項目を省略・統合してよい。
-
 | 項目 | 内容 |
 | --- | --- |
 | テスト対象システム名 | <記載> |
@@ -273,16 +271,14 @@ flowchart LR
     EXEC --> LOG["テストログ"]
 ```
 
-テスト計画は仕様書・参考資料を入力として作成する。テスト設計・実装でテストケースを具体化し、そのテストケースに基づいてテストを実行する。実行結果はテストログとして記録し、テスト終結時の評価・報告に用いる。
-
 ### <中間生成物>
 
 | テストフェーズ | 作業内容 | 中間生成物（※1） | 成果物（※2） |
 | --- | --- | --- | --- |
-| テスト計画 | テストの目的、範囲、方針、基準、環境、体制、スケジュール等を定める | リスク整理、対象整理等 | テスト計画書 |
-| テスト設計・実装 | テスト対象と観点を具体化し、実行可能なテストケースへ落とし込む | 機能一覧、観点一覧、テストマップ、機能動作確認一覧、テスト明細等 | テスト設計仕様書、テストケース |
-| テスト実行 | テストケースに従って実行し、結果と不具合を記録する | 実行途中の記録、証跡等 | テストログ |
-| テスト終結 | 実行結果を評価し、完了可否や残存リスクを整理する | 集計、分析等 | テストサマリ／完了報告 |
+| テスト計画 | <記載> | <記載> | <記載> |
+| テスト設計・実装 | <記載> | <記載> | <記載> |
+| テスト実行 | <記載> | <記載> | <記載> |
+| テスト終結 | <記載> | <記載> | <記載> |
 
 ※1 中間生成物はテスト内容に合わせて変動する。
 
@@ -425,34 +421,218 @@ flowchart LR
 
 本テストは、下記のスケジュールに沿って行う。
 
-スケジュールは、テストアクティビティの期間、依存関係、マイルストーン、成果物提出時期が確認できる粒度で記載する。リスクが高い対象は、必要に応じて設計・実行の優先順位へ反映する。
+<table>
+  <thead>
+    <tr>
+      <th rowspan="3">作業内容</th>
+      <th colspan="18">スケジュール</th>
+    </tr>
+    <tr>
+      <th colspan="3">12月</th>
+      <th colspan="3">1月</th>
+      <th colspan="3">2月</th>
+      <th colspan="3">3月</th>
+      <th colspan="3">4月</th>
+      <th colspan="3">5月</th>
+    </tr>
+    <tr>
+      <th>上</th><th>中</th><th>下</th>
+      <th>上</th><th>中</th><th>下</th>
+      <th>上</th><th>中</th><th>下</th>
+      <th>上</th><th>中</th><th>下</th>
+      <th>上</th><th>中</th><th>下</th>
+      <th>上</th><th>中</th><th>下</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>マイルストーン</td>
+      <td></td><td>▲<br>12/15<br>結合テスト開始</td><td></td>
+      <td></td><td>▲<br>1/16<br>結合テスト完了<br>●<br>1/16<br>結合テストサマリ提出</td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td>▲<br>受入テスト開始</td><td>▲<br>受入テスト完了<br>●<br>3/27<br>受入テストサマリ提出</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>仕様理解</td>
+      <td></td><td>━━▶</td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>テスト計画</td>
+      <td></td><td>━━</td><td>▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>└ テスト計画書作成</td>
+      <td></td><td>━━</td><td>▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>テスト設計</td>
+      <td></td><td>━━</td><td>━━▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ テスト設計仕様書作成</td>
+      <td></td><td>━━</td><td>▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ テストマップ作成</td>
+      <td></td><td></td><td>━━▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>└ テスト明細作成</td>
+      <td></td><td></td><td>━━▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>結合テスト実施①</td>
+      <td></td><td></td><td>━━</td>
+      <td>━━</td><td>━━▶</td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ 結合テストケース作成</td>
+      <td></td><td></td><td>━━▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ 結合テスト環境構築</td>
+      <td></td><td></td><td>━━▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ 結合テストデータ作成</td>
+      <td></td><td></td><td>━━▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ 結合テスト実施</td>
+      <td></td><td></td><td></td>
+      <td>━━</td><td>━━▶</td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>└ 結合テスト報告提出</td>
+      <td></td><td></td><td></td>
+      <td></td><td>● 1/16</td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>テスト実施②</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td>━━</td><td>━━▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ 受入テストケース作成</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td>━━▶</td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ 受入テスト環境構築</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td>━━▶</td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ 受入テストデータ作成</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td>━━▶</td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>├ 受入テスト実施</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td>━━</td><td>━━▶</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>└ 受入テスト報告提出</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td>● 3/27</td>
+      <td></td><td></td><td></td>
+      <td></td><td></td><td></td>
+    </tr>
+  </tbody>
+</table>
 
-| 作業内容 | 月1 上 | 月1 中 | 月1 下 | 月2 上 | 月2 中 | 月2 下 | 月3 上 | 月3 中 | 月3 下 | 月4 上 | 月4 中 | 月4 下 | 月5 上 | 月5 中 | 月5 下 | 月6 上 | 月6 中 | 月6 下 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 仕様理解 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| テスト計画 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| └ テスト計画書作成 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| テスト設計 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| ├ テスト設計仕様書作成 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| ├ テストマップ作成 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| ├ テスト明細作成 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| └ テストケース作成 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| テスト実行 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| テスト終結 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-
-記入時は、実施期間を `■`、マイルストーンを `◆` などで示す。
-
-| マイルストーン | 予定日 | 関連成果物 |
-| --- | --- | --- |
-| テスト開始 |  |  |
-| テスト完了 |  |  |
-| テストサマリ提出 |  |  |
+<!-- スケジュール表を作成。リスクスコアに応じてアクティビティの優先順位を考慮。以下例。 -->
 
 ### 9.3 成果物
 
-本テストの成果物を以下に記載する（※1）。
-
-※ 中間生成物に関しては、別途ご相談の上、決定する。
+本テストの成果物を以下に記載する。
 
 | 成果物名 | 成果物概要 | 納期 |
 | --- | --- | --- |
