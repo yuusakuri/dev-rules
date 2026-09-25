@@ -22,7 +22,7 @@
 | 文書 | [ドキュメント作成ガイドライン](documentation/document-guidelines.md) | 文書の記述方法と根拠の扱いを定めるガイドライン。 | なし |
 | 文書 | [仕様書作成ガイドライン](documentation/specification-guidelines.md) | 仕様書作成のガイドライン。 | なし |
 | 文書 | [規格準拠文書ガイドライン](documentation/standard-conformance-guidelines.md) | 発行元と分野を問わず、規格が内容を定める文書を規格に準拠して作成するためのガイドライン。 | なし |
-| 文書 | [テスト文書ガイドライン](documentation/test-documentation-guidelines.md) | テスト仕様書と、それに付随するテストデータ要求、テスト環境要求をISO/IEC/IEEE 29119-3に準拠して作成するためのガイドライン。 | 規格準拠文書ガイドライン、仕様書作成ガイドライン、テストガイドライン |
+| 文書 | [テスト文書ガイドライン](documentation/test-documentation-guidelines.md) | テスト計画書、テスト設計仕様書、テストケース仕様書の作成方法と、ISO/IEC/IEEE 29119-3のテスト文書との対応を定めるガイドライン。 | 仕様書作成ガイドライン、テストガイドライン |
 | 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載内容と見出しの構成を定めるガイドライン。 | リポジトリガイドライン |
 
