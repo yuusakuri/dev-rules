@@ -1255,10 +1255,6 @@ PowerShellコードの静的解析で使用するツールと検査対象を次�
 
 PowerShellコマンドの振る舞いを置き換える場合は、Pesterの `Mock` を使用する。.NETの基底クラスやインターフェースを実装するテスト用代替実装（Test Double）、または外部プロセスとして実行するテスト用プログラムが必要な場合だけ、テスト専用C#プロジェクトを作成する。
 
-テスト専用C#プロジェクトは、Unit Test、Integration Test、Contract Testのうち、必要とするテストから使用する。
-
-プロジェクト名とアセンブリ名には、テストが置き換える境界または提供する振る舞いを含める。HTTP通信のテスト用代替実装には `<ModuleName>.HttpTestDoubles`、外部プロセスの振る舞いを提供するプログラムには `<ModuleName>.ProcessTestHost` のような名前を使用する。
-
 `run.ps1 test <TestType>` は、対象テストが必要とするC#プロジェクトをテスト実行前にビルドする。テストを実行する各PowerShellプロセスが読み込めるターゲットフレームワークを指定し、DLLを `artifacts/bin/<ProjectName>/<TargetFramework>/` から読み込む。
 
 ### 21.2 Unit Test

@@ -29,6 +29,10 @@
 
 ## 2. 責務の分離
 
+### 責務の分け方は有名OSSを根拠にする
+
+モジュール、ディレクトリ、型への責務の分け方は、自分たちだけの判断を根拠にせず、同じ領域、同じ種類のソフトウェアで広く使われているOSSが実際にどう分割しているかを根拠にする。
+
 ### 中核ロジックを外部技術から独立させる
 
 業務ロジックは、データベース、通信方式、画面、フレームワークなどの外部技術から独立させる。業務上の制約は、呼び出す画面や保存先のDBが変わっても同じに効く必要がある。独立させておけば、外部技術を入れ替えても業務ロジックはそのまま使え、実際のDB接続、ネットワーク通信、ファイルI/O、UIフレームワークがなくても単体テストで検証できる。
@@ -425,7 +429,9 @@ impl UserRepo for InMemoryUserRepo {
 
 | ルール | 内容 |
 | --- | --- |
+| 有名OSSを根拠にする | 名前は、対象言語の標準ライブラリや、同じ領域で広く使われているOSSの命名を根拠にする。本書の「単語」に記載がない概念も、独自の造語を根拠にせず、実際に使われている名前を採用する。 |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Do`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
+| 複合名の語順 | 複数の語を組み合わせる名前では、中心となる概念を末尾に置き、その種類や対象を表す語を前に置く。OK: `FakeHttpServer`、NG: `HttpFakeServer` |
 | 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: [`tower`の`Timeout`](https://docs.rs/tower/latest/tower/timeout/struct.Timeout.html)、[`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html) |
 | 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: [`github`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`s3`](https://github.com/apache/opendal/tree/main/core/services/s3) |
 | 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
