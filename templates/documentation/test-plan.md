@@ -1,5 +1,7 @@
 # Test Plan
 
+作成方法は、[テスト文書作成ガイドライン](../../guidelines/documentation/test-documentation-guidelines.md#3-test-plan)に従う。
+
 | 項目 | 内容 |
 | --- | --- |
 | テスト対象システム名 | <記載> |
