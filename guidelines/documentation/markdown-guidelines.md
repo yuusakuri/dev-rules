@@ -32,10 +32,18 @@ Markdownは連続した行を1つの段落としてまとめるため、単一�
 
 ページタイトルは、参照先のページの `<title>` タグの内容をそのまま使います。
 
+## アンカーの記述
+
+見出しは、見出しの文字列から自動で生成されるアンカーを参照先として使います。
+文書内の見出しへのリンクは `[7章](#7-引用参照)` のように、生成されたアンカーを `#` に続けて書きます。
+
+表と図には自動でアンカーが付かないため、表題の行の先頭に `<a id="table-1"></a>` や `<a id="figure-1"></a>` を置き、そのIDへリンクします。
+IDは、表では `table-` に、図では `figure-` に、それぞれの番号を続けた文字列にします。
+
 ## 参考資料
 
 | 本書の章 | 参考資料 | 説明 |
 | --- | --- | --- |
-| 段落と改行<br>ブロックの前後の空行 | [CommonMark Spec](https://spec.commonmark.org/0.31.2/) | 段落が連続した行としてまとめられることと、ブロック要素の区切りに空行が必要なことを規定しています。 |
-| 表の記述 | [GitHub Flavored Markdown Spec](https://github.github.com/gfm/) | 表の行がセル内の改行で終わること、`\|` によるエスケープ、セルにブロック要素を置けないことを規定しています。 |
-| 段落と改行<br>表の記述<br>リンクの記述 | [基本的な書き方とフォーマットの構文 - GitHub Docs](https://docs.github.com/ja/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) | 改行の作り方、表の記述方法、リンクの記述形式を示しています。 |
+| 段落と改行<br>ブロックの前後の空行 | [CommonMark Spec](https://spec.commonmark.org/0.31.2/) | Markdownの構文を定めたCommonMarkの仕様です。 |
+| 表の記述 | [GitHub Flavored Markdown Spec](https://github.github.com/gfm/) | GitHubで使うMarkdownの構文を定めた仕様です。 |
+| 段落と改行<br>表の記述<br>リンクの記述<br>アンカーの記述 | [基本的な書き方とフォーマットの構文 - GitHub Docs](https://docs.github.com/ja/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) | GitHubでのMarkdownの基本的な書き方を示しています。 |
