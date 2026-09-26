@@ -10,13 +10,14 @@
 6. [Functional Behavior Checklist](#6-functional-behavior-checklist)
 7. [Test Detail](#7-test-detail)
 8. [Test Case Specification](#8-test-case-specification)
-9. [テンプレート](#9-テンプレート)
+9. [Test Log](#9-test-log)
+10. [テンプレート](#10-テンプレート)
 
 ---
 
 ## 1. 概要
 
-本書は、Test Plan、Test Design Specification、Test Map、Functional Behavior Checklist、Test Detail、Test Case Specificationの作成方法を定める。
+本書は、Test Plan、Test Design Specification、Test Map、Functional Behavior Checklist、Test Detail、Test Case Specification、Test Logの作成方法を定める。
 
 文書の流れは次のとおりである。
 
@@ -26,12 +27,13 @@ flowchart TD
     DESIGN --> MAP["Test Map"]
     MAP --> FUNC["Functional Behavior Checklist"]
     FUNC --> DETAIL["Test Detail"]
+    DESIGN --> DETAIL
     DETAIL --> CASE["Test Case Specification"]
     CASE --> EXEC["テスト実行"]
-    EXEC --> RESULT["Test Case Specificationの結果記載欄"]
+    EXEC --> LOG["Test Log"]
 ```
 
-Test Map、Functional Behavior Checklist、Test Detailは、Test Design SpecificationからTest Case Specificationへ具体化する過程で作成する中間生成物である。
+Test Map、Functional Behavior Checklist、Test Detailは、Test Design Specificationのテスト設計の流れで作成する資料である。
 
 ---
 
@@ -336,7 +338,7 @@ Test Detailでは、テスト対象となる機能と観点の組合せに対し
 
 Test Case Specificationは、テストをどのように実行するかを整理し、テスト実行前のテスト設計工程で作成する。
 
-テスト実行後に記載する結果情報も、同じテンプレートの結果記載欄に保持する。
+テストケースには、主にテスト対象、テスト観点、実行条件、実行手順、期待結果を記載する。
 
 ### 8.2 グループ項目
 
@@ -357,68 +359,81 @@ Test Case Specificationは、テストをどのように実行するかを整理
 | 機能中項目 | 該当テスト項目で確認する機能の中分類 |
 | 機能小項目 | 該当テスト項目で確認する機能の小分類 |
 | テスト観点 | そのテストケースで何を確認するのか |
-| 実施条件 | そのテストケースを実行するために必要な条件 |
-| 実施手順 | 具体的な実行手順 |
+| 実行条件 | そのテストケースを実行するために何が必要か |
+| 実行手順 | 具体的にどのような手順で実行するのか |
 | 期待結果 | どのような挙動や表示であればOK判定となるのか |
 
-### 8.4 結果記載欄
-
-| 項目 | 内容 |
-| --- | --- |
-| 結果 | テスト実施結果のステータス |
-| 環境 | テストを実施した環境 |
-| バージョン | テストを実施したテスト対象のバージョン |
-| 実施日 | テストを実施した日付 |
-| バグID | 不具合が発生した場合、不具合の識別番号 |
-| 実施者 | テストを実施した人の氏名 |
-| 備考 | テスト確認内容・確認結果の詳細、申し送り事項など |
-
-元のテストケーステンプレートでは、結果の選択肢として`OK`、`再確認OK`、`NG`、`QA`、`保留`、`NT`、`N/A`が用意されている。
-
-総項目数、有効項目数、各ステータスの件数、未実施件数、進捗率は集計項目であるため、このMarkdownテンプレートには設けない。
-
-### 8.5 項目別の書き方
+### 8.4 項目別の書き方
 
 #### テスト対象
 
-ソフトウェアのどの部分をテストするかを記載する。
+ソフトウェアのどの部分をテストの対象とするかを記載する。
 
-機能、画面、入力項目などが多い場合は、大項目、中項目、小項目に分ける。
+機能や画面、入力項目などが多い場合は、大項目、中項目、小項目に分ける。
 
 #### テスト観点
 
-そのテストケースで何を確認するのかを記載し、作成意図や実行時の着眼点が伝わるようにする。
+そのテストケースで何を確認するのかを記載する。
 
-#### 実施条件
+テストケースの作成意図や、テスターが実行する際の着眼点が伝わるようにする。
 
-使用するテストデータ、アカウント、デバイスなどの事前準備や前提条件を記載する。
+#### 実行条件
 
-入力内容や設定値を実施条件へ記載することもできる。
+テストケースを実行するために必要な事前準備や前提条件を記載する。
 
-別のテストケースがOKであることを前提とする場合など、当該ケースを実施するために必要な条件は漏れなく記載する。
+テストデータ、アカウント、デバイス、入力内容、設定値などを記載する。
 
-#### 実施手順
+#### 実行手順
 
-テスターが記載内容に沿って実行できるよう、具体的かつ正確に記載する。
+具体的にどのような手順で実行するのかを正確に記載する。
 
 必要に応じてアクセス先や仕様書の該当箇所を補足する。
 
 #### 期待結果
 
-どのような挙動や表示であればOK判定となるのかを、解釈が分かれないよう明確に記載する。
+どのような挙動や表示であればOK判定となるのかを明確に記載する。
 
-期待結果が複数ある場合は、可能な限りセルまたは行を分ける。
+期待結果が複数ある場合は、可能な限りセルを分割する。
 
-### 8.6 作成時のポイント
+### 8.5 作成時のポイント
 
-- できる限り具体性を持たせ、テスターの自己判断に委ねる表現を避ける。
-- そのテストケースを作成した意図が分かる表現にする。
-- 実施条件、実施手順など、項目ごとの役割を混同しない。
+- できる限り具体性を持たせる。
+- 作成の意図がわかる表現にする。
+- 項目ごとの役割を混同しない。
 - 関連する仕様書、設計書、エビデンスなどのパスやリンクを添え、トレーサビリティを確保する。
+
+### 8.6 集計欄
+
+配布テンプレートには、OK件数、NG件数などの集計機能がある。
+
+本Markdownテンプレートでは、スプレッドシートで自動計算されていた集計欄は設けない。
 
 ---
 
-## 9. テンプレート
+## 9. Test Log
+
+Test Logには、テスト実行後の結果情報を記録する。
+
+### 9.1 記録項目
+
+| 項目 | 内容 |
+| --- | --- |
+| テストケースNo. | 対応するテストケースの識別番号 |
+| 結果 | テストケースの結果 |
+| 環境 | テスト実行時の環境 |
+| バージョン | テストを実施したテスト対象のバージョン |
+| 実行日 | テストを実行した日付 |
+| バグID | 不具合が発生した場合の識別番号 |
+| 実行者 | テストケースを実行した担当者 |
+| 備考 | アカウント情報、申し送り事項、不具合票の番号など、結果を後から確認する際に必要な情報 |
+
+結果は、Test Planで定義した判定基準に従って記録する。
+
+配布テンプレートにある自動集計欄は、本Markdownテンプレートには設けない。
+
+---
+
+## 10. テンプレート
 
 - [Test Plan](../../templates/documentation/test-plan.md)
 - [Test Design Specification](../../templates/documentation/test-design-specification.md)
@@ -426,3 +441,4 @@ Test Case Specificationは、テストをどのように実行するかを整理
 - [Functional Behavior Checklist](../../templates/documentation/functional-behavior-checklist.md)
 - [Test Detail](../../templates/documentation/test-detail.md)
 - [Test Case Specification](../../templates/documentation/test-case-specification.md)
+- [Test Log](../../templates/documentation/test-log.md)
