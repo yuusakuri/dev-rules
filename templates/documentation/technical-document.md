@@ -1,4 +1,4 @@
-<!-- 技術文書作成ガイドライン（guidelines/documentation/technical-document-guidelines.md）に従って記載する。確定していない記載事項は，依頼者に確認する。公開する本文からは，このコメントを含む全ての執筆案内及びプレースホルダーを取り除く。 -->
+<!-- 技術文書のテンプレート。JIS Z 8301:2019及びISO/IEC Directives, Part 2を参考に作成した。技術文書作成ガイドライン（guidelines/documentation/technical-document-guidelines.md）に従って記載する。確定していない記載事項は，依頼者に確認する。公開する本文からは，このコメントを含む全ての執筆案内及びプレースホルダーを取り除く。 -->
 
 # <名称>
 
