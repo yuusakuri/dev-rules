@@ -19,7 +19,6 @@
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現、レイアウト、状態、動きのガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
-| 文書 | [ドキュメント作成ガイドライン](documentation/document-guidelines.md) | 文書の記述方法と根拠の扱いを定めるガイドライン。 | なし |
 | 文書 | [仕様書作成ガイドライン](documentation/specification-guidelines.md) | 仕様書作成のガイドライン。 | なし |
 | 文書 | [技術文書作成ガイドライン](documentation/technical-document-guidelines.md) | 技術文書の作成方法を定めるガイドライン。JIS Z 8301及びISO/IEC Directives, Part 2を参考に作成した。 | なし |
 | 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
