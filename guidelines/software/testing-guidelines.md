@@ -9,7 +9,7 @@
 5. [検証の方針](#5-検証の方針)
 6. [内部実装の呼び出し](#6-内部実装の呼び出し)
 7. [Test Doubleの選び方](#7-test-doubleの選び方)
-8. [参考資料](#8-参考資料)
+8. [参考文献](#8-参考文献)
 
 ---
 
@@ -144,9 +144,9 @@ SpyとMockも依存先を置き換えるが、選ぶ理由は振る舞いの再�
 
 ---
 
-## 8. 参考資料
+## 8. 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 2. テスト対象の決定 | [ISO/IEC 25010:2023 - Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model](https://www.iso.org/standard/78176.html) | 性能、信頼性、セキュリティ、互換性など、製品が満たす品質特性を定義する。 |
 | 3. テストの種別 | [Test Pyramid](https://martinfowler.com/bliki/TestPyramid.html) | 上位の種別のテストほど壊れやすく、実行に時間がかかることを説明する。 |

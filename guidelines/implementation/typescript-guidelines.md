@@ -6,7 +6,7 @@
 2. [フォルダ構成](#2-フォルダ構成)
 3. [型](#3-型)
 4. [検証](#4-検証)
-5. [参考資料](#5-参考資料)
+5. [参考文献](#5-参考文献)
 
 ---
 
@@ -58,9 +58,9 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 
 ---
 
-## 5. 参考資料
+## 5. 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 1. 概要、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
 | 4. 検証 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
