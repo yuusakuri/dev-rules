@@ -7,7 +7,7 @@
 3. [データアクセス](#3-データアクセス)
 4. [セキュリティ](#4-セキュリティ)
 5. [CLI](#5-cli)
-6. [参考資料](#6-参考資料)
+6. [参考文献](#6-参考文献)
 
 ---
 
@@ -95,9 +95,9 @@ Shell スクリプト以外の CLI に適用する。
 
 ---
 
-## 6. 参考資料
+## 6. 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を確認する。 |
 | 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を確認する。 |

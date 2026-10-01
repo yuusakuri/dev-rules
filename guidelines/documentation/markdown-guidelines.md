@@ -40,9 +40,9 @@ Markdownは連続した行を1つの段落としてまとめるため、単一�
 表と図には自動でアンカーが付かないため、表題の行の先頭に `<a id="table-1"></a>` や `<a id="figure-1"></a>` を置き、そのIDへリンクします。
 IDは、表では `table-` に、図では `figure-` に、それぞれの番号を続けた文字列にします。
 
-## 参考資料
+## 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 段落と改行<br>ブロックの前後の空行 | [CommonMark Spec](https://spec.commonmark.org/0.31.2/) | Markdownの構文を定めたCommonMarkの仕様です。 |
 | 表の記述 | [GitHub Flavored Markdown Spec](https://github.github.com/gfm/) | GitHubで使うMarkdownの構文を定めた仕様です。 |

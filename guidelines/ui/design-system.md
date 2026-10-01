@@ -13,7 +13,7 @@
 9. [ぼかし](#9-ぼかし)
 10. [状態表現](#10-状態表現)
 11. [動き](#11-動き)
-12. [参考資料](#12-参考資料)
+12. [参考文献](#12-参考文献)
 
 ## 1. 目的
 
@@ -603,9 +603,9 @@ Black AlphaとWhite Alphaは次の不透明度尺度とする。
 | `scale-fade-in` | 表示 | `scale-in` + `fade-in` |
 | `scale-fade-out` | 非表示 | `scale-out` + `fade-out` |
 
-## 12. 参考資料
+## 12. 参考文献
 
-| 本書の章 | 参考資料 |
+| 本書の章 | 参考文献 |
 | --- | --- |
 | 2. トークン体系<br>11. 動き | [Tokens \| Panda CSS - Panda CSS](https://panda-css.com/docs/theming/tokens) |
 | 2. トークン体系 | [Theming \| Park UI](https://park-ui.com/docs/theming) |

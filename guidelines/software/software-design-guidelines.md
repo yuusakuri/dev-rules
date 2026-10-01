@@ -13,7 +13,7 @@
 9. [並行処理](#9-並行処理)
 10. [ログ](#10-ログ)
 11. [コードコメント](#11-コードコメント)
-12. [参考資料](#12-参考資料)
+12. [参考文献](#12-参考文献)
 
 ---
 
@@ -713,9 +713,9 @@ impl UserRepo for InMemoryUserRepo {
 
 ---
 
-## 12. 参考資料
+## 12. 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 3. 依存関係の管理 | [Inversion of Control Containers and the Dependency Injection pattern](https://martinfowler.com/articles/injection.html) | 依存性注入とService Locatorを比較し、構成と利用の分離を説明する。 |
 | 3. 依存関係の管理 | [Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/) | Composition Rootをアプリケーションの起動点付近に置き、アプリケーションごとに一つ設ける考え方を説明する。 |

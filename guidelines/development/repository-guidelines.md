@@ -4,7 +4,7 @@
 
 1. [概要](#1-概要)
 2. [構成](#2-構成)
-3. [参考資料](#3-参考資料)
+3. [参考文献](#3-参考文献)
 
 ---
 
@@ -50,9 +50,9 @@
 
 ---
 
-## 3. 参考資料
+## 3. 参考文献
 
-| 参考資料 |
+| 参考文献 |
 | --- |
 | [Creating a default community health file - GitHub Docs](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file) |
 | [About issue and pull request templates - GitHub Docs](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/about-issue-and-pull-request-templates) |

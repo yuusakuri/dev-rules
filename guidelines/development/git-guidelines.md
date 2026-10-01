@@ -4,7 +4,7 @@
 
 1. [概要](#1-概要)
 2. [開発フロー](#2-開発フロー)
-3. [参考資料](#3-参考資料)
+3. [参考文献](#3-参考文献)
 
 ---
 
@@ -68,9 +68,9 @@ PRへ変更を追加したときは、タイトルと説明も変更後の内容
 
 ---
 
-## 3. 参考資料
+## 3. 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 2. 開発フロー | [GitHub フロー - GitHubドキュメント](https://docs.github.com/ja/get-started/using-github/github-flow) | ブランチの作成からPRのマージまでの開発の流れを示す。 |
 | 2. 開発フロー | [Conventional Branch — A Git Branch Naming Convention](https://conventional-branch.github.io/) | ブランチ名の接頭辞と構成を定義する。 |

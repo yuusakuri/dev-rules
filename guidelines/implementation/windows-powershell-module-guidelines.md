@@ -25,7 +25,7 @@
 21. [テスト](#21-テスト)
 22. [CI](#22-ci)
 23. [PowerShell Gallery](#23-powershell-gallery)
-24. [参考資料](#24-参考資料)
+24. [参考文献](#24-参考文献)
 
 ---
 
@@ -1350,9 +1350,9 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 
 ---
 
-## 24. 参考資料
+## 24. 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 2. 環境<br>5. モジュールマニフェスト | [about_PowerShell_Editions - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_editions?view=powershell-5.1) | `Desktop` と `Core` のエディションの違いと、`CompatiblePSEditions` の指定方法を示す。 |
 | 2. 環境<br>18. 自動フォーマット<br>20. 静的解析<br>22. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) | フォーマットと静的解析を行うモジュールの導入方法と機能を示す。 |
