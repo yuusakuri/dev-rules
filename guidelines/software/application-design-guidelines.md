@@ -99,19 +99,19 @@ Shell スクリプト以外の CLI に適用する。
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データを扱う層をRepositoryと外部データ源へ分ける構成を示す。 |
+| 2. フォルダ構成 | [App architecture \| Flutter](https://docs.flutter.dev/app-architecture/guide) | データ層の構成を示す。 |
 | 2. フォルダ構成 | [Data layer \| Android Developers](https://developer.android.com/topic/architecture/data-layer) | 一つのデータ源につき一つの実装を持たせる構成を示す。 |
-| 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | モジュールへ分ける時期と、パッケージへ切り出す時期を示す。 |
-| 2. フォルダ構成 | [core - Rust](https://doc.rust-lang.org/core/) | 実行環境に依存しない型とロジックが扱う範囲と、ヒープ確保、並行処理、I/Oを含めない理由を示す。 |
-| 2. フォルダ構成 | [rust/library/std/src at master · rust-lang/rust](https://github.com/rust-lang/rust/tree/master/library/std/src) | 提供する機能の名前をそのままモジュール名とし、抽象的な名前の階層を挟まない配置を示す。 |
-| 2. フォルダ構成 | [一般的なモジュール化のパターン \| Android Developers](https://developer.android.com/topic/modularization/patterns?hl=ja) | 機能を単位としてモジュールへ分ける考え方と、その粒度の決め方を示す。 |
-| 2. フォルダ構成 | [Internationalizing Flutter apps](https://docs.flutter.dev/ui/internationalization) | 翻訳データの配置と、表示言語を選ぶ仕組みを示す。 |
+| 2. フォルダ構成 | [Managing Growing Projects \| The Rust Programming Language](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html) | コードを分割する時期を示す。 |
+| 2. フォルダ構成 | [core - Rust](https://doc.rust-lang.org/core/) | 実行環境に依存しない部分が扱う範囲を示す。 |
+| 2. フォルダ構成 | [rust/library/std/src at master · rust-lang/rust](https://github.com/rust-lang/rust/tree/master/library/std/src) | 機能名をモジュール名とする配置を示す。 |
+| 2. フォルダ構成 | [一般的なモジュール化のパターン \| Android Developers](https://developer.android.com/topic/modularization/patterns?hl=ja) | 機能を単位としたモジュールの分け方を示す。 |
+| 2. フォルダ構成 | [Internationalizing Flutter apps](https://docs.flutter.dev/ui/internationalization) | 多言語対応の仕組みを示す。 |
 | 2. フォルダ構成 | [NumberFormat \| Android Developers](https://developer.android.com/reference/android/icu/text/NumberFormat) | ロケールによって表記が変わる値を、書式処理として分けて扱う方法を示す。 |
 | 2. フォルダ構成 | [Flutterの`TextField`](https://github.com/flutter/flutter/blob/540a2711c83a08d5c40443058448782e4dfe34aa/packages/flutter/lib/src/material/text_field.dart#L1253)、[compass_appの`ErrorIndicator`](https://github.com/flutter/samples/blob/463e365e4842f252ffab9c6198594a504d69469f/compass_app/app/lib/ui/core/ui/error_indicator.dart#L10-L18) | 共有UI部品が表示する文言の受け取り方を示す。 |
-| 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みを分離する条件と構成を示す。 |
-| 4. セキュリティ | [OWASP Application Security Verification Standard (ASVS)](https://owasp.org/www-project-application-security-verification-standard/) | アプリケーションが満たす検証レベルと、機能ごとのセキュリティ要求を示す。 |
-| 4. セキュリティ | [SP 800-63-4, Digital Identity Guidelines](https://csrc.nist.gov/pubs/sp/800/63/4/final) | 本人確認と認証に求める保証レベルと、認証方式ごとの強度を示す。 |
-| 4. セキュリティ | [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) | 外部入力を受け取る境界で検証する項目と方法を示す。 |
-| 4. セキュリティ | [Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | 機密情報の保存、利用、記録を安全に扱う方法を示す。 |
+| 3. データアクセス | [CQRS pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs) | 読み取りと書き込みとを分離する設計パターンを示す。 |
+| 4. セキュリティ | [OWASP Application Security Verification Standard (ASVS)](https://owasp.org/www-project-application-security-verification-standard/) | アプリケーションのセキュリティ要求を示す。 |
+| 4. セキュリティ | [SP 800-63-4, Digital Identity Guidelines](https://csrc.nist.gov/pubs/sp/800/63/4/final) | 認証の保証レベルを示す。 |
+| 4. セキュリティ | [Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) | 外部入力の検証方法を示す。 |
+| 4. セキュリティ | [Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html) | 機密情報を安全に扱う方法を示す。 |
 | 4. セキュリティ | [Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) | 認証情報を検証し、利用者を確定する方法を示す。 |
 | 4. セキュリティ | [Authorization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html) | 操作ごとに権限を判定する方法を示す。 |

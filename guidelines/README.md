@@ -9,7 +9,7 @@
 | ソフトウェア設計 | [ソフトウェア設計ガイドライン](software/software-design-guidelines.md) | ソフトウェア開発の設計ガイドライン。 | なし |
 | ソフトウェア設計 | [アプリケーション設計ガイドライン](software/application-design-guidelines.md) | アプリケーション設計のガイドライン。 | ソフトウェア設計ガイドライン |
 | ソフトウェア設計 | [テストガイドライン](software/testing-guidelines.md) | テストの設計方法を定めるガイドライン。 | ソフトウェア設計ガイドライン |
-| 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリのファイル及びディレクトリの役割を定めるガイドライン。 | なし |
+| 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリの構成を定めるガイドライン。 | なし |
 | 開発 | [Git規則](development/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 開発 | [バージョニング規則](development/versioning-guidelines.md) | バージョン番号を決める。 | なし |
 | 実装 | [TypeScript実装ガイドライン](implementation/typescript-guidelines.md) | TypeScript実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
@@ -19,9 +19,7 @@
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現のガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
-| 文書 | [仕様書作成ガイドライン](documentation/specification-guidelines.md) | 仕様書作成のガイドライン。 | なし |
 | 文書 | [技術文書作成ガイドライン](documentation/technical-document-guidelines.md) | 技術文書の作成方法を定めるガイドライン。JIS Z 8301及びISO/IEC Directives, Part 2を参考に作成した。 | なし |
-| 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載方法を定めるガイドライン。 | リポジトリガイドライン |
 
 ## 適用手順
