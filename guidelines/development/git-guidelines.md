@@ -73,6 +73,6 @@ PRへ変更を追加したときは、タイトルと説明も変更後の内容
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 2. 開発フロー | [GitHub フロー - GitHubドキュメント](https://docs.github.com/ja/get-started/using-github/github-flow) | ブランチの作成からPRのマージまでの開発の流れを示す。 |
-| 2. 開発フロー | [Conventional Branch — A Git Branch Naming Convention](https://conventional-branch.github.io/) | ブランチ名の接頭辞と構成を定義する。 |
-| 2. 開発フロー | [Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/) | コミットメッセージの型、スコープ、本文の形式を定義する。 |
-| 2. 開発フロー | [プル要求のマージ - GitHubドキュメント](https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges) | Merge commit、Squash and merge、Rebase and mergeが残す履歴と、それぞれを選ぶ場合を示す。 |
+| 2. 開発フロー | [Conventional Branch — A Git Branch Naming Convention](https://conventional-branch.github.io/) | ブランチ名の規則を定義する。 |
+| 2. 開発フロー | [Conventional Commits](https://www.conventionalcommits.org/ja/v1.0.0/) | コミットメッセージの形式を定義する。 |
+| 2. 開発フロー | [プル要求のマージ - GitHubドキュメント](https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges) | プルリクエストのマージ方法の違いを示す。 |

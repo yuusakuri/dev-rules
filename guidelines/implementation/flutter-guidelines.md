@@ -58,7 +58,7 @@
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 2. フォルダ構成 | [Flutterアーキテクチャガイド](https://docs.flutter.dev/app-architecture/guide) | Flutterが示すUI層とデータ層の責務、ViewModelの配置を確認する。 |
-| 2. フォルダ構成 | [Internationalizing Flutter apps](https://docs.flutter.dev/ui/internationalization) | 翻訳リソースと多言語対応コードの設定方法を確認する。 |
-| 3. 検証 | [Testing Flutter apps](https://docs.flutter.dev/testing/overview) | 単体テスト、Widgetテスト、結合テストの役割を確認する。 |
-| 3. 検証 | [Check app functionality with an integration test](https://docs.flutter.dev/testing/integration-tests) | `integration_test`による主要フローの検証方法を確認する。 |
+| 2. フォルダ構成 | [Flutterアーキテクチャガイド](https://docs.flutter.dev/app-architecture/guide) | Flutterが推奨するアプリケーションの構成を示す。 |
+| 2. フォルダ構成 | [Internationalizing Flutter apps](https://docs.flutter.dev/ui/internationalization) | Flutterアプリケーションの多言語対応の方法を示す。 |
+| 3. 検証 | [Testing Flutter apps](https://docs.flutter.dev/testing/overview) | Flutterアプリケーションのテストの種類を示す。 |
+| 3. 検証 | [Check app functionality with an integration test](https://docs.flutter.dev/testing/integration-tests) | `integration_test`による主要フローの検証方法を示す。 |
