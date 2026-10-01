@@ -62,7 +62,7 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 1. 概要、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
-| 4. 検証 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
-| 4. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
-| 4. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を確認する。 |
+| 1. 概要、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を示す。 |
+| 4. 検証 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を示す。 |
+| 4. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を示す。 |
+| 4. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を示す。 |

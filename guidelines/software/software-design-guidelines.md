@@ -2,7 +2,7 @@
 
 ## 目次
 
-1. [概要](#1-概要)
+1. [はじめに](#1-はじめに)
 2. [責務の分離](#2-責務の分離)
 3. [依存関係の管理](#3-依存関係の管理)
 4. [複雑性の制御](#4-複雑性の制御)
@@ -17,11 +17,17 @@
 
 ---
 
-## 1. 概要
+## 1. はじめに
+
+### 概要
 
 本書は、言語やフレームワークに依存しないソフトウェア設計ガイドラインを定義する。
 
+### 適用方法
+
 本書に示すガイドラインは、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
+
+### コード例
 
 本書のコード例と名前の例には、Rust OSSの実装を使用する。
 
@@ -722,18 +728,18 @@ impl UserRepo for InMemoryUserRepo {
 | 3. 依存関係の管理 | [Architectural principles - .NET](https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles) | Dependency Inversionと依存関係の明示を、上位の方針と下位の実装詳細の依存方向から説明する。 |
 | 3. 依存関係の管理 | [Dependency injection guidelines - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/guidelines) | 明示的な依存性注入、Service Locatorの回避、依存関係のライフサイクルを説明する。 |
 | 3. 依存関係の管理 | [Dependency Injection :: Spring Framework](https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html) | コンストラクター注入とコンテナーによる依存関係の構成を説明する。 |
-| 3. 依存関係の管理 | [Cargo `Executor`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/compiler/mod.rs#L130-L153) | 「具体的な実装に直接依存せず、抽象に依存する」のコード例の抜粋元。契約の定義。 |
-| 3. 依存関係の管理 | [Cargo `ops::compile`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/ops/cargo_compile/mod.rs#L131-L137) | 同じコード例の抜粋元。差し替えを必要としない呼び出しが`DefaultExecutor`を選ぶ箇所。 |
+| 3. 依存関係の管理 | [Cargo `Executor`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/compiler/mod.rs#L130-L153) | 「具体的な実装に直接依存せず、抽象に依存する」のコード例の抜粋元である契約の定義。 |
+| 3. 依存関係の管理 | [Cargo `ops::compile`](https://github.com/rust-lang/cargo/blob/75d17360928f57ff2a7d2f2da1c753f5fe1926d1/src/ops/cargo_compile/mod.rs#L131-L137) | 同じコード例で、差し替えを必要としない呼び出しが`DefaultExecutor`を選ぶ箇所。 |
 | 3. 依存関係の管理 | [ripgrep `search`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/main.rs#L125-L148) | 「依存関係を明示的に受け渡す」のコード例の抜粋元。 |
 | 3. 依存関係の管理 | [ripgrep `SearchWorker::search_preprocessor`](https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/core/search.rs#L294-L324) | 「起動点で依存関係を構成する」の操作単位の資源を示すコード例の抜粋元。 |
-| 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L205) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。送信路、タスクの実行資源、設定を保持する型。 |
-| 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例の抜粋元。状態から読み取り用の値を写す箇所。 |
-| 3. 依存関係の管理 | [rust-analyzer `GlobalState::update_tests`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L792-L819) | 所有した値を取り出して使うコード例の抜粋元。タスクプールへ、状態から作った読み取り用の値を渡して実行する。 |
-| 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。`AppStateDyn`の構成と`create_user_dyn`への受け渡し。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L86-L205) | 「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元である状態の型。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::snapshot`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/global_state.rs#L574-L588) | 同じコード例で、状態から読み取り用の値を写す箇所。 |
+| 3. 依存関係の管理 | [rust-analyzer `GlobalState::update_tests`](https://github.com/rust-lang/rust-analyzer/blob/70d74f4d134c45b073c82167fb7e7d61334bd8f5/crates/rust-analyzer/src/main_loop.rs#L792-L819) | 所有した値を取り出して使うコード例の抜粋元。 |
+| 3. 依存関係の管理 | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L169) | 「起動点で依存関係を構成する」「共有状態は実行責務とライフサイクルでまとめる」のコード例の抜粋元。 |
 | 3. 依存関係の管理 | [AWS SDK for Rust `SdkConfig`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-types/src/sdk_config.rs#L110-L137) | 「通信の共通処理と設定を下位の層へまとめる」のコード例の抜粋元。 |
-| 3. 依存関係の管理 | [AWS SDK for Rust `load_defaults`の実行例](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L40-L41) | 同じコード例の抜粋元。組み立てた設定をサービスのClientへ渡す箇所。 |
-| 3. 依存関係の管理 | [AWS SDK for Rust `CredentialsProviderChain`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/credentials.rs#L189-L193) | 資格情報を環境変数、プロファイル、実行環境のメタデータの順に解決する構成を確認する。 |
-| 3. 依存関係の管理 | [AWS SDK for Rust `region::default_provider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/region.rs#L19-L21) | 接続先リージョンの探索元と順序を確認する。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `load_defaults`の実行例](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/lib.rs#L40-L41) | 同じコード例で、組み立てた設定をサービスのClientへ渡す箇所。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `CredentialsProviderChain`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/credentials.rs#L189-L193) | 資格情報を環境変数、プロファイル、実行環境のメタデータの順に解決する構成を示す。 |
+| 3. 依存関係の管理 | [AWS SDK for Rust `region::default_provider`](https://github.com/awslabs/aws-sdk-rust/blob/3e53e326e97f4272ec282ce460aaee77a26f7e30/sdk/aws-config/src/default_provider/region.rs#L19-L21) | 接続先リージョンの探索元と順序を示す。 |
 | 6. 設計パターン | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L150-L169) | 「保存先を交換する場合はRepositoryへ分離する」のコード例の抜粋元。 |
 | 6. 設計パターン | [Repository](https://martinfowler.com/eaaCatalog/repository.html) | 永続化されたデータを、コレクションのように扱う境界として分離する構造を説明する。 |
 | 5. 型とカプセル化 | [TellDontAsk](https://martinfowler.com/bliki/TellDontAsk.html) | データを取り出して外側で判断せず、操作を持つ側へ依頼する設計を説明する。 |
