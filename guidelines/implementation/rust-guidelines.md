@@ -85,10 +85,10 @@ let using_generic = Router::new()
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
-| 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
-| 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的なファイルとフォルダの配置を確認する。 |
-| 2. フォルダ構成 | [core - Rust](https://doc.rust-lang.org/core/) | coreクレートが、標準ライブラリにも実行環境にも依存しない基盤として定義されていることを確認する。 |
-| 2. フォルダ構成 | [rust/library/std/src at master · rust-lang/rust](https://github.com/rust-lang/rust/tree/master/library/std/src) | 提供する機能の名前をそのままモジュール名とし、抽象的な名前の階層を挟まない配置を確認する。 |
-| 3. ディスパッチ | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L149) | ジェネリクスで実装型を保持する構成と、trait objectで実装型を隠す構成を示す。 |
-| 4. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの実行方法とlintの設定を確認する。 |
+| 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式を示す。 |
+| 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの設計基準を示す。 |
+| 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的な配置を示す。 |
+| 2. フォルダ構成 | [core - Rust](https://doc.rust-lang.org/core/) | coreクレートが実行環境に依存しない基盤であることを示す。 |
+| 2. フォルダ構成 | [rust/library/std/src at master · rust-lang/rust](https://github.com/rust-lang/rust/tree/master/library/std/src) | 機能名をモジュール名とする配置を示す。 |
+| 3. ディスパッチ | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L149) | 実装型を保持する構成の選び方を示す。 |
+| 4. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの使い方を示す。 |

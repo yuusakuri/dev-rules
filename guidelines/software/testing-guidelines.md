@@ -15,7 +15,7 @@
 
 ## 1. 概要
 
-本書は、何をテスト対象にし、どのテストケースを選び、何を検証するかを定義する。本書は、[ソフトウェア設計ガイドライン](software-design-guidelines.md)を前提とする。
+本書は、テストの設計方法を定義する。本書は、[ソフトウェア設計ガイドライン](software-design-guidelines.md)を前提とする。
 
 ---
 
@@ -161,14 +161,14 @@ SpyとMockも依存先を置き換えるが、選ぶ理由は振る舞いの再�
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 2. テスト対象の決定 | [ISO/IEC 25010:2023 - Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model](https://www.iso.org/standard/78176.html) | 性能、信頼性、セキュリティ、互換性など、製品が満たす品質特性を定義する。 |
+| 2. テスト対象の決定 | [ISO/IEC 25010:2023 - Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model](https://www.iso.org/standard/78176.html) | 製品が満たす品質特性を定義する。 |
 | 3. テストの種別 | [Test Pyramid](https://martinfowler.com/bliki/TestPyramid.html) | 上位の種別のテストほど壊れやすく、実行に時間がかかることを説明する。 |
-| 4. テストケースの設計 | [ISO/IEC/IEEE 29119-4:2021 - Software and systems engineering — Software testing — Part 4: Test techniques](https://www.iso.org/standard/79430.html) | 同値分割、境界値分析、デシジョンテーブル、状態遷移などのテスト設計技法を定義する。 |
-| 2. テスト対象の決定<br>4. テストケースの設計 | [Certified Tester Foundation Level (CTFL) v4.0 Overview](https://www.istqb.org/certifications/certified-tester-foundation-level/) | リスクに応じたテストの重点の決め方と、カバレッジの用途を示すシラバスを公開している。 |
-| 5. 検証の方針<br>6. 内部実装の呼び出し | [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html) | 状態検証と振る舞い検証の違いと、呼び出しを検証するテストが実装へ結び付くことを説明する。 |
-| 5. 検証の方針 | [Google Testing Blog: Testing on the Toilet: Testing State vs. Testing Interactions](https://testing.googleblog.com/2013/03/testing-on-toilet-testing-state-vs.html) | 状態の検証を既定とする理由と、インタラクションを検証する場合を示す。 |
-| 2. テスト対象の決定 | [Software Engineering at Google](https://abseil.io/resources/swe-book/html/ch12.html) | 第12章で、利用者と同じ方法で公開APIを呼び出すテストでは、テストを壊す変更が利用者も壊しうることと、振る舞いを特定の状態で入力に対してシステムが保証する応答として定義することを示す。 |
-| 5. 検証の方針<br>7. Test Doubleの選び方 | [Software Engineering at Google](https://abseil.io/resources/swe-book/html/ch13.html) | 第13章で、実物を優先すること、状態の検証を既定とすること、インタラクションを検証する場合、Stubに頼るテストの弊害を示す。 |
+| 4. テストケースの設計 | [ISO/IEC/IEEE 29119-4:2021 - Software and systems engineering — Software testing — Part 4: Test techniques](https://www.iso.org/standard/79430.html) | テスト設計技法を定義する。 |
+| 2. テスト対象の決定<br>4. テストケースの設計 | [Certified Tester Foundation Level (CTFL) v4.0 Overview](https://www.istqb.org/certifications/certified-tester-foundation-level/) | テスト技術者の基礎知識を示すシラバスを公開している。 |
+| 5. 検証の方針<br>6. 内部実装の呼び出し | [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html) | 状態検証と振る舞い検証との違いを説明する。 |
+| 5. 検証の方針 | [Google Testing Blog: Testing on the Toilet: Testing State vs. Testing Interactions](https://testing.googleblog.com/2013/03/testing-on-toilet-testing-state-vs.html) | 状態の検証を既定とする理由を示す。 |
+| 2. テスト対象の決定 | [Software Engineering at Google](https://abseil.io/resources/swe-book/html/ch12.html) | 公開APIを利用者と同じ方法で呼び出すテストの考え方を示す。 |
+| 5. 検証の方針<br>7. Test Doubleの選び方 | [Software Engineering at Google](https://abseil.io/resources/swe-book/html/ch13.html) | Test Doubleの使い方の指針を示す。 |
 | 2. テスト対象の決定<br>6. 内部実装の呼び出し | [Google Testing Blog: Testing on the Toilet: Change-Detector Tests Considered Harmful](https://testing.googleblog.com/2015/01/testing-on-toilet-change-detector-tests.html) | 実装の写しになったテストが欠陥を捉えず、保守の費用だけを増やすことを示す。 |
-| 7. Test Doubleの選び方 | [Test Double](https://martinfowler.com/bliki/TestDouble.html) | Test Doubleの種類と、それぞれの役割を説明する。 |
+| 7. Test Doubleの選び方 | [Test Double](https://martinfowler.com/bliki/TestDouble.html) | Test Doubleの種類を説明する。 |
 | 7. Test Doubleの選び方 | [Contract Test](https://martinfowler.com/bliki/ContractTest.html) | Test Doubleが実際のサービスの振る舞いと一致していることを確認する方法を説明する。 |
