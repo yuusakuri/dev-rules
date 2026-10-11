@@ -34,13 +34,13 @@
 
 ライセンスの列には，ライセンスの名称を記載する。
 
-ライセンスの条文を掲載したURLがある場合は，ライセンスの名称を，そのURLへのリンクとして記載する。
+ソフトウェアの提供元のウェブサイト又はリポジトリにライセンスのページがある場合は，ライセンスの名称の後に改行し，そのページへのリンクを記載する。
 
 ## 4 使用を許可するフリーソフト
 
 | ツール名 | ツール概要 | 提供元 | URL | プラットフォーム | ライセンス | 備考 |
 | --- | --- | --- | --- | --- | --- | --- |
-| Docker（Community Edition） | コンテナを構築，実行するためのコンテナエンジン。 | Docker Inc. | [Docker Engine \| Docker Docs](https://docs.docker.com/engine/) | Linux | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) | Docker Desktopは使用を禁止する（[5章](#5-使用を禁止するフリーソフト)参照）。 |
+| Docker（Community Edition） | コンテナを構築，実行するためのコンテナエンジン。 | Docker Inc. | [Docker Engine \| Docker Docs](https://docs.docker.com/engine/) | Linux | Apache License 2.0<br>[moby/LICENSE at master · moby/moby · GitHub](https://github.com/moby/moby/blob/master/LICENSE) | Docker Desktopは使用を禁止する（[5章](#5-使用を禁止するフリーソフト)参照）。 |
 
 ## 5 使用を禁止するフリーソフト
 
