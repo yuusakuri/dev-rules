@@ -41,6 +41,8 @@
 | ツール名 | ツール概要 | 提供元 | URL | プラットフォーム | ライセンス | 備考 |
 | --- | --- | --- | --- | --- | --- | --- |
 | Docker（Community Edition） | コンテナを構築，実行するためのコンテナエンジン。 | Docker Inc. | [Docker Engine \| Docker Docs](https://docs.docker.com/engine/) | Linux | Apache License 2.0<br>[moby/LICENSE at master · moby/moby · GitHub](https://github.com/moby/moby/blob/master/LICENSE) | Docker Desktopは使用を禁止する（[5章](#5-使用を禁止するフリーソフト)参照）。 |
+| VMware Workstation Pro | 1台のPCで複数の仮想マシンを実行するデスクトップハイパーバイザー。 | Broadcom Inc. | [Fusion and Workstation \| VMware](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | Windows<br>Linux | プロプライエタリ<br>[License and Service Terms & Repository](https://www.broadcom.com/company/legal/licensing) | 個人利用，教育利用及び商用利用のいずれも無料である（[VMware Fusion and Workstation are Now Free for All Users - VMware Cloud Foundation (VCF) Blog](https://blogs.vmware.com/cloud-foundation/2024/11/11/vmware-fusion-and-workstation-are-now-free-for-all-users/)参照）。<br>無料版は，Broadcomのサポート窓口の対象外である。<br>更新は，Broadcom Support Portalから最新版を入手して行う。 |
+| VMware Fusion Pro | 1台のMacで複数の仮想マシンを実行するデスクトップハイパーバイザー。 | Broadcom Inc. | [Fusion and Workstation \| VMware](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | macOS | プロプライエタリ<br>[License and Service Terms & Repository](https://www.broadcom.com/company/legal/licensing) | 個人利用，教育利用及び商用利用のいずれも無料である（[VMware Fusion and Workstation are Now Free for All Users - VMware Cloud Foundation (VCF) Blog](https://blogs.vmware.com/cloud-foundation/2024/11/11/vmware-fusion-and-workstation-are-now-free-for-all-users/)参照）。<br>無料版は，Broadcomのサポート窓口の対象外である。<br>更新は，Broadcom Support Portalから最新版を入手して行う。 |
 
 ## 5 使用を禁止するフリーソフト
 
@@ -50,3 +52,5 @@
 | Docker Desktop | 2021年より有償化されています。<br>無償で利用可能なのは従業員数250名までの企業に限定されています。 | Docker Inc. | | | | |
 | Visual Studio Community | 小規模事業者のみが無償となるライセンスです。<br>PC台数またはユーザー数が 250未満<br>年間の売上高が 100万米ドル（約1.5億円）未満 | Microsoft Corp. | | | | |
 | Lhaplus | 脆弱性がありアップデートされていないため利用禁止 | | | | | |
+| VMware Workstation Player | 2024年4月30日に販売及び配布を終了し，後継のメジャーバージョンの公開後は更新されない。 | Broadcom Inc. | | Windows<br>Linux | | VMware Workstation Proを使用する（[4章](#4-使用を許可するフリーソフト)参照）。 |
+| VMware Fusion Player | 2024年4月30日に販売及び配布を終了し，後継のメジャーバージョンの公開後は更新されない。 | Broadcom Inc. | | macOS | | VMware Fusion Proを使用する（[4章](#4-使用を許可するフリーソフト)参照）。 |
