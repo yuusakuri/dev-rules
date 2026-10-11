@@ -12,6 +12,7 @@
 | 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリのファイルとディレクトリの役割を定めるガイドライン。 | なし |
 | 開発 | [Git規則](development/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 開発 | [バージョニング規則](development/versioning-guidelines.md) | バージョン番号を決める。 | なし |
+| 開発 | [フリーソフト使用規則](development/free-software-usage-rules.md) | フリーソフトの選定基準と、使用を許可、禁止するフリーソフトを定める規則。 | なし |
 | 実装 | [TypeScript実装ガイドライン](implementation/typescript-guidelines.md) | TypeScript実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Rust実装ガイドライン](implementation/rust-guidelines.md) | Rust実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |

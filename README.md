@@ -14,7 +14,7 @@
 ├── guidelines/
 │   ├── README.md             # ガイドライン一覧と適用手順
 │   ├── software/             # ソフトウェアとアプリケーションの設計ガイドライン
-│   ├── development/          # リポジトリ、Git、バージョン管理のガイドライン
+│   ├── development/          # リポジトリ、Git、バージョン管理、フリーソフト使用のガイドライン
 │   ├── implementation/       # 技術固有の実装ガイドライン
 │   ├── ui/                   # UIデザインガイドライン
 │   └── documentation/        # 文書作成のガイドライン
