@@ -50,7 +50,7 @@ Markdownは連続した行を一つの段落としてまとめるため，単一
 
 IDは，表では `table-` に，図では `figure-` に，それぞれの番号を続けた文字列とする。
 
-このアンカーはMarkdownでの参照先を定める。DOCXに変換する際の内部リンクと目次の扱いは，[MarkdownからDOCXへの変換ガイドライン](docx-export-guidelines.md)に従う。Googleドキュメントへ取り込むDOCXでは，図表参照を通常の文字に変換してもよい。この場合もMarkdownのアンカーとリンクは保持する。
+このアンカーはMarkdownでの参照先を定める。DOCXに変換する際の内部リンクと目次の扱いは，[MarkdownからDOCXへの変換ガイドライン](docx-export-guidelines.md)に従う。
 
 ## 参考文献
 
