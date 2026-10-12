@@ -1,4 +1,4 @@
-# MarkdownからDOCXへの変換ガイドライン
+# MarkdownからDOCXへの変換
 
 ## 1 適用範囲
 
@@ -8,25 +8,41 @@
 
 Markdownファイルを正本として扱う。内容を変更する場合は，その都度Markdownを修正し，DOCXを再生成する。
 
-MarkdownからDOCXへの変換は，スクリプトで自動実行する。例えば，`sdv-study`では`scripts/export_docx.mjs`がMarkdownをDOCXへ変換し，次のコマンドで資料のDOCXを生成する。
+MarkdownからDOCXへの変換には，このリポジトリの`tools/markdown-to-docx/convert.mjs`を使用する。Node.jsとpnpmを用意し，dev-rulesのルートで次のコマンドを実行する。1行目で変換スクリプトの依存パッケージをインストールし，2行目でこのガイドラインをDOCXへ変換する。
 
 ```shell
-pnpm docs:docx
+pnpm --dir tools/markdown-to-docx install --frozen-lockfile
+node tools/markdown-to-docx/convert.mjs guidelines/documentation/docx-export-guidelines.md docx-export-guidelines.docx --target docx
 ```
 
-Googleドキュメントが必要な場合は，生成したDOCXをGoogleドライブにアップロードし，Googleドキュメント形式に変換する。Googleドライブの設定で「アップロードしたファイルを Google ドキュメント エディタ形式に変換する」を有効にしてからアップロードする。
+別のMarkdownを変換する場合は，2行目の入力ファイルと出力ファイルを指定し直す。パスはコマンドを実行するディレクトリからの相対パス又は絶対パスで指定できる。先頭の`#`見出しをタイトルにし，冒頭のYAMLフロントマターに`subtitle: ...`があればサブタイトルにする。Googleドキュメントへ取り込むDOCXには`--target google-docs`を指定する。
+
+Googleドキュメントが必要な場合は，生成したDOCXをGoogleドライブにアップロードし，Googleドキュメント形式に変換する。
 
 ## 3 書式
 
 ### 3.1 最終的な成果物がDOCXの場合
 
-DOCXの書式は，対象文書で指定されたWordのスタイル又はテンプレートに従う。Markdownの見出しは，対応するWordの見出しスタイルに変換する。
+DOCXを最終成果物とする場合の書式を[表1](#table-1)に示す。
+
+<a id="table-1"></a>表1−DOCX向けの書式
+
+| 要素 | スタイル | フォント | 文字サイズ |
+| --- | --- | --- | ---: |
+| タイトル | Title | Aptos | 26 pt |
+| サブタイトル | Subtitle | Aptos | 15 pt |
+| 見出し1 | Heading 1 | Aptos | 20 pt |
+| 見出し2 | Heading 2 | Aptos | 16 pt |
+| 見出し3 | Heading 3 | Aptos | 14 pt |
+| 通常のテキスト | Normal | Aptos | 11 pt |
+| インラインコード | Normal内の文字書式 | Consolas | 11 pt |
+| コードブロック | Normal | Consolas | 9 pt |
 
 ### 3.2 最終的な成果物がGoogleドキュメントの場合
 
-Googleドキュメント向けの書式を[表1](#table-1)に示す。DOCXを生成する際に表の書式を設定し，Googleドキュメント形式へ変換する。
+Googleドキュメント向けの書式を[表2](#table-2)に示す。DOCXを生成する際に表の書式を設定し，Googleドキュメント形式へ変換する。
 
-<a id="table-1"></a>表1−Googleドキュメント向けの書式
+<a id="table-2"></a>表2−Googleドキュメント向けの書式
 
 | 要素 | スタイル | フォント | 文字サイズ |
 | --- | --- | --- | ---: |

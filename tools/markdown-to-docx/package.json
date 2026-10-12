@@ -1,0 +1,13 @@
+{
+  "name": "dev-rules-markdown-to-docx",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "convert": "node convert.mjs"
+  },
+  "dependencies": {
+    "docx": "9.6.1",
+    "marked": "17.0.5",
+    "sharp": "0.35.5"
+  }
+}
