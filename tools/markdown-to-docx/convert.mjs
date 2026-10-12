@@ -1,50 +1,73 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
+import { decode } from 'html-entities';
 import { marked } from 'marked';
 import {
-  BorderStyle, Document, ExternalHyperlink, HeadingLevel, ImageRun,
+  AlignmentType, BorderStyle, Document, ExternalHyperlink, HeadingLevel, ImageRun,
   Packer, Paragraph, Table, TableCell, TableLayoutType, TableOfContents, TableRow, TextRun, WidthType,
 } from 'docx';
 import sharp from 'sharp';
+import { parse as parseYaml } from 'yaml';
 
-const [sourceArg, outputArg, ...options] = process.argv.slice(2);
-if (!sourceArg || !outputArg || options.length > 2 || (options.length && (options[0] !== '--target' || !['docx', 'google-docs'].includes(options[1])))) {
-  throw new Error('Usage: node convert.mjs INPUT.md OUTPUT.docx [--target docx|google-docs]');
+const args = process.argv.slice(2);
+const usage = 'Usage: node convert.mjs --input-file INPUT.md --output-file OUTPUT.docx [--style docx|google-docs]';
+const validOptions = new Set(['--input-file', '--output-file', '--style']);
+if (args.length % 2 !== 0) throw new Error(usage);
+const options = new Map();
+for (let index = 0; index < args.length; index += 2) {
+  const option = args[index];
+  const value = args[index + 1];
+  if (!validOptions.has(option) || options.has(option) || !value || value.startsWith('--')) throw new Error(usage);
+  options.set(option, value);
 }
+const sourceArg = options.get('--input-file');
+const outputArg = options.get('--output-file');
+const style = options.get('--style') ?? 'docx';
+if (!sourceArg || !outputArg || !['docx', 'google-docs'].includes(style)) throw new Error(usage);
 const sourcePath = path.resolve(sourceArg);
 const outputPath = path.resolve(outputArg);
 if (path.extname(sourcePath).toLowerCase() !== '.md' || path.extname(outputPath).toLowerCase() !== '.docx' || sourcePath === outputPath) {
   throw new Error('Input must be .md and output must be a distinct .docx file');
 }
-const target = options[1] ?? 'docx';
+const sourceStat = await fs.stat(sourcePath);
+const outputStat = await fs.stat(outputPath).catch((error) => {
+  if (error.code === 'ENOENT') return null;
+  throw error;
+});
+if (outputStat && sourceStat.dev === outputStat.dev && sourceStat.ino === outputStat.ino) {
+  throw new Error('Output file must not refer to the Markdown source');
+}
 const profiles = {
   docx: {
     normalFont: 'Aptos', headingFont: 'Aptos Display', codeFont: 'Consolas',
     normalSize: 24, titleSize: 56, subtitleSize: 28,
-    heading1Size: 32, heading2Size: 28, heading3Size: 24,
+    heading1Size: 32, heading2Size: 28, heading3Size: 24, heading4Size: 24, heading5Size: 22,
   },
   'google-docs': {
     normalFont: 'Arial', headingFont: 'Arial', codeFont: 'Roboto Mono',
     normalSize: 22, titleSize: 52, subtitleSize: 30,
-    heading1Size: 40, heading2Size: 32, heading3Size: 28,
+    heading1Size: 40, heading2Size: 32, heading3Size: 28, heading4Size: 24, heading5Size: 22,
   },
 };
 const {
   normalFont, headingFont, codeFont, normalSize, titleSize, subtitleSize,
-  heading1Size, heading2Size, heading3Size,
-} = profiles[target];
+  heading1Size, heading2Size, heading3Size, heading4Size, heading5Size,
+} = profiles[style];
+const fontFor = (name) => ({ ascii: name, hAnsi: name, eastAsia: 'Yu Gothic' });
 const textColor = '202124';
 const border = { style: BorderStyle.SINGLE, size: 4, color: '808080' };
 const borders = { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border };
 
-const cleanText = (text) => String(text ?? '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
+const cleanText = (text) => decode(String(text ?? '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, '')).replace(/\u00a0/g, ' ');
 const slug = (value) => cleanText(value).toLowerCase().replace(/[^\p{L}\p{N}_ -]/gu, '').replace(/ /g, '-');
 
 const source = await fs.readFile(sourcePath, 'utf8');
 const frontMatter = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(source);
-const subtitle = frontMatter?.[1].match(/^subtitle:\s*(.+)$/m)?.[1]?.trim();
-const markdown = source.slice(frontMatter?.[0].length ?? 0).replace(/<!--[^]*?-->/g, '').replace(/<a\s+id="[^"]+"\s*><\/a>/g, '');
+const subtitle = frontMatter ? parseYaml(frontMatter[1])?.subtitle : undefined;
+if (subtitle !== undefined && typeof subtitle !== 'string') throw new Error('Front matter subtitle must be a string');
+const markdown = source.slice(frontMatter?.[0].length ?? 0);
 const tokens = marked.lexer(markdown, { gfm: true });
 const anchors = new Set();
 function addAnchor(key) {
@@ -57,8 +80,20 @@ for (const line of source.split(/\r?\n/)) {
     addAnchor(match[1]);
   }
 }
-const missingAnchors = [...markdown.matchAll(/\]\(#([^)]+)\)/g)]
-  .map((match) => match[1]).filter((key) => !anchors.has(key));
+const internalLinks = [];
+function collectInternalLinks(value) {
+  if (Array.isArray(value)) {
+    for (const entry of value) collectInternalLinks(entry);
+  } else if (value && typeof value === 'object') {
+    if (value.type === 'link' && value.href?.startsWith('#')) internalLinks.push(value.href.slice(1));
+    collectInternalLinks(value.tokens);
+    collectInternalLinks(value.items);
+    collectInternalLinks(value.header);
+    collectInternalLinks(value.rows);
+  }
+}
+collectInternalLinks(tokens);
+const missingAnchors = internalLinks.filter((key) => !anchors.has(key));
 if (missingAnchors.length) throw new Error(`Unresolved internal links: ${[...new Set(missingAnchors)].join(', ')}`);
 
 function inlineRuns(tokens, style = {}) {
@@ -70,11 +105,12 @@ function inlineRuns(tokens, style = {}) {
     }
     if (token.type === 'link') {
       const text = cleanText(token.text);
-      if (/^https?:\/\//.test(token.href ?? '')) {
-        runs.push(new ExternalHyperlink({ link: token.href, children: [new TextRun({ text, style: 'Hyperlink', ...style })] }));
-      } else if (token.href?.startsWith('#')) {
+      if (token.href?.startsWith('#')) {
         runs.push(new TextRun({ text, ...style }));
-      } else runs.push(new TextRun({ text, ...style }));
+      } else {
+        const resolved = /^[a-z][a-z0-9+.-]*:/i.test(token.href) ? token.href : new URL(token.href, pathToFileURL(sourcePath)).href;
+        runs.push(new ExternalHyperlink({ link: resolved, children: [new TextRun({ text, style: 'Hyperlink', font: fontFor(normalFont), ...style })] }));
+      }
       continue;
     }
     if (token.type === 'image') continue;
@@ -83,7 +119,7 @@ function inlineRuns(tokens, style = {}) {
       continue;
     }
     if (token.type === 'codespan') {
-      runs.push(new TextRun({ text: token.text, font: codeFont, size: 22, ...style }));
+      runs.push(new TextRun({ text: token.text, font: fontFor(codeFont), size: 22, ...style }));
       continue;
     }
     if (token.type === 'br') { runs.push(new TextRun({ break: 1 })); continue; }
@@ -103,21 +139,23 @@ function paragraph(token, options = {}) {
 }
 
 async function imageParagraph(token) {
-  const match = /^!\[[^\]]*\]\(([^)]+)\)/.exec(token.raw ?? '');
-  const img = token.tokens?.find((t) => t.type === 'image');
-  const rel = img?.href ?? match?.[1];
-  if (!rel) return null;
+  const images = token.tokens?.filter((part) => part.type === 'image') ?? [];
+  if (!images.length) return null;
   if (token.tokens?.some((part) => part.type !== 'image' && cleanText(part.text).trim())) {
     throw new Error('Images must be on their own Markdown paragraph');
   }
-  if (/^[a-z][a-z0-9+.-]*:/i.test(rel)) throw new Error(`Image must be a local file: ${rel}`);
-  const imagePath = path.resolve(path.dirname(sourcePath), rel);
-  const data = await sharp(imagePath).png().toBuffer();
-  const meta = await sharp(data).metadata();
-  const scale = Math.min(1, 590 / meta.width, 650 / meta.height);
-  const width = Math.round(meta.width * scale);
-  const height = Math.round(meta.height * scale);
-  return new Paragraph({ children: [new ImageRun({ data, type: 'png', transformation: { width, height }, altText: { title: img?.text ?? '', description: img?.text ?? '', name: path.basename(rel) } })], spacing: { before: 100, after: 100 }, keepNext: true });
+  const imageRuns = [];
+  for (const [index, img] of images.entries()) {
+    const rel = img.href;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(rel)) throw new Error(`Image must be a local file: ${rel}`);
+    const imagePath = path.resolve(path.dirname(sourcePath), rel);
+    const data = await sharp(imagePath).autoOrient().png().toBuffer();
+    const meta = await sharp(data).metadata();
+    const scale = Math.min(1, 590 / meta.width, 650 / meta.height);
+    if (index) imageRuns.push(new TextRun({ break: 1 }));
+    imageRuns.push(new ImageRun({ data, type: 'png', transformation: { width: Math.round(meta.width * scale), height: Math.round(meta.height * scale) }, altText: { title: img.text ?? '', description: img.text ?? '', name: path.basename(rel) } }));
+  }
+  return new Paragraph({ children: imageRuns, spacing: { before: 100, after: 100 }, keepNext: true });
 }
 
 function makeTable(token) {
@@ -126,8 +164,8 @@ function makeTable(token) {
   const rows = allRows.map((cells, rowIndex) => new TableRow({
     tableHeader: rowIndex === 0,
     cantSplit: true,
-    children: cells.map((cell) => new TableCell({
-      children: [paragraph(cell, { after: 0, runStyle: { bold: rowIndex === 0 }, paragraph: { spacing: { before: 50, after: 50, line: 250 } } })],
+    children: cells.map((cell, columnIndex) => new TableCell({
+      children: [paragraph(cell, { after: 0, runStyle: { bold: rowIndex === 0 }, paragraph: { alignment: token.align?.[columnIndex] ? AlignmentType[token.align[columnIndex].toUpperCase()] : undefined, spacing: { before: 50, after: 50, line: 250 } } })],
       shading: rowIndex === 0 ? { fill: 'E8EEF5' } : undefined,
       margins: { top: 70, bottom: 70, left: 75, right: 75 },
     })),
@@ -142,6 +180,25 @@ function makeTable(token) {
 }
 
 const children = [];
+const numberingConfigs = [];
+function renderList(token, depth = 0) {
+  const reference = token.ordered ? `ordered-${numberingConfigs.length + 1}` : null;
+  if (reference) numberingConfigs.push({ reference, levels: [{ level: 0, format: 'decimal', text: '%1.', alignment: 'left', start: Number(token.start) || 1 }] });
+  for (const item of token.items) {
+    let firstParagraph = true;
+    for (const part of item.tokens ?? []) {
+      if (part.type === 'list') {
+        renderList(part, depth + 1);
+      } else if (part.type === 'text' || part.type === 'paragraph') {
+        const listStyle = firstParagraph
+          ? reference ? { numbering: { reference, level: 0 }, indent: depth ? { left: 400 * depth } : undefined } : { bullet: { level: depth } }
+          : { indent: { left: 400 * (depth + 1) } };
+        children.push(paragraph(part, { after: 60, paragraph: listStyle }));
+        firstParagraph = false;
+      }
+    }
+  }
+}
 let tocListPending = false;
 for (const [index, token] of tokens.entries()) {
   if (token.type === 'space' || token.type === 'hr' || token.type === 'html') continue;
@@ -154,7 +211,8 @@ for (const [index, token] of tokens.entries()) {
     const img = await imageParagraph(token);
     const next = tokens.slice(index + 1).find((candidate) => !['space', 'html'].includes(candidate.type));
     const followedByImage = next?.type === 'paragraph' && /^!\[/.test(next.raw?.trim() ?? '');
-    children.push(img ?? paragraph(token, { paragraph: { keepNext: followedByImage, keepLines: followedByImage } }));
+    const tableCaption = next?.type === 'table' && /^表\d+[−-]/.test(cleanText(token.text).trim());
+    children.push(img ?? paragraph(token, { paragraph: { keepNext: followedByImage || tableCaption, keepLines: followedByImage || tableCaption } }));
   } else if (token.type === 'table') {
     children.push(makeTable(token));
     children.push(new Paragraph({ spacing: { after: 75 } }));
@@ -168,15 +226,15 @@ for (const [index, token] of tokens.entries()) {
       tocListPending = false;
       continue;
     }
-    for (const [index, item] of token.items.entries()) {
-      const textToken = { text: item.text, tokens: marked.Lexer.lexInline(item.text) };
-      children.push(paragraph(textToken, { after: 60, paragraph: token.ordered ? { numbering: { reference: 'ordered', level: 0 } } : { bullet: { level: 0 } } }));
-    }
+    renderList(token);
   } else if (token.type === 'code') {
-    for (const line of token.text.split('\n')) children.push(new Paragraph({ children: [new TextRun({ text: line || ' ', font: codeFont, size: 18 })], spacing: { after: 0, line: 220 }, shading: { fill: 'F4F4F4' } }));
+    for (const line of token.text.split('\n')) children.push(new Paragraph({ children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 18 })], spacing: { after: 0, line: 220 }, shading: { fill: 'F4F4F4' } }));
     children.push(new Paragraph({ spacing: { after: 80 } }));
   } else if (token.type === 'blockquote') {
-    for (const line of token.text.split('\n')) children.push(new Paragraph({ children: [new TextRun(cleanText(line))], indent: { left: 400 }, spacing: { after: 80 } }));
+    for (const part of token.tokens ?? marked.lexer(token.text ?? '')) {
+      if (part.type === 'paragraph' || part.type === 'text') children.push(paragraph(part, { after: 80, paragraph: { indent: { left: 400 } } }));
+      else if (part.type === 'list') renderList(part, 1);
+    }
   }
 }
 
@@ -184,20 +242,22 @@ const doc = new Document({
   features: { updateFields: true },
   styles: {
     default: {
-      document: { run: { font: normalFont, size: normalSize, color: textColor }, paragraph: { spacing: { after: 120 } } },
-      title: { run: { font: headingFont, size: titleSize, bold: true, color: textColor }, paragraph: { spacing: { after: 240 } } },
-      heading1: { run: { font: headingFont, size: heading1Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
-      heading2: { run: { font: headingFont, size: heading2Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
-      heading3: { run: { font: headingFont, size: heading3Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      document: { run: { font: fontFor(normalFont), size: normalSize, color: textColor }, paragraph: { spacing: { after: 120 } } },
+      title: { run: { font: fontFor(headingFont), size: titleSize, bold: true, color: textColor }, paragraph: { spacing: { after: 240 } } },
+      heading1: { run: { font: fontFor(headingFont), size: heading1Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      heading2: { run: { font: fontFor(headingFont), size: heading2Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      heading3: { run: { font: fontFor(headingFont), size: heading3Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      heading4: { run: { font: fontFor(headingFont), size: heading4Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      heading5: { run: { font: fontFor(headingFont), size: heading5Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
     },
     paragraphStyles: [
-      { id: 'Subtitle', name: 'Subtitle', basedOn: 'Normal', next: 'Normal', run: { font: headingFont, size: subtitleSize, color: textColor }, paragraph: { spacing: { after: 180 } } },
-      { id: 'TOCHeading', name: 'TOC Heading', basedOn: 'Normal', next: 'Normal', run: { font: headingFont, size: heading1Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      { id: 'Subtitle', name: 'Subtitle', basedOn: 'Normal', next: 'Normal', run: { font: fontFor(headingFont), size: subtitleSize, color: textColor }, paragraph: { spacing: { after: 180 } } },
+      { id: 'TOCHeading', name: 'TOC Heading', basedOn: 'Normal', next: 'Normal', run: { font: fontFor(headingFont), size: heading1Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
     ],
   },
-  numbering: { config: [{ reference: 'ordered', levels: [{ level: 0, format: 'decimal', text: '%1.', alignment: 'left' }] }] },
+  numbering: { config: numberingConfigs },
   sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 850, right: 850, bottom: 850, left: 850 } } }, children }],
 });
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
 await fs.writeFile(outputPath, await Packer.toBuffer(doc));
-console.log(JSON.stringify({ sourcePath, outputPath, target, blocks: tokens.length, tables: tokens.filter((t) => t.type === 'table').length, images: tokens.filter((t) => t.type === 'paragraph' && t.tokens?.some((x) => x.type === 'image')).length }));
+console.log(JSON.stringify({ sourcePath, outputPath, style, blocks: tokens.length, tables: tokens.filter((t) => t.type === 'table').length, images: tokens.reduce((count, token) => count + (token.type === 'paragraph' ? token.tokens?.filter((part) => part.type === 'image').length ?? 0 : 0), 0) }));

@@ -11,12 +11,18 @@ importers:
       docx:
         specifier: 9.6.1
         version: 9.6.1
+      html-entities:
+        specifier: 2.6.0
+        version: 2.6.0
       marked:
         specifier: 17.0.5
         version: 17.0.5
       sharp:
         specifier: 0.35.5
         version: 0.35.5(@types/node@25.9.9)
+      yaml:
+        specifier: 2.8.1
+        version: 2.8.1
 
 packages:
 
@@ -202,6 +208,9 @@ packages:
   hash.js@1.1.7:
     resolution: {integrity: sha512-taOaskGt4z4SOANNseOviYDvjEJinIkRgmp7LbKP2YTTmVxWBl87s/uzK9r+44BclBSp2X7K1hqeNfz9JbBeXA==}
 
+  html-entities@2.6.0:
+    resolution: {integrity: sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ==}
+
   immediate@3.0.6:
     resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==}
 
@@ -281,6 +290,11 @@ packages:
 
   xml@1.0.1:
     resolution: {integrity: sha512-huCv9IH9Tcf95zuYCsQraZtWnJvBtLVE0QHMOs8bWyZAFZNDcYjsPq1nEx8jKA9y+Beo9v+7OBPRisQTjinQMw==}
+
+  yaml@2.8.1:
+    resolution: {integrity: sha512-lcYcMxX2PO9XMGvAJkJ3OsNMw+/7FKes7/hgerGUYWIoWu5j/+YQqcZr5JnPZWzOsEBgMbSbiSTn/dv/69Mkpw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
 
 snapshots:
 
@@ -417,6 +431,8 @@ snapshots:
       inherits: 2.0.4
       minimalistic-assert: 1.0.1
 
+  html-entities@2.6.0: {}
+
   immediate@3.0.6: {}
 
   inherits@2.0.4: {}
@@ -511,3 +527,5 @@ snapshots:
       sax: 1.6.1
 
   xml@1.0.1: {}
+
+  yaml@2.8.1: {}

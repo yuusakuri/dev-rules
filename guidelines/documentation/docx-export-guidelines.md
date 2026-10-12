@@ -10,14 +10,30 @@ Markdownファイルを正本として扱う。内容を変更する場合は，
 
 ## 3 変換方法
 
-MarkdownからDOCXへの変換には，このリポジトリの`tools/markdown-to-docx/convert.mjs`を使用する。Node.jsとpnpmを用意し，dev-rulesのルートで次のコマンドを実行する。`<input.md>`と`<output.docx>`は，変換対象のMarkdownファイルと出力するDOCXファイルのパスに置き換える。
+### 3.1 環境
 
-```shell
-pnpm --dir tools/markdown-to-docx install --frozen-lockfile
-node tools/markdown-to-docx/convert.mjs "<input.md>" "<output.docx>" --target docx
-```
+変換に必要な環境を[表1](#table-1)に示す。
 
-パスはコマンドを実行するディレクトリからの相対パス又は絶対パスで指定できる。先頭の`#`見出しをタイトルにし，冒頭のYAMLフロントマターに`subtitle: ...`があればサブタイトルにする。Googleドキュメントへ取り込むDOCXには`--target google-docs`を指定する。
+<a id="table-1"></a>表1−変換環境
+
+| 項目 | 要件 |
+| --- | --- |
+| Node.js | 20.9.0以上。 |
+| pnpm | 10.28.2。 |
+
+### 3.2 手順
+
+MarkdownからDOCXへの変換には，このリポジトリの`tools/markdown-to-docx/convert.mjs`を使用する。dev-rulesのルートで[表2](#table-2)の順にコマンドを実行する。
+
+<a id="table-2"></a>表2−変換手順
+
+| 手順 | コマンド | 説明 |
+| --- | --- | --- |
+| 1 | `pnpm --dir tools/markdown-to-docx install --frozen-lockfile` | 変換スクリプトの依存パッケージをインストールする。 |
+| 2 | `node tools/markdown-to-docx/convert.mjs --input-file "<input.md>" --output-file "<output.docx>" --style docx` | DOCX向けの書式で変換する。 |
+| 2（Googleドキュメント向け） | `node tools/markdown-to-docx/convert.mjs --input-file "<input.md>" --output-file "<output.docx>" --style google-docs` | Googleドキュメントへの取り込みに用いるDOCXを生成する。 |
+
+`<input.md>`及び`<output.docx>`は，変換対象のMarkdownファイル及び出力するDOCXファイルのパスに置き換える。相対パスと絶対パスのどちらも指定できる。先頭の`#`見出しをタイトルにし，冒頭のYAMLフロントマターに`subtitle: ...`があればサブタイトルにする。
 
 Googleドキュメントが必要な場合は，生成したDOCXをGoogleドライブにアップロードし，Googleドキュメント形式に変換する。
 
@@ -25,37 +41,43 @@ Googleドキュメントが必要な場合は，生成したDOCXをGoogleドラ�
 
 ### 4.1 最終的な成果物がDOCXの場合
 
-DOCXを最終成果物とする場合の書式を[表1](#table-1)に示す。
+DOCXを最終成果物とする場合の書式を[表3](#table-3)に示す。
 
-<a id="table-1"></a>表1−DOCX向けの書式
+<a id="table-3"></a>表3−DOCX向けの書式
 
-| 要素 | スタイル | フォント | 文字サイズ |
-| --- | --- | --- | ---: |
-| タイトル | Title | Aptos Display | 28 pt |
-| サブタイトル | Subtitle | Aptos Display | 14 pt |
-| 見出し1 | Heading 1 | Aptos Display | 16 pt |
-| 見出し2 | Heading 2 | Aptos Display | 14 pt |
-| 見出し3 | Heading 3 | Aptos Display | 12 pt |
-| 通常のテキスト | Normal | Aptos | 12 pt |
-| インラインコード | Normal内の文字書式 | Consolas | 11 pt |
-| コードブロック | Normal | Consolas | 9 pt |
+| 要素 | Markdown | スタイル | フォント | 文字サイズ |
+| --- | --- | --- | --- | ---: |
+| タイトル | `#` | Title | Aptos Display | 28 pt |
+| サブタイトル | フロントマターの`subtitle` | Subtitle | Aptos Display | 14 pt |
+| 見出し1 | `##` | Heading 1 | Aptos Display | 16 pt |
+| 見出し2 | `###` | Heading 2 | Aptos Display | 14 pt |
+| 見出し3 | `####` | Heading 3 | Aptos Display | 12 pt |
+| 見出し4 | `#####` | Heading 4 | Aptos Display | 12 pt |
+| 見出し5 | `######` | Heading 5 | Aptos Display | 11 pt |
+| 通常のテキスト | 段落 | Normal | Aptos | 12 pt |
+| インラインコード | 行内のコード | Normal内の文字書式 | Consolas | 11 pt |
+| コードブロック | コードフェンス | Normal | Consolas | 9 pt |
 
 ### 4.2 最終的な成果物がGoogleドキュメントの場合
 
-Googleドキュメント向けの書式を[表2](#table-2)に示す。DOCXを生成する際に表の書式を設定し，Googleドキュメント形式へ変換する。
+Googleドキュメント向けの書式を[表4](#table-4)に示す。DOCXを生成する際に各要素へ表4の書式を設定し，Googleドキュメント形式へ変換する。
 
-<a id="table-2"></a>表2−Googleドキュメント向けの書式
+<a id="table-4"></a>表4−Googleドキュメント向けの書式
 
-| 要素 | スタイル | フォント | 文字サイズ |
-| --- | --- | --- | ---: |
-| タイトル | タイトル | Arial | 26 pt |
-| サブタイトル | サブタイトル | Arial | 15 pt |
-| 見出し1 | 見出し1 | Arial | 20 pt |
-| 見出し2 | 見出し2 | Arial | 16 pt |
-| 見出し3 | 見出し3 | Arial | 14 pt |
-| 通常のテキスト | 標準テキスト | Arial | 11 pt |
-| インラインコード | 標準テキスト内の文字書式 | Roboto Mono | 11 pt |
-| コードブロック | 標準テキストの段落 | Roboto Mono | 9 pt |
+| 要素 | Markdown | スタイル | フォント | 文字サイズ |
+| --- | --- | --- | --- | ---: |
+| タイトル | `#` | タイトル | Arial | 26 pt |
+| サブタイトル | フロントマターの`subtitle` | サブタイトル | Arial | 15 pt |
+| 見出し1 | `##` | 見出し1 | Arial | 20 pt |
+| 見出し2 | `###` | 見出し2 | Arial | 16 pt |
+| 見出し3 | `####` | 見出し3 | Arial | 14 pt |
+| 見出し4 | `#####` | 見出し4 | Arial | 12 pt |
+| 見出し5 | `######` | 見出し5 | Arial | 11 pt |
+| 通常のテキスト | 段落 | 標準テキスト | Arial | 11 pt |
+| インラインコード | 行内のコード | 標準テキスト内の文字書式 | Roboto Mono | 11 pt |
+| コードブロック | コードフェンス | 標準テキストの段落 | Roboto Mono | 9 pt |
+
+[表3](#table-3)及び[表4](#table-4)のフォント欄は欧文に適用し，日本語にはYu Gothicを指定する。
 
 ## 参考文献
 
