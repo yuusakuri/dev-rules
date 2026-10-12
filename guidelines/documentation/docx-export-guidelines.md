@@ -29,12 +29,12 @@ DOCXを最終成果物とする場合の書式を[表1](#table-1)に示す。
 
 | 要素 | スタイル | フォント | 文字サイズ |
 | --- | --- | --- | ---: |
-| タイトル | Title | Aptos | 26 pt |
-| サブタイトル | Subtitle | Aptos | 15 pt |
-| 見出し1 | Heading 1 | Aptos | 20 pt |
-| 見出し2 | Heading 2 | Aptos | 16 pt |
-| 見出し3 | Heading 3 | Aptos | 14 pt |
-| 通常のテキスト | Normal | Aptos | 11 pt |
+| タイトル | Title | Aptos Display | 28 pt |
+| サブタイトル | Subtitle | Aptos Display | 14 pt |
+| 見出し1 | Heading 1 | Aptos Display | 16 pt |
+| 見出し2 | Heading 2 | Aptos Display | 14 pt |
+| 見出し3 | Heading 3 | Aptos Display | 12 pt |
+| 通常のテキスト | Normal | Aptos | 12 pt |
 | インラインコード | Normal内の文字書式 | Consolas | 11 pt |
 | コードブロック | Normal | Consolas | 9 pt |
 

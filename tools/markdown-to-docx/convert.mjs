@@ -19,10 +19,21 @@ if (path.extname(sourcePath).toLowerCase() !== '.md' || path.extname(outputPath)
 }
 const target = options[1] ?? 'docx';
 const profiles = {
-  docx: { normalFont: 'Aptos', codeFont: 'Consolas' },
-  'google-docs': { normalFont: 'Arial', codeFont: 'Roboto Mono' },
+  docx: {
+    normalFont: 'Aptos', headingFont: 'Aptos Display', codeFont: 'Consolas',
+    normalSize: 24, titleSize: 56, subtitleSize: 28,
+    heading1Size: 32, heading2Size: 28, heading3Size: 24,
+  },
+  'google-docs': {
+    normalFont: 'Arial', headingFont: 'Arial', codeFont: 'Roboto Mono',
+    normalSize: 22, titleSize: 52, subtitleSize: 30,
+    heading1Size: 40, heading2Size: 32, heading3Size: 28,
+  },
 };
-const { normalFont, codeFont } = profiles[target];
+const {
+  normalFont, headingFont, codeFont, normalSize, titleSize, subtitleSize,
+  heading1Size, heading2Size, heading3Size,
+} = profiles[target];
 const textColor = '202124';
 const border = { style: BorderStyle.SINGLE, size: 4, color: '808080' };
 const borders = { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border };
@@ -173,15 +184,15 @@ const doc = new Document({
   features: { updateFields: true },
   styles: {
     default: {
-      document: { run: { font: normalFont, size: 22, color: textColor }, paragraph: { spacing: { after: 120 } } },
-      title: { run: { font: normalFont, size: 52, bold: true, color: textColor }, paragraph: { spacing: { after: 240 } } },
-      heading1: { run: { font: normalFont, size: 40, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
-      heading2: { run: { font: normalFont, size: 32, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
-      heading3: { run: { font: normalFont, size: 28, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      document: { run: { font: normalFont, size: normalSize, color: textColor }, paragraph: { spacing: { after: 120 } } },
+      title: { run: { font: headingFont, size: titleSize, bold: true, color: textColor }, paragraph: { spacing: { after: 240 } } },
+      heading1: { run: { font: headingFont, size: heading1Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      heading2: { run: { font: headingFont, size: heading2Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      heading3: { run: { font: headingFont, size: heading3Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
     },
     paragraphStyles: [
-      { id: 'Subtitle', name: 'Subtitle', basedOn: 'Normal', next: 'Normal', run: { font: normalFont, size: 30, color: textColor }, paragraph: { spacing: { after: 180 } } },
-      { id: 'TOCHeading', name: 'TOC Heading', basedOn: 'Normal', next: 'Normal', run: { font: normalFont, size: 40, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      { id: 'Subtitle', name: 'Subtitle', basedOn: 'Normal', next: 'Normal', run: { font: headingFont, size: subtitleSize, color: textColor }, paragraph: { spacing: { after: 180 } } },
+      { id: 'TOCHeading', name: 'TOC Heading', basedOn: 'Normal', next: 'Normal', run: { font: headingFont, size: heading1Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
     ],
   },
   numbering: { config: [{ reference: 'ordered', levels: [{ level: 0, format: 'decimal', text: '%1.', alignment: 'left' }] }] },
