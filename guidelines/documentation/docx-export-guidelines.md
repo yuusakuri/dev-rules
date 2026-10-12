@@ -91,4 +91,3 @@ Googleドキュメント向けの書式を[表4](#table-4)に示す。DOCXを生
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 3章 | [Google ドライブにファイルやフォルダをアップロードする - パソコン - Google ドライブ ヘルプ](https://support.google.com/drive/answer/2424368?hl=ja) | DOCXのアップロードとGoogleドキュメント形式への変換を説明する文書。 |
-| 4章 | [ドキュメントにタイトル、見出し、目次を追加する - パソコン - Google ドキュメント エディタ ヘルプ](https://support.google.com/docs/answer/116338?hl=ja) | Googleドキュメントのタイトル及び見出しスタイルを説明する文書。 |
