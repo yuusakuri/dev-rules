@@ -7,7 +7,8 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "convert": "node convert.mjs"
+    "convert": "node convert.mjs",
+    "test": "node --test convert.test.mjs"
   },
   "dependencies": {
     "docx": "9.6.1",
@@ -15,5 +16,8 @@
     "marked": "17.0.5",
     "sharp": "0.35.5",
     "yaml": "2.8.3"
+  },
+  "devDependencies": {
+    "jszip": "3.10.2"
   }
 }
