@@ -130,7 +130,16 @@ function inlineRuns(tokens, style = {}) {
 }
 
 function paragraph(token, options = {}) {
-  const tokens = token.tokens ?? marked.Lexer.lexInline(token.text ?? token.raw ?? '');
+  const tokens = (token.tokens ?? marked.Lexer.lexInline(token.text ?? token.raw ?? ''))
+    .filter((part) => part.type !== 'html' || /^<br/i.test(part.raw ?? ''));
+  while (tokens.at(-1)?.type === 'text') {
+    const last = tokens.pop();
+    const text = last.text.replace(/[ \t]+$/, '');
+    if (text) {
+      tokens.push({ ...last, text });
+      break;
+    }
+  }
   return new Paragraph({
     children: inlineRuns(tokens, options.runStyle ?? {}),
     spacing: { after: options.after ?? 120, line: 285 },
