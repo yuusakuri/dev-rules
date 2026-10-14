@@ -43,17 +43,17 @@ const profiles = {
   docx: {
     normalFont: 'Aptos', headingFont: 'Aptos Display', codeFont: 'Consolas',
     normalSize: 24, titleSize: 56, subtitleSize: 28,
-    heading1Size: 32, heading2Size: 28, heading3Size: 24, heading4Size: 24, heading5Size: 22,
+    heading1Size: 32, heading2Size: 28, heading3Size: 24, heading4Size: 24, heading5Size: 22, heading6Size: 22,
   },
   'google-docs': {
     normalFont: 'Arial', headingFont: 'Arial', codeFont: 'Roboto Mono',
     normalSize: 22, titleSize: 52, subtitleSize: 30,
-    heading1Size: 40, heading2Size: 32, heading3Size: 28, heading4Size: 24, heading5Size: 22,
+    heading1Size: 40, heading2Size: 32, heading3Size: 28, heading4Size: 24, heading5Size: 22, heading6Size: 22,
   },
 };
 const {
   normalFont, headingFont, codeFont, normalSize, titleSize, subtitleSize,
-  heading1Size, heading2Size, heading3Size, heading4Size, heading5Size,
+  heading1Size, heading2Size, heading3Size, heading4Size, heading5Size, heading6Size,
 } = profiles[style];
 const fontFor = (name) => ({ ascii: name, hAnsi: name, eastAsia: 'Yu Gothic' });
 const textColor = '202124';
@@ -209,13 +209,14 @@ function renderList(token, depth = 0) {
   }
 }
 let tocListPending = false;
+const titleToken = tokens.find((token) => token.type === 'heading' && token.depth === 1);
 for (const [index, token] of tokens.entries()) {
   if (token.type === 'space' || token.type === 'hr' || token.type === 'html') continue;
   if (token.type === 'heading') {
     tocListPending = token.text === '目次';
-    const heading = tocListPending ? 'TOCHeading' : token.depth === 1 ? 'Title' : HeadingLevel['HEADING_' + Math.min(6, token.depth - 1)];
-    children.push(paragraph(token, { after: token.depth === 1 ? 230 : 150, paragraph: { style: heading, keepNext: true } }));
-    if (token.depth === 1 && subtitle) children.push(new Paragraph({ text: subtitle, style: 'Subtitle' }));
+    const heading = tocListPending ? 'TOCHeading' : token === titleToken ? 'Title' : HeadingLevel['HEADING_' + token.depth];
+    children.push(paragraph(token, { after: token === titleToken ? 230 : 150, paragraph: { style: heading, keepNext: true } }));
+    if (token === titleToken && subtitle) children.push(new Paragraph({ text: subtitle, style: 'Subtitle' }));
   } else if (token.type === 'paragraph') {
     const img = await imageParagraph(token);
     const next = tokens.slice(index + 1).find((candidate) => !['space', 'html'].includes(candidate.type));
@@ -229,8 +230,8 @@ for (const [index, token] of tokens.entries()) {
     if (tocListPending) {
       children.push(new TableOfContents('目次', {
         hyperlink: true,
-        headingStyleRange: '1-1',
-        cachedEntries: token.items.map((item) => ({ title: cleanText(marked.parseInline(item.text)), level: 1 })),
+        headingStyleRange: '2-2',
+        cachedEntries: token.items.map((item) => ({ title: cleanText(marked.parseInline(item.text)), level: 2 })),
       }));
       tocListPending = false;
       continue;
@@ -258,10 +259,11 @@ const doc = new Document({
       heading3: { run: { font: fontFor(headingFont), size: heading3Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
       heading4: { run: { font: fontFor(headingFont), size: heading4Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
       heading5: { run: { font: fontFor(headingFont), size: heading5Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      heading6: { run: { font: fontFor(headingFont), size: heading6Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
     },
     paragraphStyles: [
       { id: 'Subtitle', name: 'Subtitle', basedOn: 'Normal', next: 'Normal', run: { font: fontFor(headingFont), size: subtitleSize, color: textColor }, paragraph: { spacing: { after: 180 } } },
-      { id: 'TOCHeading', name: 'TOC Heading', basedOn: 'Normal', next: 'Normal', run: { font: fontFor(headingFont), size: heading1Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
+      { id: 'TOCHeading', name: 'TOC Heading', basedOn: 'Normal', next: 'Normal', run: { font: fontFor(headingFont), size: heading2Size, bold: true, color: textColor }, paragraph: { spacing: { before: 220, after: 120 }, keepNext: true } },
     ],
   },
   numbering: { config: numberingConfigs },
