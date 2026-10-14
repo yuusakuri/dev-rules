@@ -40,7 +40,9 @@ node tools/markdown-to-docx/convert.mjs --input-file "<input.md>" --output-file 
 | `--output-file` | `<output.docx>`：出力するDOCXファイル。相対パス又は絶対パスを指定する。 |
 | `--style` | `docx`：DOCXを最終成果物とする場合の書式。<br>`google-docs`：Googleドキュメントへ取り込む場合の書式。 |
 
-先頭の`#`見出しをタイトルにし，冒頭のYAMLフロントマターに`subtitle: ...`があればサブタイトルにする。
+先頭の`#`見出しをタイトルにし，冒頭のYAMLフロントマターに`subtitle: ...`があればサブタイトルにする。それ以外の見出しは，Markdownの`#`の数と同じ段階の見出しスタイルへ変換する。例えば，`##`は見出し2，`###`は見出し3になる。
+
+“目次”の見出しには目次専用のスタイルを設定し，直後のリンク付きリストをTOCフィールドへ変換する。このフィールドは，章に用いる見出し2から目次を生成する。
 
 Googleドキュメントが必要な場合は，生成したDOCXをGoogleドライブにアップロードし，Googleドキュメント形式に変換する。
 
@@ -54,13 +56,14 @@ DOCXを最終成果物とする場合の書式を[表3](#table-3)に示す。
 
 | 要素 | Markdown | スタイル | フォント | 文字サイズ |
 | --- | --- | --- | --- | ---: |
-| タイトル | `#` | Title | Aptos Display | 28 pt |
+| タイトル | 先頭の`#` | Title | Aptos Display | 28 pt |
 | サブタイトル | フロントマターの`subtitle` | Subtitle | Aptos Display | 14 pt |
-| 見出し1 | `##` | Heading 1 | Aptos Display | 16 pt |
-| 見出し2 | `###` | Heading 2 | Aptos Display | 14 pt |
-| 見出し3 | `####` | Heading 3 | Aptos Display | 12 pt |
-| 見出し4 | `#####` | Heading 4 | Aptos Display | 12 pt |
-| 見出し5 | `######` | Heading 5 | Aptos Display | 11 pt |
+| 見出し1 | タイトル以外の`#` | Heading 1 | Aptos Display | 16 pt |
+| 見出し2 | `##` | Heading 2 | Aptos Display | 14 pt |
+| 見出し3 | `###` | Heading 3 | Aptos Display | 12 pt |
+| 見出し4 | `####` | Heading 4 | Aptos Display | 12 pt |
+| 見出し5 | `#####` | Heading 5 | Aptos Display | 11 pt |
+| 見出し6 | `######` | Heading 6 | Aptos Display | 11 pt |
 | 通常のテキスト | 段落 | Normal | Aptos | 12 pt |
 | インラインコード | 行内のコード | Normal内の文字書式 | Consolas | 11 pt |
 | コードブロック | コードフェンス | Normal | Consolas | 9 pt |
@@ -73,13 +76,14 @@ Googleドキュメント向けの書式を[表4](#table-4)に示す。DOCXを生
 
 | 要素 | Markdown | スタイル | フォント | 文字サイズ |
 | --- | --- | --- | --- | ---: |
-| タイトル | `#` | タイトル | Arial | 26 pt |
+| タイトル | 先頭の`#` | タイトル | Arial | 26 pt |
 | サブタイトル | フロントマターの`subtitle` | サブタイトル | Arial | 15 pt |
-| 見出し1 | `##` | 見出し1 | Arial | 20 pt |
-| 見出し2 | `###` | 見出し2 | Arial | 16 pt |
-| 見出し3 | `####` | 見出し3 | Arial | 14 pt |
-| 見出し4 | `#####` | 見出し4 | Arial | 12 pt |
-| 見出し5 | `######` | 見出し5 | Arial | 11 pt |
+| 見出し1 | タイトル以外の`#` | 見出し1 | Arial | 20 pt |
+| 見出し2 | `##` | 見出し2 | Arial | 16 pt |
+| 見出し3 | `###` | 見出し3 | Arial | 14 pt |
+| 見出し4 | `####` | 見出し4 | Arial | 12 pt |
+| 見出し5 | `#####` | 見出し5 | Arial | 11 pt |
+| 見出し6 | `######` | 見出し6 | Arial | 11 pt |
 | 通常のテキスト | 段落 | 標準テキスト | Arial | 11 pt |
 | インラインコード | 行内のコード | 標準テキスト内の文字書式 | Roboto Mono | 11 pt |
 | コードブロック | コードフェンス | 標準テキストの段落 | Roboto Mono | 9 pt |
