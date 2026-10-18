@@ -23,7 +23,7 @@
 | `CONTRIBUTING.md` | 推奨 | 開発環境の構築、ブランチ運用、テスト実行、コーディング規約、PRの出し方など、貢献に必要な手順を記載する。 |
 | `CODE_OF_CONDUCT.md` | 任意 | コミュニティ内での行動規範と、違反時の連絡先、対応手順を定める。Contributor Covenantなど既存の規範を採用してよい。 |
 | `SECURITY.md` | 任意 | 脆弱性を公開Issueではなく非公開で報告する方法と、対応対象バージョンを明記する。 |
-| `CHANGELOG.md` | 推奨 | バージョンごとの変更点を時系列で記録する。[Keep a Changelog](https://keepachangelog.com/)の形式に従う。 |
+| `CHANGELOG.md` | 任意 | バージョンごとの変更点を時系列で記録する。[Keep a Changelog](https://keepachangelog.com/)の形式に従う。 |
 | `MAINTAINERS` | 任意 | 各領域の責任者を、担当範囲とともに一覧化する。バージョン管理システムやホスティングサービスに依存せず読める形式にする。 |
 | `SUPPORT.md` | 任意 | 質問や利用相談の受付先（Issue、Discussions、メーリングリストなど）を明記する。 |
 | `GOVERNANCE.md` | 任意 | 意思決定の方法、メンテナへの昇格基準など、プロジェクトの運営体制を定める。 |
