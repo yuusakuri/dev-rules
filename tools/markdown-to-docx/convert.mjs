@@ -74,17 +74,15 @@ function addAnchor(key) {
   anchors.add(key);
 }
 for (const token of tokens) if (token.type === 'heading') addAnchor(slug(token.text));
-for (const line of source.split(/\r?\n/)) {
-  const match = /^<a id="([^"]+)"><\/a>([図表]\d+)[−-]/.exec(line);
-  if (match) {
-    addAnchor(match[1]);
-  }
-}
 const internalLinks = [];
 function collectInternalLinks(value) {
   if (Array.isArray(value)) {
     for (const entry of value) collectInternalLinks(entry);
   } else if (value && typeof value === 'object') {
+    if (value.type === 'html') {
+      const html = value.raw.replace(/<!--[\s\S]*?-->/g, '');
+      for (const match of html.matchAll(/<a\b[^>]*\bid\s*=\s*["']([^"']+)["'][^>]*>/gi)) addAnchor(match[1]);
+    }
     if (value.type === 'link' && value.href?.startsWith('#')) internalLinks.push(value.href.slice(1));
     collectInternalLinks(value.tokens);
     collectInternalLinks(value.items);
@@ -129,6 +127,16 @@ function inlineRuns(tokens, style = {}) {
   return runs.length ? runs : [new TextRun('')];
 }
 
+function hasVisibleInlineContent(tokens) {
+  return (tokens ?? []).some((token) => {
+    if (token.type === 'br' || token.type === 'image') return true;
+    if (token.type === 'html') return /^<br\b/i.test(token.raw ?? '');
+    if (token.type === 'codespan') return Boolean(token.text.length);
+    if (token.tokens) return hasVisibleInlineContent(token.tokens);
+    return Boolean(cleanText(token.text).trim());
+  });
+}
+
 function paragraph(token, options = {}) {
   const tokens = (token.tokens ?? marked.Lexer.lexInline(token.text ?? token.raw ?? ''))
     .filter((part) => part.type !== 'html' || /^<br/i.test(part.raw ?? ''));
@@ -140,9 +148,10 @@ function paragraph(token, options = {}) {
       break;
     }
   }
+  if (!options.allowEmpty && !hasVisibleInlineContent(tokens)) return null;
   return new Paragraph({
     children: inlineRuns(tokens, options.runStyle ?? {}),
-    spacing: { after: options.after ?? 120, line: 285 },
+    spacing: { before: options.before, after: options.after ?? 120, line: 285 },
     ...options.paragraph,
   });
 }
@@ -174,7 +183,7 @@ function makeTable(token) {
     tableHeader: rowIndex === 0,
     cantSplit: true,
     children: cells.map((cell, columnIndex) => new TableCell({
-      children: [paragraph(cell, { after: 0, runStyle: { bold: rowIndex === 0 }, paragraph: { alignment: token.align?.[columnIndex] ? AlignmentType[token.align[columnIndex].toUpperCase()] : undefined, spacing: { before: 50, after: 50, line: 250 } } })],
+      children: [paragraph(cell, { allowEmpty: true, after: 0, runStyle: { bold: rowIndex === 0 }, paragraph: { alignment: token.align?.[columnIndex] ? AlignmentType[token.align[columnIndex].toUpperCase()] : undefined, spacing: { before: 50, after: 50, line: 250 } } })],
       shading: rowIndex === 0 ? { fill: 'E8EEF5' } : undefined,
       margins: { top: 70, bottom: 70, left: 75, right: 75 },
     })),
@@ -190,6 +199,17 @@ function makeTable(token) {
 
 const children = [];
 const numberingConfigs = [];
+function appendParagraph(token, options = {}) {
+  let before;
+  if (children.at(-1) instanceof Table) {
+    before = /^(Heading|TOCHeading)/.test(options.paragraph?.style ?? '') ? 220 : 120;
+  }
+  const output = paragraph(token, { ...options, before });
+  if (!output) return false;
+  children.push(output);
+  return true;
+}
+
 function renderList(token, depth = 0) {
   const reference = token.ordered ? `ordered-${numberingConfigs.length + 1}` : null;
   if (reference) numberingConfigs.push({ reference, levels: [{ level: 0, format: 'decimal', text: '%1.', alignment: 'left', start: Number(token.start) || 1 }] });
@@ -202,8 +222,7 @@ function renderList(token, depth = 0) {
         const listStyle = firstParagraph
           ? reference ? { numbering: { reference, level: 0 }, indent: depth ? { left: 400 * depth } : undefined } : { bullet: { level: depth } }
           : { indent: { left: 400 * (depth + 1) } };
-        children.push(paragraph(part, { after: 60, paragraph: listStyle }));
-        firstParagraph = false;
+        if (appendParagraph(part, { after: 60, paragraph: listStyle })) firstParagraph = false;
       }
     }
   }
@@ -215,17 +234,24 @@ for (const [index, token] of tokens.entries()) {
   if (token.type === 'heading') {
     tocListPending = token.text === '目次';
     const heading = tocListPending ? 'TOCHeading' : token === titleToken ? 'Title' : HeadingLevel['HEADING_' + token.depth];
-    children.push(paragraph(token, { after: token === titleToken ? 230 : 150, paragraph: { style: heading, keepNext: true } }));
+    appendParagraph(token, { after: token === titleToken ? 230 : 150, paragraph: { style: heading, keepNext: true } });
     if (token === titleToken && subtitle) children.push(new Paragraph({ text: subtitle, style: 'Subtitle' }));
   } else if (token.type === 'paragraph') {
     const img = await imageParagraph(token);
-    const next = tokens.slice(index + 1).find((candidate) => !['space', 'html'].includes(candidate.type));
+    const next = tokens.slice(index + 1).find((candidate) => !['space', 'html'].includes(candidate.type)
+      && (candidate.type !== 'paragraph' || hasVisibleInlineContent(candidate.tokens)));
     const followedByImage = next?.type === 'paragraph' && /^!\[/.test(next.raw?.trim() ?? '');
     const tableCaption = next?.type === 'table' && /^表\d+[−-]/.test(cleanText(token.text).trim());
-    children.push(img ?? paragraph(token, { paragraph: { keepNext: followedByImage || tableCaption, keepLines: followedByImage || tableCaption } }));
+    if (img) children.push(img);
+    else appendParagraph(token, { paragraph: { keepNext: followedByImage || tableCaption, keepLines: followedByImage || tableCaption } });
   } else if (token.type === 'table') {
+    // Word may merge adjacent tables unless a paragraph separates them.
+    if (children.at(-1) instanceof Table) children.push(new Paragraph({
+      spacing: { before: 0, after: 0, line: 20, lineRule: 'exact' },
+      run: { size: 2 },
+      keepNext: true,
+    }));
     children.push(makeTable(token));
-    children.push(new Paragraph({ spacing: { after: 75 } }));
   } else if (token.type === 'list') {
     if (tocListPending) {
       children.push(new TableOfContents('目次', {
@@ -238,11 +264,11 @@ for (const [index, token] of tokens.entries()) {
     }
     renderList(token);
   } else if (token.type === 'code') {
-    for (const line of token.text.split('\n')) children.push(new Paragraph({ children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 18 })], spacing: { after: 0, line: 220 }, shading: { fill: 'F4F4F4' } }));
+    for (const line of token.text.split('\n')) children.push(new Paragraph({ children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 18 })], spacing: { before: children.at(-1) instanceof Table ? 120 : undefined, after: 0, line: 220 }, shading: { fill: 'F4F4F4' } }));
     children.push(new Paragraph({ spacing: { after: 80 } }));
   } else if (token.type === 'blockquote') {
     for (const part of token.tokens ?? marked.lexer(token.text ?? '')) {
-      if (part.type === 'paragraph' || part.type === 'text') children.push(paragraph(part, { after: 80, paragraph: { indent: { left: 400 } } }));
+      if (part.type === 'paragraph' || part.type === 'text') appendParagraph(part, { after: 80, paragraph: { indent: { left: 400 } } });
       else if (part.type === 'list') renderList(part, 1);
     }
   }
