@@ -6,6 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
+import sharp from 'sharp';
 
 const converter = fileURLToPath(new URL('./convert.mjs', import.meta.url));
 const markdown = `# 空白の確認
@@ -220,6 +221,51 @@ for (const style of ['docx', 'google-docs']) {
       assert.deepEqual(blocks.map((block) => block.tag), ['w:p', 'w:tbl', 'w:p', 'w:tbl', 'w:sectPr']);
       assert.equal(textOf(blocks[2].xml), '');
       assert.match(blocks[2].xml, /<w:spacing[^>]*w:line="20"[^>]*w:lineRule="exact"/);
+    } finally {
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+}
+
+for (const style of ['docx', 'google-docs']) {
+  test(`${style}: SVG stays vector with a 4K fallback and unchanged display size`, async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-vector-'));
+    try {
+      const drawings = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="32"><path d="M1 1L63 31" stroke="black"/></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="64"><path d="M1 1L31 63" stroke="black"/></svg>',
+      ];
+      for (const [i, drawing] of drawings.entries()) await fs.writeFile(path.join(directory, `${i}.svg`), drawing);
+      const bitmap = await sharp({ create: { width: 80, height: 40, channels: 3, background: '#fff' } }).png().toBuffer();
+      await fs.writeFile(path.join(directory, 'bitmap.png'), bitmap);
+      const source = path.join(directory, 'input.md');
+      const output = path.join(directory, 'output.docx');
+      await fs.writeFile(source, '# 図\n\n![横長](0.svg)\n\n![縦長](1.svg)\n\n![画像](bitmap.png)\n');
+      execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
+      const archive = await JSZip.loadAsync(await fs.readFile(output));
+      const xml = await archive.file('word/document.xml').async('string');
+      const rels = await archive.file('word/_rels/document.xml.rels').async('string');
+      const relationships = new Map([...rels.matchAll(/<Relationship\b([^>]+)\/?\>/g)].map((match) => {
+        const attrs = Object.fromEntries([...match[1].matchAll(/(\w+)="([^"]*)"/g)].map((a) => [a[1], a[2]]));
+        return [attrs.Id, attrs.Target];
+      }));
+      const pictures = [...xml.matchAll(/<pic:pic\b[^>]*>([^]*?)<\/pic:pic>/g)].map((m) => m[1]);
+      assert.equal(pictures.length, 3);
+      for (const [i, picture] of pictures.entries()) {
+        const pngId = picture.match(/<a:blip\b[^>]*r:embed="([^"]+)"/)[1];
+        const png = await archive.file('word/' + relationships.get(pngId)).async('nodebuffer');
+        const meta = await sharp(png).metadata();
+        if (i < 2) {
+          const svgId = picture.match(/<asvg:svgBlip\b[^>]*r:embed="([^"]+)"/)[1];
+          assert.equal(await archive.file('word/' + relationships.get(svgId)).async('string'), drawings[i]);
+          assert.deepEqual([meta.width, meta.height], i === 0 ? [3840, 1920] : [1920, 3840]);
+          assert.match(picture, i === 0 ? /<a:ext cx="609600" cy="304800"/ : /<a:ext cx="304800" cy="609600"/);
+        } else {
+          assert.doesNotMatch(picture, /asvg:svgBlip/);
+          assert.deepEqual([meta.width, meta.height], [80, 40]);
+        }
+      }
+      assert.match(await archive.file('[Content_Types].xml').async('string'), /image\/svg\+xml/);
     } finally {
       await fs.rm(directory, { recursive: true, force: true });
     }

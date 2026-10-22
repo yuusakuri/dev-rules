@@ -167,11 +167,26 @@ async function imageParagraph(token) {
     const rel = img.href;
     if (/^[a-z][a-z0-9+.-]*:/i.test(rel)) throw new Error(`Image must be a local file: ${rel}`);
     const imagePath = path.resolve(path.dirname(sourcePath), rel);
-    const data = await sharp(imagePath).autoOrient().png().toBuffer();
-    const meta = await sharp(data).metadata();
+    const sourceData = await fs.readFile(imagePath);
+    const sourceMeta = await sharp(sourceData).metadata();
+    let imageOptions;
+    let meta;
+    if (sourceMeta.format === 'svg') {
+      const longestSide = Math.max(sourceMeta.width, sourceMeta.height);
+      const rasterScale = Math.max(1, 3840 / longestSide);
+      const fallback = await sharp(sourceData, { density: Math.min(100000, Math.ceil(72 * rasterScale)) })
+        .resize({ width: Math.round(sourceMeta.width * rasterScale), height: Math.round(sourceMeta.height * rasterScale) })
+        .png().toBuffer();
+      imageOptions = { data: sourceData, type: 'svg', fallback: { data: fallback, type: 'png' } };
+      meta = sourceMeta;
+    } else {
+      const data = await sharp(sourceData).autoOrient().png().toBuffer();
+      imageOptions = { data, type: 'png' };
+      meta = await sharp(data).metadata();
+    }
     const scale = Math.min(1, 590 / meta.width, 650 / meta.height);
     if (index) imageRuns.push(new TextRun({ break: 1 }));
-    imageRuns.push(new ImageRun({ data, type: 'png', transformation: { width: Math.round(meta.width * scale), height: Math.round(meta.height * scale) }, altText: { title: img.text ?? '', description: img.text ?? '', name: path.basename(rel) } }));
+    imageRuns.push(new ImageRun({ ...imageOptions, transformation: { width: Math.round(meta.width * scale), height: Math.round(meta.height * scale) }, altText: { title: img.text ?? '', description: img.text ?? '', name: path.basename(rel) } }));
   }
   return new Paragraph({ children: imageRuns, spacing: { before: 100, after: 100 }, keepNext: true });
 }
