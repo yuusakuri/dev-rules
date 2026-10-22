@@ -389,3 +389,53 @@ for (const style of ['docx', 'google-docs']) {
     }
   });
 }
+
+for (const style of ['docx', 'google-docs']) {
+  test(`${style}: traceability comments never reach the document`, async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-comments-'));
+    try {
+      const source = path.join(directory, 'input.md');
+      const output = path.join(directory, 'output.docx');
+      await fs.writeFile(source, `# 文書名 <!-- TRACE-01 -->
+
+## 見出し<!-- TRACE-02 -->
+
+説明。<!-- TRACE-03 -->
+
+前<!-- TRACE-04 -->後
+
+複数行 <!-- TRACE-05
+続き -->
+
+矢印 <!-- TRACE-06 a -> b -->
+
+- 項目 <!-- TRACE-07 -->
+
+> 引用 <!-- TRACE-08 -->
+>
+> <!-- TRACE-09 -->
+
+| 表 <!-- TRACE-10 --> | 値 |
+| --- | --- |
+| セル<!-- TRACE-11 --> | <!-- TRACE-12 --> |
+
+[リンク<!-- TRACE-13 -->](https://example.com)と**強調<!-- TRACE-14 -->**
+
+<!--
+TRACE-15
+-->
+本文
+`);
+      execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
+      const archive = await JSZip.loadAsync(await fs.readFile(output));
+      const xml = await archive.file('word/document.xml').async('string');
+      assert.doesNotMatch(xml, /TRACE-|&lt;!--|--&gt;/);
+      const texts = bodyBlocks(xml).filter((block) => block.tag === 'w:p').map((block) => textOf(block.xml));
+      for (const expected of ['見出し', '説明。', '前後', '複数行', '矢印', '項目', '引用', 'リンクと強調', '本文']) {
+        assert.ok(texts.includes(expected), `Missing exact paragraph: ${JSON.stringify(expected)}`);
+      }
+    } finally {
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+}
