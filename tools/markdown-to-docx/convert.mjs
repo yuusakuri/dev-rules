@@ -279,8 +279,12 @@ for (const [index, token] of tokens.entries()) {
     }
     renderList(token);
   } else if (token.type === 'code') {
-    for (const line of token.text.split('\n')) children.push(new Paragraph({ children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 18 })], spacing: { before: children.at(-1) instanceof Table ? 120 : undefined, after: 0, line: 220 }, shading: { fill: 'F4F4F4' } }));
-    children.push(new Paragraph({ spacing: { after: 80 } }));
+    const lines = token.text.split('\n');
+    for (const [lineIndex, line] of lines.entries()) children.push(new Paragraph({
+      children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 18 })],
+      spacing: { before: children.at(-1) instanceof Table ? 120 : undefined, after: lineIndex === lines.length - 1 ? 80 : 0, line: 220 },
+      shading: { fill: 'F4F4F4' },
+    }));
   } else if (token.type === 'blockquote') {
     for (const part of token.tokens ?? marked.lexer(token.text ?? '')) {
       if (part.type === 'paragraph' || part.type === 'text') appendParagraph(part, { after: 80, paragraph: { indent: { left: 400 } } });

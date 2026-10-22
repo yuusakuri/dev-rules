@@ -271,3 +271,60 @@ for (const style of ['docx', 'google-docs']) {
     }
   });
 }
+
+for (const style of ['docx', 'google-docs']) {
+  test(`${style}: code examples keep their content without spacer paragraphs around tables`, async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-code-spacing-'));
+    try {
+      const source = path.join(directory, 'input.md');
+      const output = path.join(directory, 'output.docx');
+      await fs.writeFile(source, `# 文書名
+
+| 項目 | 値 |
+| --- | --- |
+| 空欄 | |
+
+<a id="code-example"></a> <!-- 根拠: TEST-01 -->
+
+\`\`\`text
+  first${'  '}
+
+last
+\`\`\`
+
+<!-- コードと表の間のコメント -->
+
+| 項目 | 値 |
+| --- | --- |
+| 終了 | 本文 |
+
+[コード例](#code-example)を参照する。
+
+\`\`\`text
+end
+\`\`\`
+`);
+      execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
+      const archive = await JSZip.loadAsync(await fs.readFile(output));
+      const xml = await archive.file('word/document.xml').async('string');
+      const blocks = bodyBlocks(xml);
+      const codeLines = blocks.filter((block) => block.tag === 'w:p' && /<w:shd\b/.test(block.xml));
+      assert.deepEqual(codeLines.map((block) => textOf(block.xml)), ['  first  ', ' ', 'last', 'end']);
+      const blankParagraphs = blocks.filter((block) => block.tag === 'w:p' && !textOf(block.xml).trim());
+      assert.deepEqual(blankParagraphs, [codeLines[1]], 'Only an empty line in the code may produce an empty body paragraph');
+      const firstTable = blocks.findIndex((block) => block.tag === 'w:tbl');
+      assert.equal(blocks[firstTable + 1], codeLines[0], 'Metadata after a table must not introduce a paragraph');
+      assert.match(codeLines[0].xml, /<w:spacing[^>]*w:before="120"/);
+      for (const finalLine of [codeLines[2], codeLines[3]]) {
+        assert.match(finalLine.xml, /<w:spacing[^>]*w:after="80"/, 'Separate the code from following content with paragraph formatting');
+      }
+      const lastTable = blocks.findLastIndex((block) => block.tag === 'w:tbl');
+      assert.equal(textOf(blocks[lastTable + 1].xml), 'コード例を参照する。');
+      assert.match(blocks[lastTable + 1].xml, /<w:spacing[^>]*w:before="120"/);
+      for (const cell of xml.matchAll(/<w:tc>([^]*?)<\/w:tc>/g)) assert.match(cell[1], /<w:p[ >\/]/);
+      assert.doesNotMatch(xml, /TEST-01|bookmarkStart|w:anchor=/);
+    } finally {
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+}
