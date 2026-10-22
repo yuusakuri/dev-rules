@@ -60,8 +60,21 @@ const textColor = '202124';
 const border = { style: BorderStyle.SINGLE, size: 4, color: '808080' };
 const borders = { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border };
 
-const cleanText = (text) => decode(String(text ?? '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, '')).replace(/\u00a0/g, ' ');
-const slug = (value) => cleanText(value).toLowerCase().replace(/[^\p{L}\p{N}_ -]/gu, '').replace(/ /g, '-');
+const decodeText = (text) => decode(String(text ?? '')).replace(/\u00a0/g, ' ');
+const cleanText = (text) => decodeText(String(text ?? '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, ''));
+// Inline HTML is already a separate token, so `<...>` left in text tokens is literal text.
+const plainText = (tokens) => (tokens ?? []).map((token) => {
+  if (token.type === 'html') return '';
+  return token.tokens ? plainText(token.tokens) : decodeText(token.text);
+}).join('');
+const slug = (tokens) => plainText(tokens).toLowerCase().replace(/[^\p{L}\p{N}_ -]/gu, '').replace(/ /g, '-');
+const decodeHref = (href) => {
+  try {
+    return decodeURIComponent(href);
+  } catch {
+    return href;
+  }
+};
 
 const source = await fs.readFile(sourcePath, 'utf8');
 const frontMatter = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(source);
@@ -73,7 +86,19 @@ const anchors = new Set();
 function addAnchor(key) {
   anchors.add(key);
 }
-for (const token of tokens) if (token.type === 'heading') addAnchor(slug(token.text));
+// Repeated headings get -1, -2, ... suffixes, as on GitHub.
+const slugOccurrences = new Map();
+for (const token of tokens) {
+  if (token.type !== 'heading') continue;
+  const base = slug(token.tokens);
+  let key = base;
+  while (slugOccurrences.has(key)) {
+    slugOccurrences.set(base, slugOccurrences.get(base) + 1);
+    key = `${base}-${slugOccurrences.get(base)}`;
+  }
+  slugOccurrences.set(key, 0);
+  addAnchor(key);
+}
 const internalLinks = [];
 function collectInternalLinks(value) {
   if (Array.isArray(value)) {
@@ -83,7 +108,7 @@ function collectInternalLinks(value) {
       const html = value.raw.replace(/<!--[\s\S]*?-->/g, '');
       for (const match of html.matchAll(/<a\b[^>]*\bid\s*=\s*["']([^"']+)["'][^>]*>/gi)) addAnchor(match[1]);
     }
-    if (value.type === 'link' && value.href?.startsWith('#')) internalLinks.push(value.href.slice(1));
+    if (value.type === 'link' && value.href?.startsWith('#')) internalLinks.push(decodeHref(value.href.slice(1)));
     collectInternalLinks(value.tokens);
     collectInternalLinks(value.items);
     collectInternalLinks(value.header);
@@ -102,12 +127,11 @@ function inlineRuns(tokens, style = {}) {
       continue;
     }
     if (token.type === 'link') {
-      const text = cleanText(token.text);
       if (token.href?.startsWith('#')) {
-        runs.push(new TextRun({ text, ...style }));
+        runs.push(...inlineRuns(token.tokens, style));
       } else {
         const resolved = /^[a-z][a-z0-9+.-]*:/i.test(token.href) ? token.href : new URL(token.href, pathToFileURL(sourcePath)).href;
-        runs.push(new ExternalHyperlink({ link: resolved, children: [new TextRun({ text, style: 'Hyperlink', font: fontFor(normalFont), ...style })] }));
+        runs.push(new ExternalHyperlink({ link: resolved, children: inlineRuns(token.tokens, { font: fontFor(normalFont), ...style, style: 'Hyperlink' }) }));
       }
       continue;
     }
@@ -117,12 +141,12 @@ function inlineRuns(tokens, style = {}) {
       continue;
     }
     if (token.type === 'codespan') {
-      runs.push(new TextRun({ text: token.text, font: fontFor(codeFont), size: 22, ...style }));
+      runs.push(new TextRun({ ...style, text: token.text, font: fontFor(codeFont), size: 22 }));
       continue;
     }
     if (token.type === 'br') { runs.push(new TextRun({ break: 1 })); continue; }
     if (token.tokens) runs.push(...inlineRuns(token.tokens, style));
-    else if (token.text) runs.push(new TextRun({ text: cleanText(token.text), ...style }));
+    else if (token.text) runs.push(new TextRun({ text: decodeText(token.text), ...style }));
   }
   return runs.length ? runs : [new TextRun('')];
 }
@@ -133,7 +157,7 @@ function hasVisibleInlineContent(tokens) {
     if (token.type === 'html') return /^<br\b/i.test(token.raw ?? '');
     if (token.type === 'codespan') return Boolean(token.text.length);
     if (token.tokens) return hasVisibleInlineContent(token.tokens);
-    return Boolean(cleanText(token.text).trim());
+    return Boolean(decodeText(token.text).trim());
   });
 }
 
@@ -166,7 +190,7 @@ async function imageParagraph(token) {
   for (const [index, img] of images.entries()) {
     const rel = img.href;
     if (/^[a-z][a-z0-9+.-]*:/i.test(rel)) throw new Error(`Image must be a local file: ${rel}`);
-    const imagePath = path.resolve(path.dirname(sourcePath), rel);
+    const imagePath = path.resolve(path.dirname(sourcePath), decodeHref(rel));
     const sourceData = await fs.readFile(imagePath);
     const sourceMeta = await sharp(sourceData).metadata();
     let imageOptions;
@@ -225,6 +249,22 @@ function appendParagraph(token, options = {}) {
   return true;
 }
 
+function renderCode(token, indent) {
+  const lines = token.text.split('\n');
+  for (const [lineIndex, line] of lines.entries()) children.push(new Paragraph({
+    children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 18 })],
+    spacing: { before: children.at(-1) instanceof Table ? 120 : undefined, after: lineIndex === lines.length - 1 ? 80 : 0, line: 220 },
+    indent: indent ? { left: indent } : undefined,
+    shading: { fill: 'F4F4F4' },
+  }));
+}
+
+// Blocks without visible content; anything else nested must be rendered or rejected, never dropped.
+const invisibleNestedBlocks = new Set(['space', 'html', 'hr', 'def', 'checkbox']);
+function rejectNestedBlock(part, container) {
+  if (!invisibleNestedBlocks.has(part.type)) throw new Error(`Unsupported Markdown ${part.type} inside a ${container}`);
+}
+
 function renderList(token, depth = 0) {
   const reference = token.ordered ? `ordered-${numberingConfigs.length + 1}` : null;
   if (reference) numberingConfigs.push({ reference, levels: [{ level: 0, format: 'decimal', text: '%1.', alignment: 'left', start: Number(token.start) || 1 }] });
@@ -238,8 +278,22 @@ function renderList(token, depth = 0) {
           ? reference ? { numbering: { reference, level: 0 }, indent: depth ? { left: 400 * depth } : undefined } : { bullet: { level: depth } }
           : { indent: { left: 400 * (depth + 1) } };
         if (appendParagraph(part, { after: 60, paragraph: listStyle })) firstParagraph = false;
+      } else if (part.type === 'code') {
+        renderCode(part, 400 * (depth + 1));
+      } else {
+        rejectNestedBlock(part, 'list');
       }
     }
+  }
+}
+
+function renderBlockquote(token, depth = 1) {
+  for (const part of token.tokens ?? marked.lexer(token.text ?? '')) {
+    if (part.type === 'paragraph' || part.type === 'text') appendParagraph(part, { after: 80, paragraph: { indent: { left: 400 * depth } } });
+    else if (part.type === 'list') renderList(part, depth);
+    else if (part.type === 'code') renderCode(part, 400 * depth);
+    else if (part.type === 'blockquote') renderBlockquote(part, depth + 1);
+    else rejectNestedBlock(part, 'blockquote');
   }
 }
 let tocListPending = false;
@@ -279,17 +333,9 @@ for (const [index, token] of tokens.entries()) {
     }
     renderList(token);
   } else if (token.type === 'code') {
-    const lines = token.text.split('\n');
-    for (const [lineIndex, line] of lines.entries()) children.push(new Paragraph({
-      children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 18 })],
-      spacing: { before: children.at(-1) instanceof Table ? 120 : undefined, after: lineIndex === lines.length - 1 ? 80 : 0, line: 220 },
-      shading: { fill: 'F4F4F4' },
-    }));
+    renderCode(token);
   } else if (token.type === 'blockquote') {
-    for (const part of token.tokens ?? marked.lexer(token.text ?? '')) {
-      if (part.type === 'paragraph' || part.type === 'text') appendParagraph(part, { after: 80, paragraph: { indent: { left: 400 } } });
-      else if (part.type === 'list') renderList(part, 1);
-    }
+    renderBlockquote(token);
   }
 }
 
