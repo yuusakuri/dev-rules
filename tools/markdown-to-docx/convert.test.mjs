@@ -328,3 +328,114 @@ end
     }
   });
 }
+
+for (const style of ['docx', 'google-docs']) {
+  test(`${style}: literal text, link formatting, and nested code are kept`, async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-content-'));
+    try {
+      const source = path.join(directory, 'input.md');
+      const output = path.join(directory, 'output.docx');
+      await fs.writeFile(source, `# 文書名
+
+## 2 <章の題名>
+
+## 例
+
+## 例
+
+[章](#2-章の題名)、[二つ目](#例-1)、[符号化](#%E4%BE%8B)を参照する。
+
+比較: a < b > c
+
+[**太字**と\`code\`](https://example.com)
+
+1. 手順:
+
+   \`\`\`shell
+   echo list
+   \`\`\`
+
+> 引用:
+>
+> \`\`\`text
+> echo quote
+> \`\`\`
+>
+> > 入れ子の引用。
+
+![空白を含む名前](my%20image.svg)
+`);
+      await fs.writeFile(path.join(directory, 'my image.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"/>');
+      execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
+      const archive = await JSZip.loadAsync(await fs.readFile(output));
+      const xml = await archive.file('word/document.xml').async('string');
+      const paragraphs = bodyBlocks(xml).filter((block) => block.tag === 'w:p');
+      const texts = paragraphs.map((block) => textOf(block.xml));
+      for (const expected of ['2 <章の題名>', '章、二つ目、符号化を参照する。', '比較: a < b > c', '太字とcode', 'echo list', 'echo quote', '入れ子の引用。']) {
+        assert.ok(texts.includes(expected), `Missing exact paragraph: ${JSON.stringify(expected)}`);
+      }
+      const link = xml.match(/<w:hyperlink\b[^>]*>([^]*?)<\/w:hyperlink>/)[1];
+      assert.match(link, /<w:b\/>[^]*?太字/);
+      assert.match(link, /w:ascii="Consolas|w:ascii="Roboto Mono/);
+      assert.equal((link.match(/<w:rStyle w:val="Hyperlink"\/>/g) ?? []).length, 3);
+      const listCode = paragraphs.find((block) => textOf(block.xml) === 'echo list');
+      assert.match(listCode.xml, /<w:ind w:left="400"/);
+      assert.match(listCode.xml, /<w:shd\b/);
+      assert.equal((xml.match(/<w:drawing\b/g) ?? []).length, 1);
+      await fs.writeFile(source, '# 文書名\n\n- 項目\n\n  | 表 |\n  | --- |\n  | 値 |\n');
+      assert.throws(() => execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style], { stdio: 'pipe' }), /Unsupported Markdown table inside a list/);
+    } finally {
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+}
+
+for (const style of ['docx', 'google-docs']) {
+  test(`${style}: traceability comments never reach the document`, async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-comments-'));
+    try {
+      const source = path.join(directory, 'input.md');
+      const output = path.join(directory, 'output.docx');
+      await fs.writeFile(source, `# 文書名 <!-- TRACE-01 -->
+
+## 見出し<!-- TRACE-02 -->
+
+説明。<!-- TRACE-03 -->
+
+前<!-- TRACE-04 -->後
+
+複数行 <!-- TRACE-05
+続き -->
+
+矢印 <!-- TRACE-06 a -> b -->
+
+- 項目 <!-- TRACE-07 -->
+
+> 引用 <!-- TRACE-08 -->
+>
+> <!-- TRACE-09 -->
+
+| 表 <!-- TRACE-10 --> | 値 |
+| --- | --- |
+| セル<!-- TRACE-11 --> | <!-- TRACE-12 --> |
+
+[リンク<!-- TRACE-13 -->](https://example.com)と**強調<!-- TRACE-14 -->**
+
+<!--
+TRACE-15
+-->
+本文
+`);
+      execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
+      const archive = await JSZip.loadAsync(await fs.readFile(output));
+      const xml = await archive.file('word/document.xml').async('string');
+      assert.doesNotMatch(xml, /TRACE-|&lt;!--|--&gt;/);
+      const texts = bodyBlocks(xml).filter((block) => block.tag === 'w:p').map((block) => textOf(block.xml));
+      for (const expected of ['見出し', '説明。', '前後', '複数行', '矢印', '項目', '引用', 'リンクと強調', '本文']) {
+        assert.ok(texts.includes(expected), `Missing exact paragraph: ${JSON.stringify(expected)}`);
+      }
+    } finally {
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+}
