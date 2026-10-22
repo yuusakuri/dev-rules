@@ -107,6 +107,8 @@ npx mmdc -c mermaid-config.json -i docs/diagrams/order-flow.mmd -o docs/images/o
 
 `--size`は，図の種類によって効かない場合がある。生成後に，PNGの長辺が3840ピクセル以上であることを確認する。
 
+Mermaid CLIは，`--size`で指定したピクセル数でChromiumが図を直接描画するため，アンチエイリアスが最終的な解像度で働く。生成済みのSVGからPNGを作る場合は，[SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md)による。
+
 ### 7.3 Markdown内のコードブロックの変換
 
 Markdownに`mermaid`のコードブロックで図を記述した場合は，Markdownファイルを入力にする。Mermaid CLIは，コードブロックごとに画像を生成し，コードブロックを画像への参照に置き換えたMarkdownを出力する。

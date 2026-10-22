@@ -102,9 +102,11 @@ java -jar tools/plantuml.jar --check-before-run --charset UTF-8 --svg --output-d
 
 ### 6.2 PNGへの変換
 
-PNGは，長辺3840ピクセル以上で生成する。PlantUMLは96 dpiを基準の解像度として画像を描画するため，`-Sdpi`で解像度を上げる。
+PNGは，長辺3840ピクセル以上で生成する。[6.1](#61-svgへの変換)で生成したSVGを，[SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md)の方法でPNGに変換する。
 
-`-Sdpi`の値は，SVGの`width`及び`height`の長い方を基準の長辺として，次の式で求める。式の4000は，計算の誤差で3840ピクセルを下回らないようにするための値である。
+PlantUMLのPNG出力は，Javaの描画処理で描かれ，SVGとは別の描画結果になる。SVGから変換すると，DOCXに埋め込むSVGと同じ見た目のPNGになる。
+
+Chromiumを用意できない場合は，PlantUMLでPNGを直接生成する。PlantUMLは96 dpiを基準の解像度として画像を描画するため，`-Sdpi`で解像度を上げる。`-Sdpi`の値は，SVGの`width`及び`height`の長い方を基準の長辺として，次の式で求める。式の4000は，計算の誤差で3840ピクセルを下回らないようにするための値である。
 
 ```text
 dpi = 96 × 4000 ÷ 基準の長辺（小数点以下切上げ）
