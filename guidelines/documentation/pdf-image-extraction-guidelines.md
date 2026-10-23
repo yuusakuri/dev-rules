@@ -17,7 +17,7 @@ PDFの図には，線及び文字をPDFの描画命令で描いたベクター�
 | 図の種類 | 抽出方法 | 抽出結果 |
 | --- | --- | --- |
 | ベクター図 | 図の範囲をPDFとして切り出し，SVGに変換する（[4.2](#42-ベクター図の抽出)参照）。 | ベクター形式を保持したSVG。 |
-| ラスター画像 | PDFに埋め込まれた画像のデータを取り出す（[4.3](#43-ラスター画像の抽出)参照）。 | PDFに埋め込まれた画素数及び符号化形式のままの画像。 |
+| ラスター画像 | PDFに埋め込まれた画像のデータを取り出し，透過情報がある場合はアルファチャンネルとして合成する（[4.3](#43-ラスター画像の抽出)参照）。 | PDFに埋め込まれた画素数のままの画像。 |
 
 ページ全体を画像として描画してから図を切り抜く方法は，用いない。ベクター図はその解像度の画像になり，拡大すると線及び文字の縁がぼける。ラスター画像は描画時に画素が再標本化され，元の画素の値が失われる。
 
@@ -29,48 +29,54 @@ PDFの図には，線及び文字をPDFの描画命令で描いたベクター�
 
 抽出には，PopplerのCLIを用いる。Popplerは，ページの情報の表示（`pdfinfo`），埋め込み画像の一覧表示及び抽出（`pdfimages`），文字の座標の出力（`pdftotext`），並びにページの範囲を指定したPDF，SVG及びPNGへの変換（`pdftocairo`）を，一つのパッケージで提供する。
 
+ラスター画像の透過情報の合成には，ImageMagickのCLIを用いる。
+
 ## 3 抽出環境
 
 ### 3.1 Windows
 
-wingetでPopplerをインストールする。
+wingetでPoppler及びImageMagickをインストールする。
 
 ```powershell
 winget install --id oschwartz10612.Poppler -e
+winget install --id ImageMagick.ImageMagick -e
 ```
 
 インストール後に新しいターミナルを開き，次のコマンドで版が表示されることを確認する。
 
 ```powershell
 pdftocairo -v
+magick -version
 ```
 
 ### 3.2 macOS
 
-HomebrewでPopplerをインストールする。
+HomebrewでPoppler及びImageMagickをインストールする。
 
 ```shell
-brew install poppler
+brew install poppler imagemagick
 ```
 
 次のコマンドで版が表示されることを確認する。
 
 ```shell
 pdftocairo -v
+magick -version
 ```
 
 ### 3.3 Ubuntu
 
-APTでPopplerのCLIをインストールする。
+APTでPopplerのCLI及びImageMagickをインストールする。
 
 ```shell
-sudo apt-get install -y poppler-utils
+sudo apt-get install -y poppler-utils imagemagick
 ```
 
-次のコマンドで版が表示されることを確認する。
+次のコマンドで版が表示されることを確認する。APTで提供されるImageMagickは6系であり，`magick` の代わりに `convert` コマンドを用いる。
 
 ```shell
 pdftocairo -v
+convert -version
 ```
 
 ## 4 抽出手順
@@ -85,7 +91,7 @@ pdftocairo -v
 pdfimages -list -f <page> -l <page> <input.pdf>
 ```
 
-図の位置に，図の大きさの画像が一覧にある場合はラスター画像として[4.3](#43-ラスター画像の抽出)によって抽出する。一覧にない場合はベクター図として[4.2](#42-ベクター図の抽出)によって抽出する。一覧の`type`が`smask`の行は，直前の画像の透過情報であり，図の本体ではない。
+図の位置に，図の大きさの画像が一覧にある場合はラスター画像として[4.3](#43-ラスター画像の抽出)によって抽出する。一覧にない場合はベクター図として[4.2](#42-ベクター図の抽出)によって抽出する。一覧の`type`が`smask`の行は，直前の`image`の行の画像の透過情報であり，図の本体ではない。
 
 ### 4.2 ベクター図の抽出
 
@@ -133,6 +139,8 @@ SVGを扱えない変換ツール又は表示先へ図を渡す場合は，[SVG�
 
 ### 4.3 ラスター画像の抽出
 
+#### 4.3.1 画像の取り出し
+
 次のコマンドで，ページに埋め込まれた画像を抽出する。
 
 ```shell
@@ -141,7 +149,39 @@ pdfimages -all -f <page> -l <page> <input.pdf> <prefix>
 
 `-all` を指定すると，JPEGで埋め込まれた画像はJPEGのまま，その他の多くの画像はPNGとして，再圧縮せずに出力される。出力されるファイルの名前は，`<prefix>-000.jpg` のように，`<prefix>` に画像の番号を付けたものになる。4.1の一覧の`num`の列が，画像の番号に対応する。
 
+透過情報（4.1の一覧の`smask`の行）は，本体とは別のグレースケールの画像として出力される。本体の画像の透過する部分の色は定まっておらず，黒になる場合が多い。透過情報がある画像を本体だけで用いると，背景が黒くなり，黒い文字及び線が見えなくなる。透過情報がある画像は，4.3.2によって合成する。
+
 抽出した画像の画素数を変えず，非可逆圧縮の形式に変換しない。
+
+#### 4.3.2 透過情報の合成
+
+##### 4.3.2.1 Windows及びmacOS
+
+次のコマンドで，透過情報を本体の画像のアルファチャンネルとして合成する。本体の画素の値は変わらない。
+
+```shell
+magick <image.png> <mask.png> -compose CopyOpacity -composite <figure>.png
+```
+
+`<image.png>` には本体の画像を，`<mask.png>` にはその透過情報を指定する。透過情報の画素数が本体と異なる場合は，先に次のコマンドで透過情報を本体の画素数に合わせ，合わせた画像を `<mask.png>` に指定する。`<width>` 及び `<height>` には，本体の画素数を指定する。
+
+```shell
+magick <mask.png> -resize '<width>x<height>!' <mask-resized.png>
+```
+
+##### 4.3.2.2 Ubuntu
+
+次のコマンドで，透過情報を本体の画像のアルファチャンネルとして合成する。本体の画素の値は変わらない。
+
+```shell
+convert <image.png> <mask.png> -compose CopyOpacity -composite <figure>.png
+```
+
+`<image.png>` には本体の画像を，`<mask.png>` にはその透過情報を指定する。透過情報の画素数が本体と異なる場合は，先に次のコマンドで透過情報を本体の画素数に合わせ，合わせた画像を `<mask.png>` に指定する。`<width>` 及び `<height>` には，本体の画素数を指定する。
+
+```shell
+convert <mask.png> -resize '<width>x<height>!' <mask-resized.png>
+```
 
 ## 5 確認
 
@@ -153,6 +193,7 @@ pdfimages -all -f <page> -l <page> <input.pdf> <prefix>
 | --- | --- |
 | 範囲 | 図の端が切れておらず，図の題名，本文及び余分な余白を含まない。 |
 | 形式 | ベクター図はSVGであり，ラスター画像は4.1の一覧の画素数と同じ画素数である。 |
+| 透過 | 透過情報がある画像は，白の背景に重ねて表示したとき，背景が黒くならず，黒い文字及び線が見える。 |
 | 文字 | SVGをPNGに変換して等倍で表示し，文字が元のPDFと同じ字形で描画されている。 |
 | 出典 | Markdownの図の題名に，出典の文書，版，図番号及びページの番号を記載している。 |
 
@@ -163,7 +204,9 @@ pdfimages -all -f <page> -l <page> <input.pdf> <prefix>
 | 2章 | [Poppler](https://poppler.freedesktop.org/) | PDFを描画するライブラリー及びCLIを提供するPopplerの公式サイト。 |
 | 3章 | [GitHub - oschwartz10612/poppler-windows: Download Poppler binaries packaged for Windows with dependencies · GitHub](https://github.com/oschwartz10612/poppler-windows) | wingetでインストールするWindows向けのPopplerを配布するリポジトリ。 |
 | 3章 | [Homebrew Formulae: poppler](https://formulae.brew.sh/formula/poppler) | macOS向けのPopplerのHomebrewのパッケージ。 |
+| 3章 | [Homebrew Formulae: imagemagick](https://formulae.brew.sh/formula/imagemagick) | macOS向けのImageMagickのHomebrewのパッケージ。 |
 | 3章 | ['install' コマンド \| Microsoft Learn](https://learn.microsoft.com/ja-jp/windows/package-manager/winget/install) | wingetでパッケージをインストールするコマンドを説明する文書。 |
 | 4章 | [pdftocairo(1) — poppler-utils — Debian trixie — Debian Manpages](https://manpages.debian.org/trixie/poppler-utils/pdftocairo.1.en.html) | ページの範囲を切り出してPDF，SVG及びPNGに変換するコマンドの説明。ベクター出力での範囲の単位及び配置を説明する。 |
 | 4章 | [pdfimages(1) — poppler-utils — Debian trixie — Debian Manpages](https://manpages.debian.org/trixie/poppler-utils/pdfimages.1.en.html) | PDFに埋め込まれた画像を一覧表示及び抽出するコマンドの説明。 |
 | 4章 | [pdftotext(1) — poppler-utils — Debian trixie — Debian Manpages](https://manpages.debian.org/trixie/poppler-utils/pdftotext.1.en.html) | ページ内の語の座標を出力するコマンドの説明。 |
+| 4章 | [Masks -- ImageMagick Examples](https://usage.imagemagick.org/masking/) | グレースケールの画像を`CopyOpacity`で画像の透過情報として合成する方法の説明。 |
