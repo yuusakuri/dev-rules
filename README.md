@@ -66,6 +66,22 @@ git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
 実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
 ```
 
+### URLへのアクセスが拒否された場合に使うスキル
+
+通常の取得方法でURLへのアクセスが拒否された場合に使う `scrapling-official` を、`.agents/skills/scrapling-official/` に収録している。
+
+Codexはこのディレクトリから、Claude Codeは `.claude/skills/scrapling-official` のリンクからスキルを読み込む。
+
+別のプロジェクトでも使う場合は、そのプロジェクトのルートで次のコマンドを実行する。
+
+```bash
+npx skills add D4Vinci/Scrapling --skill scrapling-official
+```
+
+実行時に、利用するエージェントを選択する。
+
+Python環境とブラウザーの準備は、[Scrapling](.agents/skills/scrapling-official/SKILL.md)の手順に従う。
+
 ## テンプレートの利用
 
 文書を書き始めるためのひな形を [`templates/`](templates/README.md) に用意している。
