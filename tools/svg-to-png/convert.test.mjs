@@ -64,6 +64,16 @@ test('uses the viewBox when the width is a percentage', async () => {
   }
 });
 
+test('reaches the long side for an SVG measured in points', async () => {
+  // pdftocairo writes SVGs measured in points, which become fractional CSS pixels.
+  const { directory, png } = await convert('<svg xmlns="http://www.w3.org/2000/svg" width="132pt" height="244pt" viewBox="0 0 132 244"><rect width="132" height="244" fill="#ccc"/></svg>');
+  try {
+    assert.equal(Math.max(png.readUInt32BE(16), png.readUInt32BE(20)), 3840);
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('honors --long-side', async () => {
   const { directory, png } = await convert('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="150"/>', ['--long-side', '600']);
   try {

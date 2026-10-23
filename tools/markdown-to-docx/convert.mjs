@@ -198,7 +198,13 @@ async function imageParagraph(token) {
     if (sourceMeta.format === 'svg') {
       const longestSide = Math.max(sourceMeta.width, sourceMeta.height);
       const rasterScale = Math.max(1, 3840 / longestSide);
-      const fallback = await sharp(sourceData, { density: Math.min(100000, Math.ceil(72 * rasterScale)) })
+      // librsvg scales absolute units such as pt by the density twice, so the
+      // size grows with the square of the density. Measure how the size responds
+      // before choosing the density, or the render exceeds the pixel limit.
+      const probe = await sharp(sourceData, { density: 144 }).metadata();
+      const exponent = Math.log2(probe.width / sourceMeta.width) || 1;
+      const density = Math.min(100000, Math.ceil(72 * rasterScale ** (1 / exponent)));
+      const fallback = await sharp(sourceData, { density })
         .resize({ width: Math.round(sourceMeta.width * rasterScale), height: Math.round(sourceMeta.height * rasterScale) })
         .png().toBuffer();
       imageOptions = { data: sourceData, type: 'svg', fallback: { data: fallback, type: 'png' } };

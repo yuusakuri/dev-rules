@@ -46,6 +46,10 @@ try {
       else if (height === null) height = width * box.height / box.width;
     }
     if (!(width > 0 && height > 0)) return null;
+    // Chromium clips screenshots to whole CSS pixels, and units such as pt give
+    // fractional sizes. Round up so the long side reaches the requested pixels.
+    width = Math.ceil(width);
+    height = Math.ceil(height);
     svg.setAttribute('width', String(width));
     svg.setAttribute('height', String(height));
     svg.style.maxWidth = 'none';
