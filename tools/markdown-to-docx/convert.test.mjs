@@ -227,6 +227,25 @@ for (const style of ['docx', 'google-docs']) {
   });
 }
 
+test('SVG measured in points gets a 4K fallback', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-points-'));
+  try {
+    // pdftocairo writes SVGs measured in points.
+    const drawing = '<svg xmlns="http://www.w3.org/2000/svg" width="132pt" height="244pt" viewBox="0 0 132 244"><path d="M1 1L131 243" stroke="black"/></svg>';
+    await fs.writeFile(path.join(directory, 'figure.svg'), drawing);
+    const source = path.join(directory, 'input.md');
+    const output = path.join(directory, 'output.docx');
+    await fs.writeFile(source, '# 図\n\n![縦長](figure.svg)\n');
+    execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', 'docx']);
+    const archive = await JSZip.loadAsync(await fs.readFile(output));
+    const png = Object.keys(archive.files).find((name) => /^word\/media\/.*\.png$/.test(name));
+    const meta = await sharp(await archive.file(png).async('nodebuffer')).metadata();
+    assert.deepEqual([meta.width, meta.height], [2077, 3840]);
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 for (const style of ['docx', 'google-docs']) {
   test(`${style}: SVG stays vector with a 4K fallback and unchanged display size`, async () => {
     const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-vector-'));
