@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "scrapling-official": {
+      "source": "D4Vinci/Scrapling",
+      "sourceType": "github",
+      "skillPath": "agent-skill/Scrapling-Skill/SKILL.md",
+      "computedHash": "5c12e0853db99dd3e70119774e86365b088fdd2a69c67fc314d45054dfc5063c"
+    }
+  }
+}
