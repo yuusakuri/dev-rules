@@ -27,6 +27,7 @@
 | 文書 | [Mermaid図の画像変換ガイドライン](documentation/mermaid-image-guidelines.md) | Mermaidの図をSVG又はPNGに変換し、DOCXへ変換するMarkdownに埋め込むガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
 | 文書 | [PlantUML図の画像変換ガイドライン](documentation/plantuml-image-guidelines.md) | PlantUMLの図をSVG又はPNGに変換し、DOCXへ変換するMarkdownに埋め込むガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
 | 文書 | [SVGからPNGへの変換ガイドライン](documentation/svg-to-png-guidelines.md) | アンチエイリアスを考慮し、SVGの図を高解像度のPNGに変換するガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
+| 文書 | [PDFからの画像抽出ガイドライン](documentation/pdf-image-extraction-guidelines.md) | PDFの図を、ベクター図はSVGとして、埋め込み画像は元の画素のまま抽出するガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
 | 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載内容と見出しの構成を定めるガイドライン。 | リポジトリガイドライン |
 
