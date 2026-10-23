@@ -24,6 +24,9 @@
 | 文書 | [PowerPoint作成ガイドライン](documentation/powerpoint-guidelines.md) | PowerPointのプレゼンテーションの作成方法を定めるガイドライン。 | TypeScript実装ガイドライン、技術文書作成ガイドライン |
 | 文書 | [技術文書作成ガイドライン](documentation/technical-document-guidelines.md) | 技術文書の作成方法を定めるガイドライン。JIS Z 8301及びISO/IEC Directives, Part 2を参考に作成した。 | なし |
 | 文書 | [MarkdownからDOCXへの変換ガイドライン](documentation/docx-export-guidelines.md) | MarkdownからDOCXへの変換ガイドライン。Googleドキュメントへの変換も扱う。 | Markdown記述ガイドライン |
+| 文書 | [Mermaid図の画像変換ガイドライン](documentation/mermaid-image-guidelines.md) | Mermaidの図をSVG又はPNGに変換し、DOCXへ変換するMarkdownに埋め込むガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
+| 文書 | [PlantUML図の画像変換ガイドライン](documentation/plantuml-image-guidelines.md) | PlantUMLの図をSVG又はPNGに変換し、DOCXへ変換するMarkdownに埋め込むガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
+| 文書 | [SVGからPNGへの変換ガイドライン](documentation/svg-to-png-guidelines.md) | アンチエイリアスを考慮し、SVGの図を高解像度のPNGに変換するガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
 | 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載内容と見出しの構成を定めるガイドライン。 | リポジトリガイドライン |
 

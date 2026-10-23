@@ -54,6 +54,8 @@ Googleドキュメントが必要な場合は，生成したDOCXをGoogleドラ�
 
 ### 3.3 図の形式及び解像度
 
+MermaidとPlantUMLで記述した図を画像に変換する方法は，[Mermaid図の画像変換ガイドライン](mermaid-image-guidelines.md)及び[PlantUML図の画像変換ガイドライン](plantuml-image-guidelines.md)による。SVGをPNGに変換する方法は，[SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md)による。
+
 SVGなどのベクター形式の図は，ベクター形式を保持してDOCXに埋め込む。SVGでは，原本のデータと，SVGに対応しない表示環境のためのPNGを併せて格納する。
 
 ベクター形式の図をPNGなどの画像に変換する場合は，縦横比を保持し，長辺3840ピクセル以上（4K相当）で描画する。互換表示用のPNGにも同じ解像度を適用する。

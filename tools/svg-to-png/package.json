@@ -1,0 +1,21 @@
+{
+  "name": "dev-rules-svg-to-png",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "convert": "node convert.mjs",
+    "test": "node --test convert.test.mjs"
+  },
+  "dependencies": {
+    "puppeteer": "25.13.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "puppeteer"
+    ]
+  }
+}
