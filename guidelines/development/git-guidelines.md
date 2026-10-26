@@ -20,7 +20,7 @@ PR マージ前にフォーマットチェック、静的解析 / lint、全テ�
 
 ### ブランチ戦略：GitHub Flow
 
-本プロジェクトは [GitHub フロー](https://docs.github.com/ja/get-started/using-github/github-flow) を採用する。`main` は常にデプロイ可能な状態を保つ。直接プッシュは禁止。PR は最低1名のレビュー承認が必須。
+本プロジェクトは [GitHub フロー](https://docs.github.com/ja/get-started/using-github/github-flow) を採用する。`main` は常にデプロイ可能な状態を保つ。直接プッシュは禁止。PRは，利用者がmergeを明示的に指示していない場合，最低1名のレビュー承認を得てからmergeする。利用者が対象PRのmergeを明示的に指示した場合は，レビュー承認なしでmergeしてよい。
 
 ```
 main
