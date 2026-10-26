@@ -29,6 +29,13 @@ main
   └── refactor/use-case-extraction
 ```
 
+### 作業の手順
+
+1. 開発は最新の適切なベースブランチを基点とした作業ブランチで行う。
+2. 作業ブランチで変更をコミットする。
+3. 作業ブランチをリモートリポジトリへpushする。
+4. Pull Requestを作成する。
+
 ### ブランチ名：Conventional Branch
 
 ブランチ名は [Conventional Branch](https://conventional-branch.github.io/) に従う。ただし、AI Agent Source Prefixes は使用しない。
