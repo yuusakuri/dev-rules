@@ -193,30 +193,13 @@ async function imageParagraph(token) {
     const imagePath = path.resolve(path.dirname(sourcePath), decodeHref(rel));
     const sourceData = await fs.readFile(imagePath);
     const sourceMeta = await sharp(sourceData).metadata();
-    let imageOptions;
-    let meta;
-    if (sourceMeta.format === 'svg') {
-      const longestSide = Math.max(sourceMeta.width, sourceMeta.height);
-      const rasterScale = Math.max(1, 3840 / longestSide);
-      // librsvg scales absolute units such as pt by the density twice, so the
-      // size grows with the square of the density. Measure how the size responds
-      // before choosing the density, or the render exceeds the pixel limit.
-      const probe = await sharp(sourceData, { density: 144 }).metadata();
-      const exponent = Math.log2(probe.width / sourceMeta.width) || 1;
-      const density = Math.min(100000, Math.ceil(72 * rasterScale ** (1 / exponent)));
-      const fallback = await sharp(sourceData, { density })
-        .resize({ width: Math.round(sourceMeta.width * rasterScale), height: Math.round(sourceMeta.height * rasterScale) })
-        .png().toBuffer();
-      imageOptions = { data: sourceData, type: 'svg', fallback: { data: fallback, type: 'png' } };
-      meta = sourceMeta;
-    } else {
-      const data = await sharp(sourceData).autoOrient().png().toBuffer();
-      imageOptions = { data, type: 'png' };
-      meta = await sharp(data).metadata();
-    }
+    // DOCX viewers render SVG differently, so vector figures arrive as PNG made with Chromium.
+    if (sourceMeta.format === 'svg') throw new Error(`Convert SVG to PNG before embedding: ${rel}`);
+    const data = await sharp(sourceData).autoOrient().png().toBuffer();
+    const meta = await sharp(data).metadata();
     const scale = Math.min(1, 590 / meta.width, 650 / meta.height);
     if (index) imageRuns.push(new TextRun({ break: 1 }));
-    imageRuns.push(new ImageRun({ ...imageOptions, transformation: { width: Math.round(meta.width * scale), height: Math.round(meta.height * scale) }, altText: { title: img.text ?? '', description: img.text ?? '', name: path.basename(rel) } }));
+    imageRuns.push(new ImageRun({ data, type: 'png', transformation: { width: Math.round(meta.width * scale), height: Math.round(meta.height * scale) }, altText: { title: img.text ?? '', description: img.text ?? '', name: path.basename(rel) } }));
   }
   return new Paragraph({ children: imageRuns, spacing: { before: 100, after: 100 }, keepNext: true });
 }

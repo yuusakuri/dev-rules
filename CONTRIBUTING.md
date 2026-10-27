@@ -6,6 +6,8 @@ AIの入口や導入方法が変わる場合は、[`AGENTS.md`](AGENTS.md) と�
 
 ブランチ、コミット、PRの進め方は [Git規則](guidelines/development/git-guidelines.md) に従う。
 
+`tools/` 又は `docker/` を変更した場合は、`docker/test.sh` を実行する。このスクリプトは、Dockerイメージを作成し、変換ツールのテストと、ガイドラインに記載した変換コマンドを実行する。
+
 ## 例の書き方
 
 ガイドラインへ載せるコード例と名前の例は、次のいずれかに当てはまるOSSの実装から採用する。

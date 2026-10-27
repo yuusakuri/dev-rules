@@ -18,9 +18,11 @@
 │   ├── implementation/       # 技術固有の実装ガイドライン
 │   ├── ui/                   # UIデザインガイドライン
 │   └── documentation/        # 文書作成のガイドライン
-└── templates/
-    ├── README.md             # テンプレート一覧
-    └── documentation/        # ドキュメントのテンプレート
+├── templates/
+│   ├── README.md             # テンプレート一覧
+│   └── documentation/        # ドキュメントのテンプレート
+├── tools/                    # 文書と図の変換ツール
+└── docker/                   # 変換ツールを実行するDockerイメージとその検証スクリプト
 ```
 
 ## 利用方法

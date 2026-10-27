@@ -18,32 +18,28 @@ Markdownファイルを正本として扱う。内容を変更する場合は，
 
 ### 3.1 環境
 
-変換に必要な環境を[表1](#table-1)に示す。
+変換には，dev-rulesの[`docker/Dockerfile`](../../docker/Dockerfile)で作成するDockerイメージを用いる。dev-rulesのルートで次のコマンドを実行し，イメージを作成する。
 
-<a id="table-1"></a>表1−変換環境
-
-| 項目 | 要件 |
-| --- | --- |
-| Node.js | 20.9.0以上。 |
-| pnpm | 10.28.2。 |
+```shell
+docker build -t dev-rules-tools -f docker/Dockerfile .
+```
 
 ### 3.2 手順
 
-MarkdownからDOCXへの変換には，このリポジトリの`tools/markdown-to-docx/convert.mjs`を使用する。dev-rulesのルートで次のコマンドを実行する。
+変換するMarkdownファイルがあるディレクトリで次のコマンドを実行し，DOCXを生成する。
 
 ```shell
-pnpm --dir tools/markdown-to-docx install --frozen-lockfile
-node tools/markdown-to-docx/convert.mjs --input-file "<input.md>" --output-file "<output.docx>" --style docx
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/data" dev-rules-tools markdown-to-docx --input-file "<input.md>" --output-file "<output.docx>" --style docx
 ```
 
-1行目で依存パッケージをインストールし，2行目でDOCXを生成する。2行目のパラメーターを[表2](#table-2)に示す。
+コンテナは，現在のディレクトリを`/data`として読み書きする。ファイルは，現在のディレクトリからの相対パスで指定する。`markdown-to-docx`のパラメーターを[表1](#table-1)に示す。
 
-<a id="table-2"></a>表2−変換コマンドのパラメーター
+<a id="table-1"></a>表1−変換コマンドのパラメーター
 
 | パラメーター | 指定値と説明 |
 | --- | --- |
-| `--input-file` | `<input.md>`：変換対象のMarkdownファイル。相対パス又は絶対パスを指定する。 |
-| `--output-file` | `<output.docx>`：出力するDOCXファイル。相対パス又は絶対パスを指定する。 |
+| `--input-file` | `<input.md>`：変換対象のMarkdownファイル。 |
+| `--output-file` | `<output.docx>`：出力するDOCXファイル。 |
 | `--style` | `docx`：DOCXを最終成果物とする場合の書式。<br>`google-docs`：Googleドキュメントへ取り込む場合の書式。 |
 
 先頭の`#`見出しをタイトルにし，冒頭のYAMLフロントマターに`subtitle: ...`があればサブタイトルにする。それ以外の見出しは，Markdownの`#`の数と同じ段階の見出しスタイルへ変換する。例えば，`##`は見出し2，`###`は見出し3になる。
@@ -54,21 +50,23 @@ Googleドキュメントが必要な場合は，生成したDOCXをGoogleドラ�
 
 ### 3.3 図の形式及び解像度
 
-MermaidとPlantUMLで記述した図を画像に変換する方法は，[Mermaid図の画像変換ガイドライン](mermaid-image-guidelines.md)及び[PlantUML図の画像変換ガイドライン](plantuml-image-guidelines.md)による。SVGをPNGに変換する方法は，[SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md)による。PDFに含まれる図を抽出する方法は，[PDFからの画像抽出ガイドライン](pdf-image-extraction-guidelines.md)による。
+図を画像に変換又は取得する方法は，[表2](#table-2)のガイドラインによる。
 
-SVGなどのベクター形式の図は，ベクター形式を保持してDOCXに埋め込む。SVGでは，原本のデータと，SVGに対応しない表示環境のためのPNGを併せて格納する。
+<a id="table-2"></a>表2−図の画像化に用いるガイドライン
 
-Webページの図を利用する場合は，提供元が配布する画像ファイルを取得し，SVGがある場合はSVGを正本として保存する。ページのスクリーンショットや表示先から取り出したPNGを，提供元の原本として扱わない。
+| 図 | ガイドライン |
+| --- | --- |
+| Mermaidで記述した図 | [Mermaid図の画像変換ガイドライン](mermaid-image-guidelines.md) |
+| PlantUMLで記述した図 | [PlantUML図の画像変換ガイドライン](plantuml-image-guidelines.md) |
+| SVGの図 | [SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md) |
+| PDFに含まれる図 | [PDFからの画像抽出ガイドライン](pdf-image-extraction-guidelines.md) |
+| Webページに含まれる図 | [Webページからの画像取得ガイドライン](web-image-guidelines.md) |
 
-ベクター形式の図をPNGなどの画像に変換する場合は，縦横比を保持し，長辺3840ピクセル以上（4K相当）で描画する。互換表示用のPNGにも同じ解像度を適用する。
+SVGなどのベクター形式の図は，PNGに変換してからDOCXに埋め込む。Markdownから参照したSVGは，変換ツールがエラーにする。
 
-文書内での表示サイズと画像のピクセル数は区別する。図を本文の幅に収める場合は表示サイズを調整し，埋込み画像の解像度を下げない。
+図をドキュメントの幅に収める場合は，表示サイズを調整する。画像の解像度を下げてはならない。
 
 元からPNG又はJPEGなどの画像である図は，元の解像度を保持する。低解像度の画像を拡大するだけで高精細な図として扱わない。
-
-SVGを互換表示用のPNGだけに置き換えてはならない。変換後は，DOCX内のSVGが原本と一致すること及び互換PNGの解像度を確認する。
-
-図の線や文字にギザギザ，ぼけ又は欠落がある場合は，原本，DOCX内の図及び表示先で取り込まれた図を比較し，劣化が生じた段階を確認する。表示先で縮小又は再圧縮された画像を原本として再利用しない。
 
 図を追加または変更する場合は，提供元の図と上下左右の端にある図形を照合し，線及び文字が途中で切れていないことを確認する。
 
