@@ -32,8 +32,6 @@ docker build -t dev-rules-tools -f docker/Dockerfile .
 | `docs/images/<name>.svg` | 定義ファイルから生成したSVG。定義ファイルと同じ名前にする。 |
 | `docs/images/<name>.png` | SVGから変換したPNG。必要な場合に限って生成する。 |
 
-生成した画像は，定義ファイルと同じコミットに含める。
-
 ## 5 図の定義
 
 定義ファイルは，UTF-8で保存する。図の題名は`title`で記述する。
