@@ -105,6 +105,21 @@ test('anti-aliases diagonal edges at the output resolution', async () => {
   }
 });
 
+test('draws text with grayscale anti-aliasing', async () => {
+  const { directory, png } = await convert('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="40"><text x="10" y="30" font-family="sans-serif" font-size="20">Ag 注文</text></svg>', ['--long-side', '400']);
+  try {
+    const { data } = await pixels(png);
+    let gray = 0;
+    for (let index = 0; index < data.length; index += 4) {
+      assert.ok(data[index] === data[index + 1] && data[index + 1] === data[index + 2], `colored edge pixel at ${index / 4}`);
+      if (data[index] > 0 && data[index] < 255) gray += 1;
+    }
+    assert.ok(gray > 0, 'expected anti-aliased text edges');
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('keeps a leading space in a tspan', async () => {
   const text = (body) => `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="40"><text x="10" y="30" font-family="sans-serif" font-size="20">${body}</text></svg>`;
   const inkRight = async (body) => {

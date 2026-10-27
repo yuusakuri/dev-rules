@@ -1,0 +1,3 @@
+*
+!tools/
+tools/**/node_modules/
