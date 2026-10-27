@@ -2,64 +2,52 @@
 
 ## 1 適用範囲
 
-このガイドラインは，SVGの図をPNGに変換する場合に適用する。SVGを扱えない変換ツール又は表示先へ図を渡す場合に用いる。
-
-PNGの解像度は，[MarkdownからDOCXへの変換ガイドライン](docx-export-guidelines.md)の3.3による。
+このガイドラインは，SVGの図をPNGに変換する場合に適用する。
 
 ## 2 変換方針
 
-### 2.1 アンチエイリアス
+### 2.1 解像度及び背景
 
-SVGを描画する処理は，図形及び文字の縁にかかる画素を，縁が画素を覆う割合に応じた中間色で塗る。これをアンチエイリアスという。アンチエイリアスは描画した解像度の画素に対して働くため，PNGの画質は次の条件で決まる。
+ベクター形式の図をPNGなどのラスター画像に変換する場合は，縦横比を保持し，長辺3840ピクセル以上で描画する。
 
-a) SVGから直接，最終的なピクセル数で描画する。小さく描画したPNGを拡大すると，縁の中間色も拡大され，縁がぼけるか階段状になる。同じ描画エンジンで比べると，1倍で描画して4倍に拡大したPNGは，4倍で直接描画したPNGに比べ，理想的な描画との差が約30倍になった。
+ラスター画像を書き出してから拡大してはならない。
 
-b) アンチエイリアスを無効にしない。SVGに`shape-rendering="crispEdges"`，`shape-rendering="optimizeSpeed"`又は`text-rendering="optimizeSpeed"`を指定しない。`crispEdges`を指定した場合，理想的な描画との差が約7倍になった。
+背景は透過にせず，白で塗りつぶして出力する。
 
-c) 背景を白で塗りつぶして描画する。背景を透過にすると，縁の中間色が半透明の画素になり，表示先の背景色や透過の扱いによって縁の色が変わる。
-
-d) 変換後に縮小，拡大及び非可逆圧縮をしない。PNGをJPEGなどの非可逆圧縮の形式に変換すると，縁の周囲にノイズが生じる。
+原本のSVGと，PNGを併せて保存する。
 
 ### 2.2 描画エンジン
 
-SVGの描画には，Chromiumを用いる。アンチエイリアスの精度は，Chromium，resvg及びlibrsvgのいずれも同等であるが，SVGをどこまで忠実に描画できるかが異なる。
+SVGをPNGに変換する際は，文字の欠落やレイアウト崩れを防ぐため，Chromiumブラウザベースの描画機能を使用する。
 
-SVGには，CSSによる書式，`@font-face`で埋め込んだフォント，複数の`tspan`要素に分けた文字列などを含むものがある。また，ブラウザーで文字の幅を測って図形を配置したSVGは，同じブラウザーの描画エンジンで描画したときに配置どおりになる。Chromium以外の描画エンジンでは，次の差異が生じる場合がある。
+Chromiumベースのツールを使用する。resvgやlibrsvgなどの他の描画エンジンは，空白が消えたり指定フォントが反映されず文字が枠からはみ出すおそれがあるため，使用しない。
 
-- librsvgは，`tspan`要素の先頭の空白を描画せず，単語の間の空白が消える。
-- resvgは，`@font-face`で埋め込んだフォントを用いず，別のフォントで描画する。文字の幅が変わるため，文字が枠からはみ出すおそれがある。
-
-Chromiumのスクリーンショットは，文字をグレースケールのアンチエイリアスで描画し，文字の縁に色が付くサブピクセルレンダリングを用いない。
+文字の縁の着色を防ぐため，サブピクセルレンダリングは使用せず，グレースケールのアンチエイリアスで描画する。これは，Chromiumのスクリーンショット機能を使えば自動で適用される。
 
 ## 3 変換環境
 
-変換に必要な環境を[表1](#table-1)に示す。
+変換には，dev-rulesの[`docker/Dockerfile`](../../docker/Dockerfile)で作成するDockerイメージを用いる。イメージには，Chromium及び日本語フォントが含まれる。dev-rulesのルートで次のコマンドを実行し，イメージを作成する。
 
-<a id="table-1"></a>表1−変換環境
-
-| 項目 | 要件 |
-| --- | --- |
-| Node.js | 22.12.0以上。 |
-| pnpm | 10.28.2。 |
-| 日本語フォント | 日本語を描画できるフォント。変換環境に導入されていない場合，日本語の文字が正しく描画されない。 |
+```shell
+docker build -t dev-rules-tools -f docker/Dockerfile .
+```
 
 ## 4 変換手順
 
-SVGからPNGへの変換には，このリポジトリの`tools/svg-to-png/convert.mjs`を使用する。dev-rulesのルートで次のコマンドを実行する。
+SVGからPNGへの変換には，イメージに含まれる`svg-to-png`を使用する。変換するSVGがあるディレクトリで次のコマンドを実行する。
 
 ```shell
-pnpm --dir tools/svg-to-png install --frozen-lockfile
-node tools/svg-to-png/convert.mjs --input-file "<input.svg>" --output-file "<output.png>"
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/data" dev-rules-tools svg-to-png --input-file "<input.svg>" --output-file "<output.png>"
 ```
 
-1行目で依存パッケージをインストールする。このとき，Puppeteerが描画に用いるchrome-headless-shellを取得する。2行目でPNGを生成する。2行目のパラメーターを[表2](#table-2)に示す。
+コンテナは，現在のディレクトリを`/data`として読み書きする。ファイルは，現在のディレクトリからの相対パスで指定する。`svg-to-png`のパラメーターを[表1](#table-1)に示す。
 
-<a id="table-2"></a>表2−変換コマンドのパラメーター
+<a id="table-1"></a>表1−変換コマンドのパラメーター
 
 | パラメーター | 指定値と説明 |
 | --- | --- |
-| `--input-file` | `<input.svg>`：変換するSVGファイル。相対パス又は絶対パスを指定する。 |
-| `--output-file` | `<output.png>`：出力するPNGファイル。相対パス又は絶対パスを指定する。 |
+| `--input-file` | `<input.svg>`：変換するSVGファイル。 |
+| `--output-file` | `<output.png>`：出力するPNGファイル。 |
 | `--long-side` | PNGの長辺のピクセル数。省略した場合は3840になる。 |
 
 変換ツールは，SVGの`width`及び`height`属性，又は`viewBox`属性から図の大きさを求め，長辺が指定したピクセル数になる倍率で，SVGを直接描画する。背景は不透明な白にする。大きさを求められないSVGは，エラーにする。
@@ -68,9 +56,9 @@ node tools/svg-to-png/convert.mjs --input-file "<input.svg>" --output-file "<out
 
 ## 5 確認
 
-変換後に，[表3](#table-3)の項目を確認する。
+変換後に，[表2](#table-2)の項目を確認する。
 
-<a id="table-3"></a>表3−確認項目
+<a id="table-2"></a>表2−確認項目
 
 | 項目 | 確認方法 |
 | --- | --- |
@@ -84,6 +72,4 @@ node tools/svg-to-png/convert.mjs --input-file "<input.svg>" --output-file "<out
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 2.1 | [shape-rendering - SVG \| MDN](https://developer.mozilla.org/ja/docs/Web/SVG/Reference/Attribute/shape-rendering) | 図形のアンチエイリアスを制御する`shape-rendering`属性を説明する文書。 |
-| 2.1 | [text-rendering - SVG \| MDN](https://developer.mozilla.org/ja/docs/Web/SVG/Reference/Attribute/text-rendering) | 文字の描画の優先事項を指定する`text-rendering`属性を説明する文書。 |
 | 4章 | [Puppeteer](https://pptr.dev/) | 変換ツールがChromiumの操作に用いるライブラリーを説明する文書。 |

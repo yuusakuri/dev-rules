@@ -24,10 +24,11 @@
 | 文書 | [PowerPoint作成ガイドライン](documentation/powerpoint-guidelines.md) | PowerPointのプレゼンテーションの作成方法を定めるガイドライン。 | TypeScript実装ガイドライン、技術文書作成ガイドライン |
 | 文書 | [技術文書作成ガイドライン](documentation/technical-document-guidelines.md) | 技術文書の作成方法を定めるガイドライン。JIS Z 8301及びISO/IEC Directives, Part 2を参考に作成した。 | なし |
 | 文書 | [MarkdownからDOCXへの変換ガイドライン](documentation/docx-export-guidelines.md) | MarkdownからDOCXへの変換ガイドライン。Googleドキュメントへの変換も扱う。 | Markdown記述ガイドライン |
-| 文書 | [Mermaid図の画像変換ガイドライン](documentation/mermaid-image-guidelines.md) | Mermaidの図をSVG又はPNGに変換し、DOCXへ変換するMarkdownに埋め込むガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
-| 文書 | [PlantUML図の画像変換ガイドライン](documentation/plantuml-image-guidelines.md) | PlantUMLの図をSVG又はPNGに変換し、DOCXへ変換するMarkdownに埋め込むガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
-| 文書 | [SVGからPNGへの変換ガイドライン](documentation/svg-to-png-guidelines.md) | アンチエイリアスを考慮し、SVGの図を高解像度のPNGに変換するガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
-| 文書 | [PDFからの画像抽出ガイドライン](documentation/pdf-image-extraction-guidelines.md) | PDFの図を、ベクター図はSVGとして、埋め込み画像は元の画素のまま抽出するガイドライン。 | MarkdownからDOCXへの変換ガイドライン |
+| 文書 | [Mermaid図の画像変換ガイドライン](documentation/mermaid-image-guidelines.md) | Mermaidの図をSVG又はPNGに変換するガイドライン。 | なし |
+| 文書 | [PlantUML図の画像変換ガイドライン](documentation/plantuml-image-guidelines.md) | PlantUMLの図をSVGに変換し、SVGからPNGを作るガイドライン。 | SVGからPNGへの変換ガイドライン |
+| 文書 | [SVGからPNGへの変換ガイドライン](documentation/svg-to-png-guidelines.md) | SVGの図をChromiumで高解像度のPNGに変換するガイドライン。 | なし |
+| 文書 | [PDFからの画像抽出ガイドライン](documentation/pdf-image-extraction-guidelines.md) | PDFの図を、ベクター図はSVGとして、埋め込み画像は元の画素のまま抽出するガイドライン。 | なし |
+| 文書 | [Webページからの画像取得ガイドライン](documentation/web-image-guidelines.md) | Webページの図を、提供元が配布する画像ファイルから取得するガイドライン。 | なし |
 | 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載内容と見出しの構成を定めるガイドライン。 | リポジトリガイドライン |
 

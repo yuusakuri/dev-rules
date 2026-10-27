@@ -2,9 +2,7 @@
 
 ## 1 適用範囲
 
-このガイドラインは，PDFに含まれる図を抽出し，Markdownに埋め込んでDOCXへ変換する場合に適用する。
-
-抽出した図の形式及び解像度は，[MarkdownからDOCXへの変換ガイドライン](docx-export-guidelines.md)の3.3による。SVGをPNGに変換する方法は，[SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md)による。
+このガイドラインは，PDFに含まれる図を抽出する場合に適用する。
 
 ## 2 抽出方針
 
@@ -19,11 +17,13 @@ PDFの図には，線及び文字をPDFの描画命令で描いたベクター�
 | ベクター図 | 図の範囲をPDFとして切り出し，SVGに変換する（[4.2](#42-ベクター図の抽出)参照）。 | ベクター形式を保持したSVG。 |
 | ラスター画像 | PDFに埋め込まれた画像のデータを取り出し，透過情報がある場合はアルファチャンネルとして合成する（[4.3](#43-ラスター画像の抽出)参照）。 | PDFに埋め込まれた画素数のままの画像。 |
 
+ベクター図は，ベクター形式を保持して抽出する。ラスター画像は，元の解像度を保持する。低解像度の画像を拡大して高精細な図として扱ってはならない。
+
 ページ全体を画像として描画してから図を切り抜く方法は，用いない。ベクター図はその解像度の画像になり，拡大すると線及び文字の縁がぼける。ラスター画像は描画時に画素が再標本化され，元の画素の値が失われる。
 
 ### 2.2 抽出する範囲
 
-図の題名及び出典は，抽出する範囲に含めない。題名及び出典は，[技術文書作成ガイドライン](technical-document-guidelines.md)の16章によってMarkdownに記載する。
+図の題名及び出典は，抽出する範囲に含めない。
 
 ### 2.3 ツール
 
@@ -33,50 +33,22 @@ PDFの図には，線及び文字をPDFの描画命令で描いたベクター�
 
 ## 3 抽出環境
 
-### 3.1 Windows
-
-wingetでPoppler及びImageMagickをインストールする。
-
-```powershell
-winget install --id oschwartz10612.Poppler -e
-winget install --id ImageMagick.ImageMagick -e
-```
-
-インストール後に新しいターミナルを開き，次のコマンドで版が表示されることを確認する。
-
-```powershell
-pdftocairo -v
-magick -version
-```
-
-### 3.2 macOS
-
-HomebrewでPoppler及びImageMagickをインストールする。
+抽出には，dev-rulesの[`docker/Dockerfile`](../../docker/Dockerfile)で作成するDockerイメージを用いる。イメージには，PopplerのCLI及びImageMagick 7が含まれる。dev-rulesのルートで次のコマンドを実行し，イメージを作成する。
 
 ```shell
-brew install poppler imagemagick
+docker build -t dev-rules-tools -f docker/Dockerfile .
 ```
 
-次のコマンドで版が表示されることを確認する。
+[4章](#4-抽出手順)の各コマンドは，PDFがあるディレクトリで，次の`<command>`に置き換えて実行する。コンテナは，現在のディレクトリを`/data`として読み書きする。ファイルは，現在のディレクトリからの相対パスで指定する。
 
 ```shell
-pdftocairo -v
-magick -version
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/data" dev-rules-tools <command>
 ```
 
-### 3.3 Ubuntu
-
-APTでPopplerのCLI及びImageMagickをインストールする。
+例えば，[4.1](#41-図の種類の判別)の一覧表示は次のコマンドになる。
 
 ```shell
-sudo apt-get install -y poppler-utils imagemagick
-```
-
-次のコマンドで版が表示されることを確認する。APTで提供されるImageMagickは6系であり，`magick` の代わりに `convert` コマンドを用いる。
-
-```shell
-pdftocairo -v
-convert -version
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/data" dev-rules-tools pdfimages -list -f <page> -l <page> <input.pdf>
 ```
 
 ## 4 抽出手順
@@ -109,21 +81,10 @@ pdftotext -f <page> -l <page> -bbox-layout <input.pdf> <page>.html
 
 次に，探索範囲を288 dpiで描画し，白以外の画素の外接矩形を求める。288 dpiでは，1 ptが4ピクセルに相当する。`<sx>`，`<sy>`，`<sw>`及び`<sh>`には，探索範囲の左上の座標，幅及び高さ（単位 pt）を4倍した値を指定する。
 
-##### 4.2.1.1 Windows及びmacOS
-
 ```shell
 pdftocairo -png -singlefile -r 288 -f <page> -l <page> -x <sx> -y <sy> -W <sw> -H <sh> <input.pdf> <area>
 magick <area>.png -fuzz 3% -trim -format "%w %h %X %Y" info:
 ```
-
-##### 4.2.1.2 Ubuntu
-
-```shell
-pdftocairo -png -singlefile -r 288 -f <page> -l <page> -x <sx> -y <sy> -W <sw> -H <sh> <input.pdf> <area>
-convert <area>.png -fuzz 3% -trim -format "%w %h %X %Y" info:
-```
-
-##### 4.2.1.3 範囲の計算
 
 2行目のコマンドは，外接矩形の幅，高さ，左端の位置及び上端の位置をピクセル単位で出力する。これらを4で割り，探索範囲の左上の座標（単位 pt）に加えたものを図の範囲とする。図の線が範囲の端で切れないよう，範囲の四方に2 ptの余白を加え，小数は範囲が広がる方向に丸める。
 
@@ -155,10 +116,6 @@ pdftocairo -svg <figure>.pdf <figure>.svg
 
 SVGでは，文字は字形の輪郭を表すパスとして出力される。図の見た目は元のPDFと一致するが，SVG内の文字は検索及び選択の対象にならない。
 
-#### 4.2.3 PNGへの変換
-
-SVGを扱えない変換ツール又は表示先へ図を渡す場合は，[SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md)によって，4.2.2で作成したSVGをPNGに変換する。PDFから直接PNGを描画しない。
-
 ### 4.3 ラスター画像の抽出
 
 #### 4.3.1 画像の取り出し
@@ -177,8 +134,6 @@ pdfimages -all -f <page> -l <page> <input.pdf> <prefix>
 
 #### 4.3.2 透過情報の合成
 
-##### 4.3.2.1 Windows及びmacOS
-
 次のコマンドで，透過情報を本体の画像のアルファチャンネルとして合成する。本体の画素の値は変わらない。
 
 ```shell
@@ -191,20 +146,6 @@ magick <image.png> <mask.png> -compose CopyOpacity -composite <figure>.png
 magick <mask.png> -resize '<width>x<height>!' <mask-resized.png>
 ```
 
-##### 4.3.2.2 Ubuntu
-
-次のコマンドで，透過情報を本体の画像のアルファチャンネルとして合成する。本体の画素の値は変わらない。
-
-```shell
-convert <image.png> <mask.png> -compose CopyOpacity -composite <figure>.png
-```
-
-`<image.png>` には本体の画像を，`<mask.png>` にはその透過情報を指定する。透過情報の画素数が本体と異なる場合は，先に次のコマンドで透過情報を本体の画素数に合わせ，合わせた画像を `<mask.png>` に指定する。`<width>` 及び `<height>` には，本体の画素数を指定する。
-
-```shell
-convert <mask.png> -resize '<width>x<height>!' <mask-resized.png>
-```
-
 ## 5 確認
 
 抽出後に，[表3](#table-3)の項目を確認する。
@@ -214,20 +155,12 @@ convert <mask.png> -resize '<width>x<height>!' <mask-resized.png>
 | 項目 | 確認方法 |
 | --- | --- |
 | 範囲 | 図の端が切れておらず，図の題名，本文及び余分な余白を含まない。 |
-| 形式 | ベクター図はSVGであり，ラスター画像は4.1の一覧の画素数と同じ画素数である。 |
-| 透過 | 透過情報がある画像は，白の背景に重ねて表示したとき，背景が黒くならず，黒い文字及び線が見える。 |
-| 文字 | SVGをPNGに変換して等倍で表示し，文字が元のPDFと同じ字形で描画されている。 |
-| 出典 | Markdownの図の題名に，出典の文書，版，図番号及びページの番号を記載している。 |
 
 ## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 2章 | [Poppler](https://poppler.freedesktop.org/) | PDFを描画するライブラリー及びCLIを提供するPopplerの公式サイト。 |
-| 3章 | [GitHub - oschwartz10612/poppler-windows: Download Poppler binaries packaged for Windows with dependencies · GitHub](https://github.com/oschwartz10612/poppler-windows) | wingetでインストールするWindows向けのPopplerを配布するリポジトリ。 |
-| 3章 | [Homebrew Formulae: poppler](https://formulae.brew.sh/formula/poppler) | macOS向けのPopplerのHomebrewのパッケージ。 |
-| 3章 | [Homebrew Formulae: imagemagick](https://formulae.brew.sh/formula/imagemagick) | macOS向けのImageMagickのHomebrewのパッケージ。 |
-| 3章 | ['install' コマンド \| Microsoft Learn](https://learn.microsoft.com/ja-jp/windows/package-manager/winget/install) | wingetでパッケージをインストールするコマンドを説明する文書。 |
 | 4章 | [pdftocairo(1) — poppler-utils — Debian trixie — Debian Manpages](https://manpages.debian.org/trixie/poppler-utils/pdftocairo.1.en.html) | ページの範囲を切り出してPDF，SVG及びPNGに変換するコマンドの説明。ベクター出力での範囲の単位及び配置を説明する。 |
 | 4章 | [pdfimages(1) — poppler-utils — Debian trixie — Debian Manpages](https://manpages.debian.org/trixie/poppler-utils/pdfimages.1.en.html) | PDFに埋め込まれた画像を一覧表示及び抽出するコマンドの説明。 |
 | 4章 | [pdftotext(1) — poppler-utils — Debian trixie — Debian Manpages](https://manpages.debian.org/trixie/poppler-utils/pdftotext.1.en.html) | ページ内の語の座標を出力するコマンドの説明。 |
