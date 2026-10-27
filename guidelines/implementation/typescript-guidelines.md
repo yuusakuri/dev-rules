@@ -2,17 +2,24 @@
 
 ## 目次
 
-1. [概要](#1-概要)
+1. [はじめに](#1-はじめに)
 2. [フォルダ構成](#2-フォルダ構成)
 3. [型](#3-型)
 4. [検証](#4-検証)
-5. [参考文献](#5-参考文献)
+
+- [参考文献](#参考文献)
 
 ---
 
-## 1. 概要
+## 1 はじめに
 
-本書は、TypeScript実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
+### 1.1 目的
+
+本書の目的は、TypeScriptの実装の構成と記述方法をそろえることである。
+
+### 1.2 適用範囲
+
+本書は、TypeScriptによる実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
 ---
 
@@ -58,11 +65,11 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 
 ---
 
-## 5. 参考文献
+## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 1. 概要、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
+| 1 はじめに、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
 | 4. 検証 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
 | 4. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
 | 4. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を確認する。 |

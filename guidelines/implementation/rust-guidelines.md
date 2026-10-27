@@ -2,17 +2,24 @@
 
 ## 目次
 
-1. [概要](#1-概要)
+1. [はじめに](#1-はじめに)
 2. [フォルダ構成](#2-フォルダ構成)
 3. [ディスパッチ](#3-ディスパッチ)
 4. [検証](#4-検証)
-5. [参考文献](#5-参考文献)
+
+- [参考文献](#参考文献)
 
 ---
 
-## 1. 概要
+## 1 はじめに
 
-本書は、Rust実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)を前提とする。
+### 1.1 目的
+
+本書の目的は、Rustの実装の構成と記述方法をそろえることである。
+
+### 1.2 適用範囲
+
+本書は、Rustによる実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)を前提とする。
 
 記述方法は、「参考文献」のThe Rust Style GuideとRust API Guidelinesに従う。
 
@@ -81,12 +88,12 @@ let using_generic = Router::new()
 
 ---
 
-## 5. 参考文献
+## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
-| 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
+| 1 はじめに | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
+| 1 はじめに | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
 | 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的なファイルとフォルダの配置を確認する。 |
 | 2. フォルダ構成 | [core - Rust](https://doc.rust-lang.org/core/) | coreクレートが、標準ライブラリにも実行環境にも依存しない基盤として定義されていることを確認する。 |
 | 2. フォルダ構成 | [rust/library/std/src at master · rust-lang/rust](https://github.com/rust-lang/rust/tree/master/library/std/src) | 提供する機能の名前をそのままモジュール名とし、抽象的な名前の階層を挟まない配置を確認する。 |
