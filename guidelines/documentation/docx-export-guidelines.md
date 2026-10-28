@@ -4,11 +4,11 @@
 
 ### 1.1 目的
 
-このガイドラインの目的は，Markdownを正本として，書式のそろったDOCXを作成できるようにすることである。
+本書の目的は，Markdownを適切な書式でDOCXに変換することである。
 
 ### 1.2 適用範囲
 
-このガイドラインは，Markdownを編集可能なDOCXに変換する場合に適用する。Googleドキュメントへの変換も扱う。
+本書は，Markdownを編集可能なDOCXに変換する場合に適用する。Googleドキュメントへの変換も扱う。
 
 ## 2 変換方針
 
@@ -62,17 +62,17 @@ Googleドキュメントが必要な場合は，生成したDOCXをGoogleドラ�
 
 | 図 | ガイドライン |
 | --- | --- |
-| Mermaidで記述した図 | [Mermaid図の画像変換ガイドライン](mermaid-image-guidelines.md) |
-| PlantUMLで記述した図 | [PlantUML図の画像変換ガイドライン](plantuml-image-guidelines.md) |
-| SVGの図 | [SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md) |
+| Mermaid | [Mermaid図の画像変換ガイドライン](mermaid-image-guidelines.md) |
+| PlantUML | [PlantUML図の画像変換ガイドライン](plantuml-image-guidelines.md) |
+| SVG | [SVGからPNGへの変換ガイドライン](svg-to-png-guidelines.md) |
 | PDFに含まれる図 | [PDFからの画像抽出ガイドライン](pdf-image-extraction-guidelines.md) |
 | Webページに含まれる図 | [Webページからの画像取得ガイドライン](web-image-guidelines.md) |
 
-SVGなどのベクター形式の図は，PNGに変換してからDOCXに埋め込む。Markdownから参照したSVGは，変換ツールがエラーにする。
+SVGなどのベクター画像は，PNGに変換してからDOCXに埋め込む。Markdownから参照したSVGは，変換ツールがエラーにする。
 
 図をドキュメントの幅に収める場合は，表示サイズを調整する。画像の解像度を下げてはならない。
 
-元からPNG又はJPEGなどの画像である図は，元の解像度を保持する。低解像度の画像を拡大するだけで高精細な図として扱わない。
+PNG又はJPEGなどのラスター画像は，元の解像度を保持する。低解像度の画像を拡大するだけで高精細な図として扱わない。
 
 図を追加または変更する場合は，提供元の図と上下左右の端にある図形を照合し，線及び文字が途中で切れていないことを確認する。
 
