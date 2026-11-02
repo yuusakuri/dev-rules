@@ -23,6 +23,7 @@
 | 文書 | [仕様書作成ガイドライン](documentation/specification-guidelines.md) | 仕様書作成のガイドライン。 | なし |
 | 文書 | [PowerPoint作成ガイドライン](documentation/powerpoint-guidelines.md) | PowerPointのプレゼンテーションの作成方法を定めるガイドライン。 | TypeScript実装ガイドライン、技術文書作成ガイドライン |
 | 文書 | [技術文書作成ガイドライン](documentation/technical-document-guidelines.md) | 技術文書の作成方法を定めるガイドライン。JIS Z 8301及びISO/IEC Directives, Part 2を参考に作成した。 | なし |
+| 文書 | [プレインランゲージガイドライン](documentation/plain-language-guidelines.md) | 読み手が必要な情報を見つけ、理解し、利用できる日本語の文書を作成するガイドライン。ISO 24495-1及び公用文作成の考え方を参考に作成した。 | なし |
 | 文書 | [MarkdownからDOCXへの変換ガイドライン](documentation/docx-export-guidelines.md) | MarkdownからDOCXへの変換ガイドライン。Googleドキュメントへの変換も扱う。 | Markdown記述ガイドライン |
 | 文書 | [Mermaid図の画像変換ガイドライン](documentation/mermaid-image-guidelines.md) | MermaidをSVG又はPNGに変換するガイドライン。 | なし |
 | 文書 | [PlantUML図の画像変換ガイドライン](documentation/plantuml-image-guidelines.md) | PlantUMLをSVGに変換し、SVGからPNGを作るガイドライン。 | SVGからPNGへの変換ガイドライン |
