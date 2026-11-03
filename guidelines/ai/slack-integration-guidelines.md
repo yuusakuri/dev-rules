@@ -54,7 +54,9 @@ Stopフックを作業の継続の判断にも使う場合は、通知の送信�
 
 通知だけを送る場合は、SlackアプリのIncoming Webhookを使う。Incoming WebhookのURLは、1つのチャンネルに結び付く。
 
-スレッドへの返信、複数のチャンネルへの投稿、投稿の更新が必要な場合は、ボットトークンと `chat.postMessage` を使う。この場合は、`chat:write` のスコープを付与し、アプリを投稿先のチャンネルへ招待する。
+スレッドへの返信や複数のチャンネルへの投稿が必要な場合は、ボットトークンと `chat.postMessage` を使う。この場合は、`chat:write` のスコープを付与し、アプリを投稿先のチャンネルへ招待する。
+
+進捗を1件の投稿で示す場合は、`chat.postMessage` の応答のチャンネルと `ts` を保存し、`chat.update` で同じ投稿を更新する。`chat.postMessage` を繰り返すと、新しい投稿が増える。
 
 ### 本文は概要に限定する
 
@@ -130,9 +132,11 @@ Slackアプリには、次のスコープを付与する。
 | ボットトークン | `chat:write` | スレッドへの返信。 |
 | ボットトークン | `app_mentions:read` | メンションの受信。メンション以外も受け取る場合は、`channels:history` または `groups:history` を加える。 |
 
+スコープに加えて、Event Subscriptionsで受け取るイベントを登録する。メンションは `app_mention`、スレッドへの返信などメンションのないメッセージは、公開チャンネルなら `message.channels`、非公開チャンネルなら `message.groups` を登録する。
+
 ### スレッドとセッションを対応させる
 
-Slackのスレッド1つに、エージェントのセッション1つを対応させる。スレッドの最初のメッセージで新しいセッションを開始し、セッションIDとスレッドの `thread_ts` の対応をファイルへ保存する。同じスレッドへの返信は、そのセッションを再開して渡す。
+Slackのスレッド1つに、エージェントのセッション1つを対応させる。スレッドの最初のメッセージで新しいセッションを開始し、セッションIDとスレッドの識別子の対応をファイルへ保存する。スレッドの識別子には、メッセージに `thread_ts` があればその値を、なければ最初のメッセージ自身の `ts` を使う。スレッドへの返信の `thread_ts` は、最初のメッセージの `ts` と一致する。同じスレッドへの返信は、そのセッションを再開して渡す。
 
 | ツール | 新しいセッション | セッションの再開 | セッションIDの取得 |
 | --- | --- | --- | --- |
@@ -172,6 +176,8 @@ Slackのスレッド1つに、エージェントのセッション1つを対応�
 | 3. 通知 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | CodexのPermissionRequest、Stop、SessionEndを含むフックのイベントを定義する。 |
 | 3. 通知 | [Sending messages using incoming webhooks \| Slack Developer Docs](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks) | Incoming Webhookの作成方法と送信形式を示す。 |
 | 3. 通知<br>5. ブリッジによる対話の中継 | [chat.postMessage method \| Slack Developer Docs](https://docs.slack.dev/reference/methods/chat.postMessage) | 投稿に必要なスコープ、スレッドへの返信、本文の長さの推奨値を定義する。 |
+| 3. 通知 | [chat.update method \| Slack Developer Docs](https://docs.slack.dev/reference/methods/chat.update) | チャンネルと `ts` で指定した投稿を更新する方法を定義する。 |
+| 5. ブリッジによる対話の中継 | [message event \| Slack Developer Docs](https://docs.slack.dev/reference/events/message) | メッセージのイベントと、受け取るために登録するイベントの種類を定義する。 |
 | 3. 通知 | [Rate limits \| Slack Developer Docs](https://docs.slack.dev/apis/web-api/rate-limits) | 投稿の頻度の制限と、HTTP 429の `Retry-After` ヘッダーを定義する。 |
 | 4. 公式連携による依頼 | [Claude Code in Slack - Claude Code Docs](https://code.claude.com/docs/en/slack) | Claude Code in Slackの前提、設定、ルーティング、アクセスの制御、制限を示す。 |
 | 4. 公式連携による依頼 | [Work with Claude Tag - Claude.ai Documentation](https://claude.com/docs/claude-tag/overview) | Team、Enterpriseのプランで使う、組織が管理するSlackの `@Claude` を示す。 |
