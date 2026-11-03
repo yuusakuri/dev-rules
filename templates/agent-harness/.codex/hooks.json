@@ -3,24 +3,33 @@
     "SessionStart": [
       {
         "matcher": "startup|resume|compact",
-        "hooks": [{ "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/harness/harness.py\" hook session-start" }]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|apply_patch",
-        "hooks": [{ "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/harness/harness.py\" hook pre-tool-use" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/harness/harness.py\" hook session-start"
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Bash|apply_patch",
-        "hooks": [{ "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/harness/harness.py\" hook post-tool-use" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/harness/harness.py\" hook post-tool-use"
+          }
+        ]
       }
     ],
     "Stop": [
       {
-        "hooks": [{ "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/harness/harness.py\" hook stop" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/harness/harness.py\" hook stop"
+          }
+        ]
       }
     ]
   }

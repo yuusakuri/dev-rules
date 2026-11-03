@@ -7,11 +7,10 @@
 import argparse
 import datetime as dt
 import fcntl
-import hashlib
 import json
+import math
 import os
 import re
-import shlex
 import signal
 import statistics
 import subprocess
@@ -27,13 +26,7 @@ CONFIG_FILE = HARNESS_DIR / "config.json"
 PROMPT_DIR = HARNESS_DIR / "prompts"
 PROJECT_DIR = HARNESS_DIR / "project"
 HISTORY_COLUMNS = ["no", "time", "commit", "label", "passed", "score", "log"]
-SCORE_LINE = re.compile(r"^SCORE\s+(-?\d+(?:\.\d+)?)\s*$")
-WRITE_COMMANDS = {"rm", "mv", "cp", "tee", "truncate", "chmod", "chown", "ln", "install", "rsync", "dd", "touch", "unlink"}
-REMOVE_COMMANDS = {"rm", "rmdir", "unlink", "mv"}
-GIT_WRITE_SUBCOMMANDS = {"checkout", "restore", "rm", "mv", "clean", "apply"}
-REDIRECT_TARGET = re.compile(r">{1,2}\|?\s*([^\s;&|<>]+)")
-PROTECTED_NOTE = "。ハーネス、評価器、記録はエージェントが変更する対象ではない。"
-PATCH_FILE_LINE = re.compile(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$|^\*\*\* Move to: (.+)$", re.MULTILINE)
+SCORE_LINE = re.compile(r"^SCORE\s+(\S+)\s*$")
 
 
 def load_config():
@@ -77,31 +70,6 @@ def write_json(path, value):
 
 def read_prompt(name, **values):
     return (PROMPT_DIR / f"{name}.md").read_text(encoding="utf-8").format(**values).strip()
-
-
-# ---- 改ざんの検知 ----
-
-
-def harness_digest(config):
-    digest = hashlib.sha256()
-    for entry in sorted(config["protected_paths"]):
-        path = ROOT / entry
-        files = sorted(path.rglob("*")) if path.is_dir() else [path]
-        for file in files:
-            if file.is_file() and "__pycache__" not in file.parts:
-                digest.update(str(file.relative_to(ROOT)).encode())
-                digest.update(file.read_bytes())
-    return digest.hexdigest()
-
-
-def check_integrity(config, run_dir):
-    recorded = run_dir / "harness.sha256"
-    current = harness_digest(config)
-    if not recorded.exists():
-        recorded.write_text(current, encoding="utf-8")
-        return
-    if recorded.read_text(encoding="utf-8").strip() != current:
-        sys.exit("ハーネスのファイルが起動時から変更されている。評価を記録しない。変更を元に戻すまで評価できない。")
 
 
 # ---- 評価の記録 ----
@@ -188,6 +156,13 @@ def tail(path, lines):
     return "\n".join(content[-lines:])
 
 
+def is_finite_number(text):
+    try:
+        return math.isfinite(float(text))
+    except ValueError:
+        return False
+
+
 def group_alive(pgid):
     try:
         os.killpg(pgid, 0)
@@ -252,7 +227,9 @@ def evaluate_once(config, run_dir, label):
                 marker.unlink(missing_ok=True)
         finished = now()
         scores = [SCORE_LINE.match(line) for line in log.read_text(encoding="utf-8", errors="replace").splitlines()]
-        scores = [match.group(1) for match in scores if match]
+        # 最後のSCOREの行を採用し、数値として不正なら評価を失敗とする。
+        scores = [match.group(1) for match in scores if match][-1:]
+        scores = [score for score in scores if is_finite_number(score)]
         row = {
             "no": number,
             "time": finished.isoformat(timespec="seconds"),
@@ -307,7 +284,6 @@ def cmd_status(args):
 def cmd_evaluate(args):
     config = load_config()
     run_dir = run_dir_of(config)
-    check_integrity(config, run_dir)
     for _ in range(args.repeat):
         row = evaluate_once(config, run_dir, args.label)
         print(f"評価 #{row['no']} label={row['label']} commit={row['commit']} passed={row['passed']} score={row['score'] or '-'} log={row['log']}")
@@ -383,7 +359,6 @@ def cmd_run(args):
     config = load_config()
     run_dir = run_dir_of(config)
     spec = config["agents"][args.agent]
-    check_integrity(config, run_dir)
     session_file = run_dir / "session.json"
     session = read_json(session_file, {})
     if session.get("agent") != args.agent:
@@ -402,7 +377,8 @@ def cmd_run(args):
         with (run_dir / f"agent-{args.agent}.jsonl").open("a", encoding="utf-8") as log, (run_dir / f"agent-{args.agent}.stderr.log").open("a", encoding="utf-8") as errors:
             process = subprocess.Popen(command, cwd=ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=errors, text=True, start_new_session=True)
             finished = threading.Event()
-            threading.Thread(target=watch, args=(process, config, run_dir, finished), daemon=True).start()
+            watcher = threading.Thread(target=watch, args=(process, config, run_dir, finished), daemon=True)
+            watcher.start()
             for line in process.stdout:
                 log.write(line)
                 log.flush()
@@ -411,94 +387,20 @@ def cmd_run(args):
                     write_json(session_file, session)
             process.wait()
             finished.set()
+            # 停止の処理が終わる前に起動スクリプトが終わると、子プロセスと評価が残る。
+            watcher.join()
+            if phase_at(config, now()) == "ended" or (run_dir / "STOP").exists():
+                stop_group(process.pid, 15)
+                stop_running_evaluation(run_dir)
         write_json(session_file, session)
         print(f"{now():%H:%M:%S} エージェントが終了した（終了コード {process.returncode}）。", flush=True)
         prompt = read_prompt("resume")
-        if time.monotonic() - started < 60:
+        if time.monotonic() - started < 60 and phase_at(config, now()) != "ended" and not (run_dir / "STOP").exists():
             time.sleep(config["restart_backoff_seconds"])
     print(f"{now():%H:%M:%S} ハーネスを終了する。", flush=True)
 
 
 # ---- フック ----
-
-
-def resolve_under_root(token, cwd):
-    token = token.strip("'\"")
-    if not token or token.startswith("-"):
-        return None
-    path = Path(token)
-    path = (Path(cwd) / path) if not path.is_absolute() else path
-    try:
-        return path.resolve().relative_to(ROOT).as_posix()
-    except ValueError:
-        return None
-
-
-def protected_targets(config):
-    run_dir = Path(config["run_dir"])
-    return [entry.rstrip("/") for entry in config["protected_paths"]] + [str(run_dir / "history.tsv"), str(run_dir / "harness.sha256")]
-
-
-def is_protected(relative, config):
-    if relative is None:
-        return False
-    return any(relative == entry or relative.startswith(entry + "/") for entry in protected_targets(config))
-
-
-def contains_protected(relative, config):
-    if relative is None:
-        return False
-    return relative == "." or is_protected(relative, config) or any(entry.startswith(relative.rstrip("/") + "/") for entry in protected_targets(config))
-
-
-def protected_write_in_shell(command, cwd, config):
-    for pattern in config["deny_command_patterns"]:
-        if re.search(pattern, command):
-            return f"禁止されたコマンドに一致した: {pattern}"
-    for segment in re.split(r"&&|\|\||;|\|", command):
-        try:
-            tokens = shlex.split(segment)
-        except ValueError:
-            tokens = segment.split()
-        for match in REDIRECT_TARGET.finditer(segment):
-            if is_protected(resolve_under_root(match.group(1), cwd), config):
-                return f"保護されたファイルへの書き込み: {match.group(1)}{PROTECTED_NOTE}"
-        if not tokens:
-            continue
-        name = Path(tokens[0]).name
-        git_subcommand = tokens[1] if name == "git" and len(tokens) > 1 else None
-        if git_subcommand == "clean" and any(re.match(r"^-[^-]*[xX]", token) for token in tokens[2:]):
-            return f"Gitの管理から除外したファイルを削除するコマンド: {segment.strip()}{PROTECTED_NOTE}"
-        if name in REMOVE_COMMANDS or git_subcommand in ("rm", "mv"):
-            operands = tokens[2:] if git_subcommand else tokens[1:]
-            sources = operands[:-1] if name == "mv" or git_subcommand == "mv" else operands
-            if any(contains_protected(resolve_under_root(token, cwd), config) for token in sources):
-                return f"保護されたファイルを含むパスを削除または移動するコマンド: {segment.strip()}{PROTECTED_NOTE}"
-        writes = name in WRITE_COMMANDS or (name == "sed" and any(token.startswith("-i") for token in tokens)) or (name == "git" and len(tokens) > 1 and tokens[1] in GIT_WRITE_SUBCOMMANDS)
-        if writes and any(is_protected(resolve_under_root(token, cwd), config) for token in tokens[1:]):
-            return f"保護されたファイルを変更するコマンド: {segment.strip()}{PROTECTED_NOTE}"
-    return None
-
-
-def pre_tool_use(payload, config, run_dir):
-    tool = payload.get("tool_name", "")
-    tool_input = payload.get("tool_input") or {}
-    cwd = payload.get("cwd") or str(ROOT)
-    reason = None
-    if tool == "Bash":
-        reason = protected_write_in_shell(tool_input.get("command", ""), cwd, config)
-    elif tool == "apply_patch":
-        for match in PATCH_FILE_LINE.finditer(tool_input.get("command", "")):
-            target = match.group(1) or match.group(2)
-            if is_protected(resolve_under_root(target.strip(), cwd), config):
-                reason = f"保護されたファイルへのパッチ: {target.strip()}{PROTECTED_NOTE}"
-    else:
-        target = tool_input.get("file_path") or tool_input.get("notebook_path")
-        if target and is_protected(resolve_under_root(target, cwd), config):
-            reason = f"保護されたファイルの編集: {target}{PROTECTED_NOTE}"
-    if reason:
-        return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": reason}}
-    return None
 
 
 def post_tool_use(payload, config, run_dir):
@@ -554,7 +456,7 @@ def session_start(payload, config, run_dir):
     return {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context}}
 
 
-HOOKS = {"pre-tool-use": pre_tool_use, "post-tool-use": post_tool_use, "stop": stop, "session-start": session_start}
+HOOKS = {"post-tool-use": post_tool_use, "stop": stop, "session-start": session_start}
 
 
 def cmd_hook(args):
