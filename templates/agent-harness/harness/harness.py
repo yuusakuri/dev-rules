@@ -233,6 +233,8 @@ def evaluate_once(config, run_dir, label):
             finally:
                 for signum, handler in previous.items():
                     signal.signal(signum, handler)
+                # 評価が終わった後に残った子プロセスを止めてから、記録を消す。
+                stop_group(process.pid, 5)
                 marker.unlink(missing_ok=True)
         finished = now()
         scores = [SCORE_LINE.match(line) for line in log.read_text(encoding="utf-8", errors="replace").splitlines()]
