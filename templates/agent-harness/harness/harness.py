@@ -376,6 +376,8 @@ def cmd_run(args):
         started = time.monotonic()
         with (run_dir / f"agent-{args.agent}.jsonl").open("a", encoding="utf-8") as log, (run_dir / f"agent-{args.agent}.stderr.log").open("a", encoding="utf-8") as errors:
             process = subprocess.Popen(command, cwd=ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=errors, text=True, start_new_session=True)
+            # 起動スクリプトが途中で止まっても、次の起動で同じセッションを再開できるように保存する。
+            write_json(session_file, session)
             finished = threading.Event()
             watcher = threading.Thread(target=watch, args=(process, config, run_dir, finished), daemon=True)
             watcher.start()
