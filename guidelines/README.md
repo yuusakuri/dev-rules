@@ -17,8 +17,12 @@
 | 実装 | [Rust実装ガイドライン](implementation/rust-guidelines.md) | Rust実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Windows PowerShellモジュール実装ガイドライン](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュール実装のガイドライン。 | ソフトウェア設計ガイドライン、リポジトリガイドライン |
+<<<<<<< HEAD
 | AI | [ハーネスエンジニアリングガイドライン](ai/harness-engineering-guidelines.md) | コーディングエージェントに与える指示、道具、検査、権限、状態の引き継ぎを設計するガイドライン。 | なし |
-| AI | [ループエンジニアリングガイドライン](ai/loop-engineering-guidelines.md) | コーディングエージェントを起動し、作業を繰り返させ、検証して止めるループを設計するガイドライン。 | ハーネスエンジニアリングガイドライン |
+| AI | [ループエンジニアリングガイドライン](ai/loop-engineering-guidelines.md) | AIエージェントを起動し、作業を繰り返させ、検証して止めるループを設計するガイドライン。 | ハーネスエンジニアリングガイドライン |
+=======
+| AI | [ハーネスエンジニアリングガイドライン](ai/harness-engineering-guidelines.md) | AIエージェントに与える指示、道具、検査、状態の引き継ぎを設計するガイドライン。 | なし |
+>>>>>>> origin/docs/agent-harness-guide
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現、レイアウト、状態、動きのガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
