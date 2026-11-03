@@ -29,6 +29,7 @@ PROJECT_DIR = HARNESS_DIR / "project"
 HISTORY_COLUMNS = ["no", "time", "commit", "label", "passed", "score", "log"]
 SCORE_LINE = re.compile(r"^SCORE\s+(-?\d+(?:\.\d+)?)\s*$")
 WRITE_COMMANDS = {"rm", "mv", "cp", "tee", "truncate", "chmod", "chown", "ln", "install", "rsync", "dd", "touch", "unlink"}
+REMOVE_COMMANDS = {"rm", "rmdir", "unlink", "mv"}
 GIT_WRITE_SUBCOMMANDS = {"checkout", "restore", "rm", "mv", "clean", "apply"}
 REDIRECT_TARGET = re.compile(r">{1,2}\|?\s*([^\s;&|<>]+)")
 PROTECTED_NOTE = "。ハーネス、評価器、記録はエージェントが変更する対象ではない。"
@@ -139,7 +140,7 @@ def baseline_of(config, rows):
     commit = baseline_rows[-1]["commit"]
     scores = [float(row["score"]) for row in baseline_rows if row["commit"] == commit][-config["baseline_runs"]:]
     median = statistics.median(scores)
-    noise = (max(scores) - min(scores)) / median if len(scores) >= 2 and median else 0.0
+    noise = (max(scores) - min(scores)) / abs(median) if len(scores) >= 2 and median else 0.0
     return {"commit": commit, "median": median, "runs": len(scores), "noise": noise}
 
 
@@ -153,8 +154,15 @@ def verdict_of(config, rows, commit):
     if baseline is None:
         return "基準が未測定。evaluate --label baseline で基準を測る"
     median = statistics.median(passed_scores(candidates))
+    if baseline["median"] == 0:
+        # 基準が0の場合は相対変化を定義できないため、スコアの向きだけで判断する。
+        if median > 0:
+            return f"keep（基準0から{median:+g}）"
+        if median < 0 or len(candidates) >= config["baseline_runs"]:
+            return f"revert（基準0から{median:+g}）"
+        return f"remeasure（基準0から{median:+g}、{len(candidates)}回測定済み）"
     threshold = max(config["keep_margin"], baseline["noise"])
-    change = median / baseline["median"] - 1
+    change = (median - baseline["median"]) / abs(baseline["median"])
     if change >= threshold:
         return f"keep（{change:+.1%}、しきい値 {threshold:+.1%}）"
     if change <= 0 or len(candidates) >= config["baseline_runs"]:
@@ -180,6 +188,32 @@ def tail(path, lines):
     return "\n".join(content[-lines:])
 
 
+def group_alive(pgid):
+    try:
+        os.killpg(pgid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+
+
+def stop_process_group(process, grace_seconds):
+    """プロセスグループ全体を止め、子プロセスを残さない。"""
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    limit = time.monotonic() + grace_seconds
+    while time.monotonic() < limit:
+        if process.poll() is not None and not group_alive(process.pid):
+            return
+        time.sleep(0.2)
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    process.wait()
+
+
 def evaluate_once(config, run_dir, label):
     with (run_dir / "evaluate.lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
@@ -187,10 +221,12 @@ def evaluate_once(config, run_dir, label):
         log = run_dir / "logs" / f"eval-{number:04d}.log"
         started = now()
         with log.open("w", encoding="utf-8") as out:
+            process = subprocess.Popen([str(PROJECT_DIR / "evaluate.sh")], cwd=ROOT, stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
             try:
-                result = subprocess.run([str(PROJECT_DIR / "evaluate.sh")], cwd=ROOT, stdout=out, stderr=subprocess.STDOUT, timeout=config["evaluate_timeout_seconds"])
-                exit_code = result.returncode
+                exit_code = process.wait(timeout=config["evaluate_timeout_seconds"])
             except subprocess.TimeoutExpired:
+                # 評価が起動した子プロセスを残すと、次の評価や復元と重なる。
+                stop_process_group(process, 15)
                 out.write("\n評価がタイムアウトした。\n")
                 exit_code = -1
         finished = now()
@@ -258,7 +294,7 @@ def cmd_evaluate(args):
     baseline = baseline_of(config, rows)
     if baseline:
         print(f"基準: {baseline['commit']} の中央値 {baseline['median']}（{baseline['runs']}回、揺れ {baseline['noise']:.1%}）")
-    verdict = verdict_of(config, rows, row["commit"])
+    verdict = verdict_of(config, rows, row["commit"]) if args.label == "candidate" else None
     if verdict:
         print(f"判定の目安: {verdict}")
     print(f"--- {row['log']} の末尾 ---")
@@ -316,9 +352,7 @@ def watch(process, config, run_dir, finished):
     deadline = deadline_of(config) + dt.timedelta(seconds=config["hard_stop_grace_seconds"])
     while not finished.is_set():
         if now() >= deadline or (run_dir / "STOP").exists():
-            os.killpg(process.pid, signal.SIGTERM)
-            if not finished.wait(15):
-                os.killpg(process.pid, signal.SIGKILL)
+            stop_process_group(process, 15)
             return
         finished.wait(5)
 
@@ -378,11 +412,21 @@ def resolve_under_root(token, cwd):
         return None
 
 
+def protected_targets(config):
+    run_dir = Path(config["run_dir"])
+    return [entry.rstrip("/") for entry in config["protected_paths"]] + [str(run_dir / "history.tsv"), str(run_dir / "harness.sha256")]
+
+
 def is_protected(relative, config):
     if relative is None:
         return False
-    targets = config["protected_paths"] + [str(Path(config["run_dir"]) / "history.tsv")]
-    return any(relative == entry.rstrip("/") or relative.startswith(entry.rstrip("/") + "/") for entry in targets)
+    return any(relative == entry or relative.startswith(entry + "/") for entry in protected_targets(config))
+
+
+def contains_protected(relative, config):
+    if relative is None:
+        return False
+    return relative == "." or is_protected(relative, config) or any(entry.startswith(relative.rstrip("/") + "/") for entry in protected_targets(config))
 
 
 def protected_write_in_shell(command, cwd, config):
@@ -400,6 +444,14 @@ def protected_write_in_shell(command, cwd, config):
         if not tokens:
             continue
         name = Path(tokens[0]).name
+        git_subcommand = tokens[1] if name == "git" and len(tokens) > 1 else None
+        if git_subcommand == "clean" and any(re.match(r"^-[^-]*[xX]", token) for token in tokens[2:]):
+            return f"Gitの管理から除外したファイルを削除するコマンド: {segment.strip()}{PROTECTED_NOTE}"
+        if name in REMOVE_COMMANDS or git_subcommand in ("rm", "mv"):
+            operands = tokens[2:] if git_subcommand else tokens[1:]
+            sources = operands[:-1] if name == "mv" or git_subcommand == "mv" else operands
+            if any(contains_protected(resolve_under_root(token, cwd), config) for token in sources):
+                return f"保護されたファイルを含むパスを削除または移動するコマンド: {segment.strip()}{PROTECTED_NOTE}"
         writes = name in WRITE_COMMANDS or (name == "sed" and any(token.startswith("-i") for token in tokens)) or (name == "git" and len(tokens) > 1 and tokens[1] in GIT_WRITE_SUBCOMMANDS)
         if writes and any(is_protected(resolve_under_root(token, cwd), config) for token in tokens[1:]):
             return f"保護されたファイルを変更するコマンド: {segment.strip()}{PROTECTED_NOTE}"
