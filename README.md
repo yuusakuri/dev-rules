@@ -14,15 +14,17 @@
 ├── guidelines/
 │   ├── README.md             # ガイドライン一覧と適用手順
 │   ├── software/             # ソフトウェアとアプリケーションの設計ガイドライン
-│   ├── development/          # リポジトリ、Git、バージョン管理、フリーソフト使用のガイドライン
+│   ├── development/          # リポジトリ、Git、バージョン管理、ソフトウェア使用のガイドライン
 │   ├── implementation/       # 技術固有の実装ガイドライン
 │   ├── ui/                   # UIデザインガイドライン
 │   ├── ai/                   # AIエージェントの運用のガイドライン
 │   └── documentation/        # 文書作成のガイドライン
-└── templates/
-    ├── README.md             # テンプレート一覧
-    ├── documentation/        # ドキュメントのテンプレート
-    └── agent-harness/        # エージェントハーネスのテンプレート
+├── templates/
+│   ├── README.md             # テンプレート一覧
+│   ├── documentation/        # ドキュメントのテンプレート
+│   └── agent-harness/        # エージェントハーネスのテンプレート
+├── tools/                    # 文書と図の変換ツール
+└── docker/                   # 変換ツールを実行するDockerイメージとその検証スクリプト
 ```
 
 ## 利用方法
@@ -67,22 +69,6 @@ git submodule add https://github.com/yuusakuri/dev-rules.git dev-rules
 
 実装、設計、レビューの前に `dev-rules/AGENTS.md` を読み、同ファイルが案内する該当ガイドラインに従うこと。
 ```
-
-### URLへのアクセスが拒否された場合に使うスキル
-
-通常の取得方法でURLへのアクセスが拒否された場合に使う `scrapling-official` を、`.agents/skills/scrapling-official/` に収録している。
-
-Codexはこのディレクトリから、Claude Codeは `.claude/skills/scrapling-official` のリンクからスキルを読み込む。
-
-別のプロジェクトでも使う場合は、そのプロジェクトのルートで次のコマンドを実行する。
-
-```bash
-npx skills add D4Vinci/Scrapling --skill scrapling-official
-```
-
-実行時に、利用するエージェントを選択する。
-
-Python環境とブラウザーの準備は、[Scrapling](.agents/skills/scrapling-official/SKILL.md)の手順に従う。
 
 ## テンプレートの利用
 

@@ -181,13 +181,13 @@ for (const style of ['docx', 'google-docs']) {
 
 [別名](#another-alias)と[引用](#quote-alias)を参照する。
 
-![画像](image.svg)
+![画像](image.png)
 
 | 終端 | 値 |
 | --- | --- |
 | 最後 | 本文 |
 `);
-      await fs.writeFile(path.join(directory, 'image.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="2" height="2" fill="#000"/></svg>');
+      await sharp({ create: { width: 2, height: 2, channels: 3, background: '#000' } }).png().toFile(path.join(directory, 'image.png'));
       execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
       const archive = await JSZip.loadAsync(await fs.readFile(output));
       const xml = await archive.file('word/document.xml').async('string');
@@ -227,39 +227,30 @@ for (const style of ['docx', 'google-docs']) {
   });
 }
 
-test('SVG measured in points gets a 4K fallback', async () => {
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-points-'));
+test('rejects SVG images so vector figures are converted to PNG first', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-svg-'));
   try {
-    // pdftocairo writes SVGs measured in points.
-    const drawing = '<svg xmlns="http://www.w3.org/2000/svg" width="132pt" height="244pt" viewBox="0 0 132 244"><path d="M1 1L131 243" stroke="black"/></svg>';
-    await fs.writeFile(path.join(directory, 'figure.svg'), drawing);
+    await fs.writeFile(path.join(directory, 'figure.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="32"><path d="M1 1L63 31" stroke="black"/></svg>');
     const source = path.join(directory, 'input.md');
     const output = path.join(directory, 'output.docx');
-    await fs.writeFile(source, '# 図\n\n![縦長](figure.svg)\n');
-    execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', 'docx']);
-    const archive = await JSZip.loadAsync(await fs.readFile(output));
-    const png = Object.keys(archive.files).find((name) => /^word\/media\/.*\.png$/.test(name));
-    const meta = await sharp(await archive.file(png).async('nodebuffer')).metadata();
-    assert.deepEqual([meta.width, meta.height], [2077, 3840]);
+    await fs.writeFile(source, '# 図\n\n![横長](figure.svg)\n');
+    assert.throws(() => execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', 'docx'], { stdio: 'pipe' }), /Convert SVG to PNG before embedding: figure\.svg/);
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
 });
 
 for (const style of ['docx', 'google-docs']) {
-  test(`${style}: SVG stays vector with a 4K fallback and unchanged display size`, async () => {
-    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-vector-'));
+  test(`${style}: PNG keeps its pixels and only the display size fits the page`, async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-raster-'));
     try {
-      const drawings = [
-        '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="32"><path d="M1 1L63 31" stroke="black"/></svg>',
-        '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="64"><path d="M1 1L31 63" stroke="black"/></svg>',
-      ];
-      for (const [i, drawing] of drawings.entries()) await fs.writeFile(path.join(directory, `${i}.svg`), drawing);
-      const bitmap = await sharp({ create: { width: 80, height: 40, channels: 3, background: '#fff' } }).png().toBuffer();
-      await fs.writeFile(path.join(directory, 'bitmap.png'), bitmap);
+      const sizes = [[3840, 1920], [1920, 3840], [80, 40]];
+      for (const [i, [width, height]] of sizes.entries()) {
+        await sharp({ create: { width, height, channels: 3, background: '#fff' } }).png().toFile(path.join(directory, `${i}.png`));
+      }
       const source = path.join(directory, 'input.md');
       const output = path.join(directory, 'output.docx');
-      await fs.writeFile(source, '# 図\n\n![横長](0.svg)\n\n![縦長](1.svg)\n\n![画像](bitmap.png)\n');
+      await fs.writeFile(source, '# 図\n\n![横長](0.png)\n\n![縦長](1.png)\n\n![小さい画像](2.png)\n');
       execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
       const archive = await JSZip.loadAsync(await fs.readFile(output));
       const xml = await archive.file('word/document.xml').async('string');
@@ -270,21 +261,15 @@ for (const style of ['docx', 'google-docs']) {
       }));
       const pictures = [...xml.matchAll(/<pic:pic\b[^>]*>([^]*?)<\/pic:pic>/g)].map((m) => m[1]);
       assert.equal(pictures.length, 3);
+      // Display sizes in EMU: 590 px wide, 650 px tall, and the original 80x40 px.
+      const extents = [/<a:ext cx="5619750" cy="2809875"/, /<a:ext cx="3095625" cy="6191250"/, /<a:ext cx="762000" cy="381000"/];
       for (const [i, picture] of pictures.entries()) {
+        assert.doesNotMatch(picture, /asvg:svgBlip/);
         const pngId = picture.match(/<a:blip\b[^>]*r:embed="([^"]+)"/)[1];
-        const png = await archive.file('word/' + relationships.get(pngId)).async('nodebuffer');
-        const meta = await sharp(png).metadata();
-        if (i < 2) {
-          const svgId = picture.match(/<asvg:svgBlip\b[^>]*r:embed="([^"]+)"/)[1];
-          assert.equal(await archive.file('word/' + relationships.get(svgId)).async('string'), drawings[i]);
-          assert.deepEqual([meta.width, meta.height], i === 0 ? [3840, 1920] : [1920, 3840]);
-          assert.match(picture, i === 0 ? /<a:ext cx="609600" cy="304800"/ : /<a:ext cx="304800" cy="609600"/);
-        } else {
-          assert.doesNotMatch(picture, /asvg:svgBlip/);
-          assert.deepEqual([meta.width, meta.height], [80, 40]);
-        }
+        const meta = await sharp(await archive.file('word/' + relationships.get(pngId)).async('nodebuffer')).metadata();
+        assert.deepEqual([meta.width, meta.height], sizes[i]);
+        assert.match(picture, extents[i]);
       }
-      assert.match(await archive.file('[Content_Types].xml').async('string'), /image\/svg\+xml/);
     } finally {
       await fs.rm(directory, { recursive: true, force: true });
     }
@@ -382,9 +367,9 @@ for (const style of ['docx', 'google-docs']) {
 >
 > > 入れ子の引用。
 
-![空白を含む名前](my%20image.svg)
+![空白を含む名前](my%20image.png)
 `);
-      await fs.writeFile(path.join(directory, 'my image.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"/>');
+      await sharp({ create: { width: 2, height: 2, channels: 3, background: '#fff' } }).png().toFile(path.join(directory, 'my image.png'));
       execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
       const archive = await JSZip.loadAsync(await fs.readFile(output));
       const xml = await archive.file('word/document.xml').async('string');

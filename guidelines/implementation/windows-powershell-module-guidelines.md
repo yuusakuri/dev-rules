@@ -2,7 +2,7 @@
 
 ## 目次
 
-1. [概要](#1-概要)
+1. [はじめに](#1-はじめに)
 2. [環境](#2-環境)
 3. [リポジトリ構成](#3-リポジトリ構成)
 4. [ソースファイル形式](#4-ソースファイル形式)
@@ -25,13 +25,20 @@
 21. [テスト](#21-テスト)
 22. [CI](#22-ci)
 23. [PowerShell Gallery](#23-powershell-gallery)
-24. [参考文献](#24-参考文献)
+
+- [参考文献](#参考文献)
 
 ---
 
-## 1. 概要
+## 1 はじめに
 
-本書は、Windows PowerShell 5.1向けモジュールの実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)と[リポジトリガイドライン](../development/repository-guidelines.md)を前提とする。
+### 1.1 目的
+
+本書の目的は、Windows PowerShell 5.1向けモジュールの構成、実装、検証の方法をそろえることである。
+
+### 1.2 適用範囲
+
+本書は、Windows PowerShell 5.1向けモジュールの実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)と[リポジトリガイドライン](../development/repository-guidelines.md)を前提とする。
 
 ---
 
@@ -1350,7 +1357,7 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 
 ---
 
-## 24. 参考文献
+## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
