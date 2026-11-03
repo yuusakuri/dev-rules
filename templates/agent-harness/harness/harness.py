@@ -7,6 +7,7 @@
 import argparse
 import datetime as dt
 import fcntl
+import glob
 import hashlib
 import json
 import math
@@ -461,6 +462,26 @@ def protected_targets(config):
     return [entry.rstrip("/") for entry in config["protected_paths"]] + [str(run_dir / "history.tsv"), str(run_dir / "harness.sha256")]
 
 
+def expand_operand(token, cwd, strict):
+    """シェルが展開した後の対象のパスを、ルートからの相対パスで返す。"""
+    token = token.strip("'\"")
+    if not token or token.startswith("-"):
+        return []
+    if re.search(r"[$`]", token):
+        # 変数やコマンドの置換は展開先を特定できない。削除と移動では保護されたパスとみなす。
+        return [UNKNOWN_PATH] if strict else []
+    if re.search(r"[*?\[]", token):
+        path = Path(os.path.expanduser(token))
+        if not path.is_absolute():
+            if cwd is None:
+                return [UNKNOWN_PATH]
+            path = Path(cwd) / path
+        matches = glob.glob(str(path))
+        if matches:
+            return [resolve_under_root(match, cwd) for match in matches]
+    return [resolve_under_root(token, cwd)]
+
+
 def is_protected(relative, config):
     if relative is None:
         return False
@@ -524,10 +545,10 @@ def protected_write_in_shell(command, cwd, config):
         if name in REMOVE_COMMANDS or git_subcommand in ("rm", "mv"):
             operands = tokens[2:] if git_subcommand else tokens[1:]
             sources = operands[:-1] if name == "mv" or git_subcommand == "mv" else operands
-            if any(contains_protected(resolve_under_root(token, cwd), config) for token in sources):
+            if any(contains_protected(path, config) for token in sources for path in expand_operand(token, cwd, strict=True)):
                 return f"保護されたファイルを含むパスを削除または移動するコマンド: {segment.strip()}{PROTECTED_NOTE}"
         writes = name in WRITE_COMMANDS or (name == "sed" and any(token.startswith("-i") for token in tokens)) or (name == "git" and len(tokens) > 1 and tokens[1] in GIT_WRITE_SUBCOMMANDS)
-        if writes and any(is_protected(resolve_under_root(token, cwd), config) for token in tokens[1:]):
+        if writes and any(is_protected(path, config) for token in tokens[1:] for path in expand_operand(token, cwd, strict=False)):
             return f"保護されたファイルを変更するコマンド: {segment.strip()}{PROTECTED_NOTE}"
     return None
 
