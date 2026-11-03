@@ -1,6 +1,6 @@
 # エージェントハーネス
 
-評価コマンドで成果を測れる目標に向けて、Claude CodeまたはCodexを終了時刻まで自律で動かすハーネスのひな形。構成と規則は[エージェントハーネス構築ガイドライン](../../guidelines/ai/agent-harness-guidelines.md)に従う。
+評価コマンドで成果を測れる目標に向けて、Claude CodeまたはCodexを終了時刻まで自律で動かすハーネスのひな形。構成は[ハーネスエンジニアリングガイドライン](../../guidelines/ai/harness-engineering-guidelines.md)に従う。
 
 ## 必要なもの
 
