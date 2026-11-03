@@ -238,7 +238,7 @@ def evaluate_once(config, run_dir, label):
             # 評価は別のプロセスグループで動くため、この処理が止められた時と起動スクリプトの停止時に止められるようにする。
             marker = run_dir / "evaluating.pid"
             marker.write_text(str(process.pid), encoding="utf-8")
-            previous = {number: signal.signal(number, lambda *_: (stop_process_group(process, 5), sys.exit(1))) for number in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT)}
+            previous = {signum: signal.signal(signum, lambda *_: (stop_process_group(process, 5), sys.exit(1))) for signum in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT)}
             try:
                 exit_code = process.wait(timeout=config["evaluate_timeout_seconds"])
             except subprocess.TimeoutExpired:
@@ -247,8 +247,8 @@ def evaluate_once(config, run_dir, label):
                 out.write("\n評価がタイムアウトした。\n")
                 exit_code = -1
             finally:
-                for number, handler in previous.items():
-                    signal.signal(number, handler)
+                for signum, handler in previous.items():
+                    signal.signal(signum, handler)
                 marker.unlink(missing_ok=True)
         finished = now()
         scores = [SCORE_LINE.match(line) for line in log.read_text(encoding="utf-8", errors="replace").splitlines()]
