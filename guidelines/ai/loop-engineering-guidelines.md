@@ -28,7 +28,7 @@
 
 本書は、Claude CodeやCodexなどのコーディングエージェントを、どのきっかけで起動し、どの条件で作業を繰り返し、どう検証し、いつ止めるかの設計を規定する。
 
-ループの中でエージェントに与える指示、道具、検査、権限は、[ハーネスエンジニアリングガイドライン](harness-engineering-guidelines.md)による。
+ループの中でエージェントに与える指示、道具、検査は、[ハーネスエンジニアリングガイドライン](harness-engineering-guidelines.md)による。
 
 ### 1.3 用語及び定義
 
@@ -207,7 +207,7 @@ StopフックでClaude Codeの停止を阻止する場合は、入力の `stop_h
 
 ### 並列のエージェントは作業ツリーを分ける
 
-同じリポジトリで複数のエージェントを並列に動かす場合は、Gitの作業ツリーをエージェントごとに分ける。Claude Codeは補助エージェントを作業ツリーで隔離でき、Codexはアプリで作業ツリーを使える。
+同じリポジトリで複数のエージェントを並列に動かす場合は、Gitの作業ツリーをエージェントごとに分ける。Claude Codeは補助エージェントを作業ツリーで動かせ、Codexはアプリで作業ツリーを使える。
 
 ### 同じ対象を複数のループが操作しない
 
@@ -215,7 +215,7 @@ StopフックでClaude Codeの停止を阻止する場合は、入力の `stop_h
 
 ### ループが自分の出力で再び起動しないようにする
 
-イベント駆動のループは、ループ自身のコミットやコメントで再び起動しないようにする。起動したユーザーがボットの場合は既定で拒否し、許可するボットを明示する。
+イベント駆動のループは、ループ自身のコミットやコメントで再び起動しないようにする。起動したユーザーがボットの場合は既定で処理せず、処理するボットを明示する。
 
 ---
 
@@ -229,21 +229,9 @@ StopフックでClaude Codeの停止を阻止する場合は、入力の `stop_h
 | --- | --- | --- |
 | 報告 | 調査し、結果を報告する。コードは変更しない。 | 報告を読み、対応を決める。 |
 | 提案 | 変更を作り、検証してプルリクエストを作成する。 | レビューし、マージを判断する。 |
-| 無人の実行 | 禁止の範囲を除き、変更からマージまで行う。 | 定期的に結果を確認する。 |
+| 無人の実行 | 変更からマージまで行う。 | 定期的に結果を確認する。 |
 
 無人の実行で取り消しが続く場合は、そのループを提案の段階へ戻す。
-
-### 取り消せない操作は人が判断する
-
-本番への反映、既定のブランチへのマージ、外部への送信、データの削除は、ループが行わず、人が判断する。ループは判断に必要な検証の結果と変更の要約を提示する。
-
-### 無人で読む入力を信頼しない
-
-無人のループが読むIssue、コメント、Webページ、ログには、エージェントへの指示を装った文章が含まれることがある。
-
-- ループを起動できる利用者を、リポジトリへの書き込みの権限がある人などに限定する。
-- 外部から入る文章をデータとして扱う規則を、常設の指示に書く。
-- 無人のループの権限は、対話で使う場合より狭くする。
 
 ### 人が理解できる量に出力を保つ
 
@@ -308,7 +296,7 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 
 ### 失敗をハーネスとループの改善につなげる
 
-ループが止まらなかった、誤った結果で止まった、同じ失敗を繰り返した場合は、記録から原因を特定し、停止条件、検証、ハーネスの構成要素のいずれかを変更する。ハーネスの構成要素の変更は、[ハーネスエンジニアリングガイドライン](harness-engineering-guidelines.md)の10章による。
+ループが止まらなかった、誤った結果で止まった、同じ失敗を繰り返した場合は、記録から原因を特定し、停止条件、検証、ハーネスの構成要素のいずれかを変更する。ハーネスの構成要素の変更は、[ハーネスエンジニアリングガイドライン](harness-engineering-guidelines.md)の9章による。
 
 新しいループは、本番と同じ形の小さな対象で予行し、止まる位置とやり過ぎる位置を確かめてから広げる。
 
@@ -324,8 +312,7 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 - 進まない状態を検出して止め、人がいつでも止められる。
 - 状態を会話の外に置き、途中で止まっても再開できる。
 - 並列のエージェントが作業ツリーを分け、同じ対象を同時に操作しない。
-- 報告の段階から始め、取り消せない操作は人が判断する。
-- ループを起動できる利用者を限定し、外部から入る文章をデータとして扱う。
+- 報告の段階から始めている。
 
 ---
 
@@ -344,15 +331,15 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 | 3. ループの型の選び方<br>9. 型ごとの規則 | [Follow a goal \| ChatGPT use cases](https://learn.chatgpt.com/docs/use-cases/follow-goals) | Codexの `/goal` で1つの目標と停止条件を与える方法を示す。 |
 | 3. ループの型の選び方<br>5. 停止条件と予算 | [Using Goals in Codex](https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex) | Codexの目標の一時停止、再開、予算による停止を示す。 |
 | 3. ループの型の選び方<br>9. 型ごとの規則 | [Run prompts on a schedule - Claude Code Docs](https://code.claude.com/docs/en/scheduled-tasks) | Claude Codeの `/loop` と、クラウド、デスクトップアプリ、セッション内のスケジュールの比較、7日の失効を定義する。 |
-| 3. ループの型の選び方<br>9. 型ごとの規則 | [Automate work with scheduled tasks - Claude Code Docs](https://code.claude.com/docs/en/routines) | Claude Codeのクラウドのスケジュールされたタスクの、スケジュール、API、GitHubのイベントのトリガーと権限を定義する。 |
-| 3. ループの型の選び方<br>7. 並列と競合 | [Claude Code GitHub Actions - Claude Code Docs](https://code.claude.com/docs/en/github-actions) | GitHub ActionsでClaude Codeを起動する方法、起動できる利用者とボットの制限、回数とタイムアウトによる費用の管理を示す。 |
+| 3. ループの型の選び方<br>9. 型ごとの規則 | [Automate work with scheduled tasks - Claude Code Docs](https://code.claude.com/docs/en/routines) | Claude Codeのクラウドのスケジュールされたタスクの、スケジュール、API、GitHubのイベントのトリガーを定義する。 |
+| 3. ループの型の選び方<br>7. 並列と競合 | [Claude Code GitHub Actions - Claude Code Docs](https://code.claude.com/docs/en/github-actions) | GitHub ActionsでClaude Codeを起動する方法、ボットによる起動の扱い、回数とタイムアウトによる費用の管理を示す。 |
 | 3. ループの型の選び方 | [Agent SDK overview - Claude Code Docs](https://code.claude.com/docs/en/agent-sdk/overview) | Claude Codeのエージェントのループを自分のプログラムから制御するAgent SDKを示す。 |
 | 5. 停止条件と予算 | [CLI reference - Claude Code Docs](https://code.claude.com/docs/en/cli-reference) | 非対話モードの回数の上限（`--max-turns`）と費用の上限（`--max-budget-usd`）を定義する。 |
-| 3. ループの型の選び方<br>9. 型ごとの規則 | [Scheduled tasks \| ChatGPT Learn](https://learn.chatgpt.com/docs/automations) | Codexのスケジュールされたタスクの種類、イベントのトリガー、実行の場所、権限を定義する。 |
-| 3. ループの型の選び方<br>8. 自律の段階と人の確認点 | [Codex GitHub Action \| ChatGPT Learn](https://learn.chatgpt.com/docs/github-action) | GitHub ActionsでCodexを起動する方法と、起動できる利用者の制限、外部から入る文章の扱いを示す。 |
+| 3. ループの型の選び方<br>9. 型ごとの規則 | [Scheduled tasks \| ChatGPT Learn](https://learn.chatgpt.com/docs/automations) | Codexのスケジュールされたタスクの種類、イベントのトリガー、実行の場所を定義する。 |
+| 3. ループの型の選び方 | [Codex GitHub Action \| ChatGPT Learn](https://learn.chatgpt.com/docs/github-action) | GitHub ActionsでCodexを起動する方法を示す。 |
 | 3. ループの型の選び方 | [Codex SDK \| ChatGPT Learn](https://learn.chatgpt.com/docs/codex-sdk) | Codexのエージェントを自分のプログラムから制御するSDKを示す。 |
 | 5. 停止条件と予算 | [Automate actions with hooks - Claude Code Docs](https://code.claude.com/docs/en/hooks-guide) | Stopフックが続けて停止を阻止できる回数の上限と、`stop_hook_active` による繰り返しの回避を定義する。 |
 | 6. 状態と再開 | [Run Claude Code programmatically - Claude Code Docs](https://code.claude.com/docs/en/headless) | Claude Codeの非対話モードでの実行とセッションの再開を示す。 |
 | 6. 状態と再開 | [Non-interactive mode \| ChatGPT Learn](https://learn.chatgpt.com/docs/non-interactive-mode) | `codex exec` の実行とセッションの再開を定義する。 |
-| 7. 並列と競合 | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeの補助エージェントを作業ツリーで隔離する設定を定義する。 |
+| 7. 並列と競合 | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeの補助エージェントを作業ツリーで動かす設定を定義する。 |
 | 7. 並列と競合 | [Worktrees \| ChatGPT Learn](https://learn.chatgpt.com/docs/environments/git-worktrees) | Codexのアプリで作業ツリーを使う方法を示す。 |
