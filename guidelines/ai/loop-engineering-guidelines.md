@@ -139,10 +139,6 @@
 
 性能やスコアのように、同じ状態でも計測ごとに値が揺れる指標は、1回の計測で比べない。基準を複数回測って中央値と揺れの幅を求め、揺れの幅を超えた差だけを改善とみなす。
 
-### 検証の手段をエージェントから守る
-
-エージェントは、検証を通すために、テストを削除する、期待値を書き換える、評価のスクリプトを変更することがある。テスト、評価のスクリプト、検証の記録は、フックで変更を拒否し、変更の有無を検証のたびにハッシュなどで照合する。
-
 ---
 
 ## 5. 停止条件と予算
@@ -324,7 +320,6 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 - 完了の条件を、終了コード、数値、件数で確認できる形にした。
 - 無人で動かすループで、外側から強制する検証を使っている。
 - 生成と検証を別のコンテキストに分け、検証役にテストと検査の出力を渡している。
-- テスト、評価のスクリプト、検証の記録を、エージェントが変更できない。
 - 回数、費用、時間のうち少なくとも1つの上限があり、上限で止まった時に人へ通知する。
 - 進まない状態を検出して止め、人がいつでも止められる。
 - 状態を会話の外に置き、途中で止まっても再開できる。
@@ -340,7 +335,7 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 | --- | --- | --- |
 | 1. はじめに<br>3. ループの型の選び方<br>5. 停止条件と予算 | [Loop engineering: Getting started with loops \| Claude by Anthropic](https://claude.com/blog/getting-started-with-loops) | ループをトリガーと停止条件で4つの型に分け、型ごとのClaude Codeの機能、検証の手順のスキル、別のエージェントによるレビュー、トークンの使用量の管理を示す。 |
 | 1. はじめに<br>4. 検証<br>8. 自律の段階と人の確認点 | [Loop Engineering \| AddyOsmani.com](https://addyosmani.com/blog/loop-engineering/) | 人の代わりにエージェントへ指示を出すシステムとしてのループと、その構成要素、生成と検証の分離、会話の外の状態、理解の負債を示す。 |
-| 4. 検証<br>5. 停止条件と予算 | [ループエンジニアリング — Claude Code で自律ループを作ってみる \| DevelopersIO](https://dev.classmethod.jp/articles/loop-engineering-claude-code-autonomous/) | 検証の方法を強制の強さで分類し、完了の条件の書き換え方、Stopフックによる検証、上限と費用の管理、テストの改ざんなどの失敗を示す。 |
+| 4. 検証<br>5. 停止条件と予算 | [ループエンジニアリング — Claude Code で自律ループを作ってみる \| DevelopersIO](https://dev.classmethod.jp/articles/loop-engineering-claude-code-autonomous/) | 検証の方法を強制の強さで分類し、完了の条件の書き換え方、Stopフックによる検証、上限と費用の管理を示す。 |
 | 2. ループの構成要素<br>6. 状態と再開 | [Ralph Wiggum as a "software engineer"](https://ghuntley.com/ralph/) | 同じ指示で新しいコンテキストのエージェントを繰り返し起動し、状態をファイルに置き、1回に1つの項目を扱い、テストと型検査で誤りを押し戻すループを示す。 |
 | 4. 検証 | [Harness design for long-running apps \ Anthropic](https://www.anthropic.com/engineering/harness-design-long-running-apps) | 自己評価が甘くなることと、別の評価役を較正して使う方法を示す。 |
 | 4. 検証 | [Building effective AI agents \ Anthropic](https://www.anthropic.com/engineering/building-effective-agents) | 生成と評価を繰り返すワークフローなどの構成と、単純な構成から始める原則を示す。 |
