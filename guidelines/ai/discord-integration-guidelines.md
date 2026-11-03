@@ -7,9 +7,8 @@
 3. [通知](#3-通知)
 4. [Claude Codeのchannelsによる対話](#4-claude-codeのchannelsによる対話)
 5. [ブリッジによる対話の中継](#5-ブリッジによる対話の中継)
-6. [秘密情報と権限](#6-秘密情報と権限)
-7. [チェックリスト](#7-チェックリスト)
-8. [参考文献](#8-参考文献)
+6. [チェックリスト](#6-チェックリスト)
+7. [参考文献](#7-参考文献)
 
 ---
 
@@ -31,7 +30,7 @@
 | channelsによる対話 | 双方向 | Claude Code | 公式のDiscordプラグインが、実行中のセッションへメッセージを届け、応答を返す。 | 手元で動かしているセッションへ、外出先から指示する。 |
 | ブリッジによる対話の中継 | 双方向 | Claude Code、Codex | 自作のDiscordボットが受け取ったメッセージを非対話モードのエージェントへ渡し、応答をDiscordへ返す。 | Codexと対話する。複数の人やチャンネルから、サーバーで動くエージェントへ指示する。 |
 
-Claude Codeだけを使い、指示する人が自分だけの場合は、channelsを使い、ブリッジを作らない。ブリッジは、認証情報の管理、権限の制御、障害時の再開を自分で実装する必要がある。
+Claude Codeだけを使い、指示する人が自分だけの場合は、channelsを使い、ブリッジを作らない。ブリッジは、スレッドとセッションの対応づけや障害時の再開を自分で実装する必要がある。
 
 ---
 
@@ -45,7 +44,7 @@ Claude Codeだけを使い、指示する人が自分だけの場合は、channe
 
 | 状態 | Claude Code | Codex |
 | --- | --- | --- |
-| 権限の確認や入力を待っている | Notificationフック（matcherは `permission_prompt`、`idle_prompt`、`agent_needs_input` など） | PermissionRequestフック |
+| 確認や入力を待っている | Notificationフック（matcherは `permission_prompt`、`idle_prompt`、`agent_needs_input` など） | PermissionRequestフック |
 | 応答を返して止まった | Stopフック（入力の `last_assistant_message` に最後の応答がある） | `config.toml` の `notify`（`agent-turn-complete` のJSONが引数で渡される）、またはStopフック |
 | APIのエラーでターンが終わった | StopFailureフック（matcherはエラーの種類で、`rate_limit`、`authentication_failed`、`billing_error` など） | 該当するフックはない。`codex exec` で動かす場合は、終了コードで検知する。 |
 | セッションが終了した | SessionEndフック | SessionEndフック |
@@ -54,7 +53,7 @@ Stopフックを作業の継続の判断にも使う場合は、通知の送信�
 
 ### 送信先はウェブフックにする
 
-通知だけを送る場合は、チャンネルのウェブフックを使う。ウェブフックはボットを作らずに投稿でき、URLに含まれるトークンで認証する。ウェブフックのURLは、知っていれば誰でも投稿できる秘密情報として扱う。
+通知だけを送る場合は、チャンネルのウェブフックを使う。ウェブフックはボットを作らずに投稿できる。
 
 投稿には、`allowed_mentions` に空の `parse` を指定し、本文に含まれる `@everyone` やユーザーへのメンションで通知が飛ばないようにする。
 
@@ -69,7 +68,7 @@ Stopフックを作業の継続の判断にも使う場合は、通知の送信�
 - 起きた事象（確認待ち、完了、失敗）。
 - 最後の応答の要約。
 
-最後の応答、ログ、差分の全文は送らない。これらにはコード、環境変数、認証情報が含まれることがある。Discordの投稿の本文は2,000文字までのため、要約はこの範囲に収める。詳細は、作業環境のファイルやプルリクエストのリンクで示す。
+最後の応答、ログ、差分の全文は送らない。全文は長く、通知として読みにくい。Discordの投稿の本文は2,000文字までのため、要約はこの範囲に収める。詳細は、作業環境のファイルやプルリクエストのリンクで示す。
 
 ### 送信の失敗でエージェントを止めない
 
@@ -89,7 +88,7 @@ channelsは研究プレビューであり、起動オプションと動作が変
 
 | 項目 | 内容 |
 | --- | --- |
-| 認証 | claude.aiのアカウントまたはConsoleのAPIキー。Amazon Bedrock、Google CloudのAgent Platform、Microsoft Foundryでは使えない。 |
+| 必要なアカウント | claude.aiのアカウントまたはConsoleのAPIキー。Amazon Bedrock、Google CloudのAgent Platform、Microsoft Foundryでは使えない。 |
 | 必要なもの | プラグインの実行に使うBun。 |
 | 組織の設定 | Team、Enterpriseでは、管理者が `channelsEnabled` を有効にするまで使えない。 |
 | 非対話モード | `-p` で動かす場合は、端末での入力が必要なツールが無効になる。 |
@@ -102,13 +101,6 @@ channelsは研究プレビューであり、起動オプションと動作が変
 4. Claude Codeで `discord@claude-plugins-official` プラグインをインストールし、ボットのトークンを設定する。
 5. `--channels plugin:discord@claude-plugins-official` を付けてClaude Codeを起動する。
 6. ボットへDMを送り、返されたペアリングのコードをClaude Codeで承認する。
-7. アクセスの方針を許可リストに切り替え、ペアリングしたアカウント以外のメッセージを受け付けないようにする。
-
-### 規則
-
-- 許可リストには、セッションの権限で実行できる操作を任せてよい人だけを加える。権限の確認をDiscordへ転送する場合は、許可リストの人がツールの実行を承認できる。
-- 権限の確認を省略して起動する場合は、作業者の個人の環境ではなく、隔離した環境で動かす。
-- Discordへ返る応答は、チャンネルやDMの相手が読める。秘密情報を含む作業結果を応答させない。
 
 ---
 
@@ -118,7 +110,7 @@ channelsは研究プレビューであり、起動オプションと動作が変
 
 ブリッジは、Discordのボットとエージェントの間でメッセージを中継する常駐プロセスである。ブリッジは次の処理を行う。
 
-1. Discordから、許可したユーザーのメッセージを受け取る。
+1. Discordからメッセージを受け取る。
 2. メッセージを、非対話モードのエージェントへ渡す。Claude Codeは `claude -p`、Codexは `codex exec` を使う。
 3. エージェントの応答を、元のメッセージへの返信またはスレッドへ投稿する。
 
@@ -151,11 +143,9 @@ DMにはスレッドを作れない。DMでは、DMのチャンネルのIDとセ
 
 同じセッションでは、エージェントを同時に2つ実行しない。実行中のスレッドに届いたメッセージは、待ち行列に入れ、実行が終わってから渡す。Codexは標準入力からも指示を読むため、標準入力を閉じて起動する。
 
-### 送信者を限定する
+### ボットのメッセージを無視する
 
-ブリッジは、許可したユーザーIDのメッセージだけを指示として扱い、他のメッセージは無視する。ボット自身と他のボットのメッセージも無視し、応答が次の指示になる繰り返しを防ぐ。
-
-エージェントへ渡すのは、許可したユーザーのメッセージの本文だけとする。スレッドの他の発言を文脈として渡す場合は、発言者を明記し、指示ではなく資料であることを本文で示す。
+ブリッジは、ボット自身と他のボットのメッセージを無視し、応答が次の指示になる繰り返しを防ぐ。スレッドの他の発言を文脈として渡す場合は、発言者を明記する。
 
 ### 応答の返し方
 
@@ -165,42 +155,18 @@ DMにはスレッドを作れない。DMでは、DMのチャンネルのIDとセ
 
 ---
 
-## 6. 秘密情報と権限
-
-### トークンをエージェントへ渡さない
-
-ウェブフックのURLとボットのトークンは、リポジトリにコミットしない。ユーザーの設定ファイルまたは秘密情報の管理機能から読み込む。
-
-ブリッジは、エージェントを起動する時に、Discordのトークンを含む環境変数を引き継がない。エージェントがトークンを読めると、ブリッジの許可を経ずにDiscordへ投稿できる。ブリッジとエージェントは、可能であれば別のOSユーザーで実行する。
-
-トークンが漏れた場合は、Discord Developer Portalでボットのトークンを再発行するか、ウェブフックを削除して作り直す。
-
-### エージェントの権限を作業に合わせて限定する
-
-ブリッジから起動したエージェントは、権限の確認に応答する人がいない。次のいずれかで、確認なしに実行できる操作を限定する。
-
-- Claude Codeは、権限の設定で許可するツールとコマンドを列挙する。Codexは、サンドボックスを `workspace-write` にして、書き込みを作業ディレクトリに限定する。
-- 権限の確認を全て省略する場合は、使い捨ての仮想マシンまたはコンテナで実行する。
-
-Discordでボットへ指示を送れる人は、ブリッジを経由してエージェントの操作を指示できる。許可するユーザーは、エージェントの権限で実行できる操作を任せてよい人に限定する。ボットを招待するサーバーは、参加者を管理できるサーバーに限る。
-
----
-
-## 7. チェックリスト
+## 6. チェックリスト
 
 - 通知、channelsによる対話、ブリッジによる対話の中継から、目的と使うツールに合う型を選んだ。
 - 通知は、確認待ち、完了、失敗などの状態の変化に限定し、本文にログや差分の全文を含めていない。
 - 通知と応答の投稿で、`allowed_mentions` によりメンションの通知を抑止している。
 - 通知の送信の失敗で、エージェントが止まらないことを確かめた。
-- channelsを使う場合は、アクセスの方針を許可リストにし、信頼できる人だけを加えた。
-- ブリッジは、許可したユーザーIDのメンションとDMだけを指示として扱い、ボットのメッセージを無視する。
+- ブリッジは、メンションとDMだけを指示として扱い、ボットのメッセージを無視する。
 - ブリッジは、スレッドまたはDMとセッションを対応させ、同じセッションを同時に実行しない。
-- ウェブフックのURLとトークンをリポジトリにコミットしておらず、エージェントの環境変数へ渡していない。
-- ブリッジから起動するエージェントの権限を、作業に必要な範囲に限定したか、隔離した環境で実行している。
 
 ---
 
-## 8. 参考文献
+## 7. 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
@@ -209,7 +175,7 @@ Discordでボットへ指示を送れる人は、ブリッジを経由してエ�
 | 3. 通知 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | CodexのPermissionRequest、Stop、SessionEndを含むフックのイベントを定義する。 |
 | 3. 通知 | [Webhook Resource - Documentation - Discord](https://docs.discord.com/developers/resources/webhook) | ウェブフックによる投稿、`wait` による投稿の取得、投稿の編集、本文の長さ、`allowed_mentions` を定義する。 |
 | 3. 通知 | [Rate Limits - Documentation - Discord](https://docs.discord.com/developers/topics/rate-limits) | 頻度の制限と、HTTP 429の応答を定義する。 |
-| 4. Claude Codeのchannelsによる対話 | [Push events into a running session with channels - Claude Code Docs](https://code.claude.com/docs/en/channels) | channelsの仕組み、Discordプラグインの設定、許可リスト、組織の設定、研究プレビューの制約を示す。 |
+| 4. Claude Codeのchannelsによる対話 | [Push events into a running session with channels - Claude Code Docs](https://code.claude.com/docs/en/channels) | channelsの仕組み、Discordプラグインの設定、組織の設定、研究プレビューの制約を示す。 |
 | 5. ブリッジによる対話の中継 | [Gateway - Documentation - Discord](https://docs.discord.com/developers/events/gateway) | Gatewayの接続と、Message Content Intentの対象と例外を定義する。 |
 | 5. ブリッジによる対話の中継 | [Message Resource - Documentation - Discord](https://docs.discord.com/developers/resources/message) | メッセージの取得と投稿のAPI、必要な権限、本文の長さ、`allowed_mentions` を定義する。 |
 | 5. ブリッジによる対話の中継 | [Run Claude Code programmatically - Claude Code Docs](https://code.claude.com/docs/en/headless) | Claude Codeの非対話モードでの実行とセッションの再開を示す。 |
