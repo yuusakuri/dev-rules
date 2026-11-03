@@ -487,7 +487,8 @@ def protected_write_in_shell(command, cwd, config):
     for pattern in config["deny_command_patterns"]:
         if re.search(pattern, command):
             return f"禁止されたコマンドに一致した: {pattern}"
-    for segment in re.split(r"&&|\|\||;|\|", command):
+    # 改行と、バックグラウンド実行の & もコマンドの区切りとして扱う。2>&1 などのリダイレクトは区切らない。
+    for segment in re.split(r"&&|\|\||;|\||\n|(?<![>&])&(?![>&])", command):
         try:
             tokens = shlex.split(segment)
         except ValueError:
