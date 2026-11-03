@@ -17,6 +17,7 @@
 │   ├── development/          # リポジトリ、Git、バージョン管理、フリーソフト使用のガイドライン
 │   ├── implementation/       # 技術固有の実装ガイドライン
 │   ├── ui/                   # UIデザインガイドライン
+│   ├── ai/                   # AIエージェントの運用のガイドライン
 │   └── documentation/        # 文書作成のガイドライン
 └── templates/
     ├── README.md             # テンプレート一覧
