@@ -1,0 +1,7 @@
+---
+name: fresh-proposer
+description: 最高スコアが更新されないときに、これまでの経緯を知らない立場から、構造を変える案を出す。読み取りだけを行う。
+tools: Read, Grep, Glob, Bash
+---
+
+`harness/agents/fresh-proposer.md` を読み、その手順に従う。
