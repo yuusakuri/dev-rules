@@ -9,6 +9,7 @@ import datetime as dt
 import fcntl
 import hashlib
 import json
+import math
 import os
 import re
 import shlex
@@ -27,7 +28,8 @@ CONFIG_FILE = HARNESS_DIR / "config.json"
 PROMPT_DIR = HARNESS_DIR / "prompts"
 PROJECT_DIR = HARNESS_DIR / "project"
 HISTORY_COLUMNS = ["no", "time", "commit", "label", "passed", "score", "log"]
-SCORE_LINE = re.compile(r"^SCORE\s+(-?\d+(?:\.\d+)?)\s*$")
+SCORE_LINE = re.compile(r"^SCORE\s+(\S+)\s*$")
+UNKNOWN_PATH = "?"
 WRITE_COMMANDS = {"rm", "mv", "cp", "tee", "truncate", "chmod", "chown", "ln", "install", "rsync", "dd", "touch", "unlink"}
 REMOVE_COMMANDS = {"rm", "rmdir", "unlink", "mv"}
 GIT_WRITE_SUBCOMMANDS = {"checkout", "restore", "rm", "mv", "clean", "apply"}
@@ -188,6 +190,13 @@ def tail(path, lines):
     return "\n".join(content[-lines:])
 
 
+def is_finite_number(text):
+    try:
+        return math.isfinite(float(text))
+    except ValueError:
+        return False
+
+
 def group_alive(pgid):
     try:
         os.killpg(pgid, 0)
@@ -252,7 +261,7 @@ def evaluate_once(config, run_dir, label):
                 marker.unlink(missing_ok=True)
         finished = now()
         scores = [SCORE_LINE.match(line) for line in log.read_text(encoding="utf-8", errors="replace").splitlines()]
-        scores = [match.group(1) for match in scores if match]
+        scores = [match.group(1) for match in scores if match and is_finite_number(match.group(1))]
         row = {
             "no": number,
             "time": finished.isoformat(timespec="seconds"),
@@ -432,8 +441,12 @@ def resolve_under_root(token, cwd):
     token = token.strip("'\"")
     if not token or token.startswith("-"):
         return None
-    path = Path(token)
-    path = (Path(cwd) / path) if not path.is_absolute() else path
+    path = Path(os.path.expanduser(token))
+    if not path.is_absolute():
+        if cwd is None:
+            # 移動先を特定できないcdの後の相対パスは、保護されたパスとみなす。
+            return UNKNOWN_PATH
+        path = Path(cwd) / path
     try:
         return path.resolve().relative_to(ROOT).as_posix()
     except ValueError:
@@ -448,6 +461,8 @@ def protected_targets(config):
 def is_protected(relative, config):
     if relative is None:
         return False
+    if relative == UNKNOWN_PATH:
+        return True
     return any(relative == entry or relative.startswith(entry + "/") for entry in protected_targets(config))
 
 
@@ -455,6 +470,17 @@ def contains_protected(relative, config):
     if relative is None:
         return False
     return relative == "." or is_protected(relative, config) or any(entry.startswith(relative.rstrip("/") + "/") for entry in protected_targets(config))
+
+
+def changed_directory(target, cwd):
+    """cdの後の作業ディレクトリを返す。特定できない場合はNoneを返す。"""
+    target = target.strip("'\"")
+    if target == "-" or re.search(r"[$`*?]", target):
+        return None
+    path = Path(os.path.expanduser(target))
+    if path.is_absolute():
+        return str(path.resolve())
+    return str((Path(cwd) / path).resolve()) if cwd is not None else None
 
 
 def protected_write_in_shell(command, cwd, config):
@@ -466,6 +492,11 @@ def protected_write_in_shell(command, cwd, config):
             tokens = shlex.split(segment)
         except ValueError:
             tokens = segment.split()
+        # サブシェルの括弧は、コマンドの判定と対象のパスから外す。
+        tokens = [token.strip("()") for token in tokens if token.strip("()")]
+        if tokens and Path(tokens[0]).name in ("cd", "pushd"):
+            cwd = changed_directory(tokens[1] if len(tokens) > 1 else "~", cwd)
+            continue
         for match in REDIRECT_TARGET.finditer(segment):
             if is_protected(resolve_under_root(match.group(1), cwd), config):
                 return f"保護されたファイルへの書き込み: {match.group(1)}{PROTECTED_NOTE}"
