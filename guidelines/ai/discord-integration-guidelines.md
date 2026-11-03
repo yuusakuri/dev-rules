@@ -47,6 +47,7 @@ Claude Codeだけを使い、指示する人が自分だけの場合は、channe
 | --- | --- | --- |
 | 権限の確認や入力を待っている | Notificationフック（matcherは `permission_prompt`、`idle_prompt`、`agent_needs_input` など） | PermissionRequestフック |
 | 応答を返して止まった | Stopフック（入力の `last_assistant_message` に最後の応答がある） | `config.toml` の `notify`（`agent-turn-complete` のJSONが引数で渡される）、またはStopフック |
+| APIのエラーでターンが終わった | StopFailureフック（matcherはエラーの種類で、`rate_limit`、`authentication_failed`、`billing_error` など） | 該当するフックはない。`codex exec` で動かす場合は、終了コードで検知する。 |
 | セッションが終了した | SessionEndフック | SessionEndフック |
 
 Stopフックを作業の継続の判断にも使う場合は、通知の送信を別のフックとして登録し、判断の処理と分ける。
@@ -135,10 +136,13 @@ channelsは研究プレビューであり、起動オプションと動作が変
 | Read Message History | 取得APIによるメッセージの取得。この権限がないとメッセージが返らない。 |
 | Send Messages<br>Send Messages in Threads | 応答の投稿。 |
 | Create Public Threads | セッションごとのスレッドを作る場合。 |
+| Attach Files | 長い結果をファイルとして添付する場合。 |
 
 ### スレッドとセッションを対応させる
 
-Discordのスレッド1つに、エージェントのセッション1つを対応させる。最初の指示のメッセージからスレッドを作って新しいセッションを開始し、セッションIDとスレッドのIDの対応をファイルへ保存する。同じスレッドへの投稿は、そのセッションを再開して渡す。
+サーバーのチャンネルでは、Discordのスレッド1つに、エージェントのセッション1つを対応させる。最初の指示のメッセージからスレッドを作って新しいセッションを開始し、セッションIDとスレッドのIDの対応をファイルへ保存する。同じスレッドへの投稿は、そのセッションを再開して渡す。
+
+DMにはスレッドを作れない。DMでは、DMのチャンネルのIDとセッションIDの対応を保存し、同じDMへの投稿をそのセッションへ渡す。新しいセッションを始める指示（`new` など）を決め、受け取った時に対応を作り直す。
 
 | ツール | 新しいセッション | セッションの再開 | セッションIDの取得 |
 | --- | --- | --- | --- |
@@ -190,7 +194,7 @@ Discordでボットへ指示を送れる人は、ブリッジを経由してエ�
 - 通知の送信の失敗で、エージェントが止まらないことを確かめた。
 - channelsを使う場合は、アクセスの方針を許可リストにし、信頼できる人だけを加えた。
 - ブリッジは、許可したユーザーIDのメンションとDMだけを指示として扱い、ボットのメッセージを無視する。
-- ブリッジは、スレッドとセッションを対応させ、同じセッションを同時に実行しない。
+- ブリッジは、スレッドまたはDMとセッションを対応させ、同じセッションを同時に実行しない。
 - ウェブフックのURLとトークンをリポジトリにコミットしておらず、エージェントの環境変数へ渡していない。
 - ブリッジから起動するエージェントの権限を、作業に必要な範囲に限定したか、隔離した環境で実行している。
 
@@ -200,7 +204,7 @@ Discordでボットへ指示を送れる人は、ブリッジを経由してエ�
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 3. 通知 | [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks) | Claude CodeのNotification、Stop、SessionEndの各フックのきっかけと入力を定義する。 |
+| 3. 通知 | [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks) | Claude CodeのNotification、Stop、StopFailure、SessionEndの各フックのきっかけと入力を定義する。 |
 | 3. 通知 | [Advanced Configuration \| ChatGPT Learn](https://learn.chatgpt.com/docs/config-file/config-advanced) | Codexの `notify` の設定と、`agent-turn-complete` のJSONの項目を定義する。 |
 | 3. 通知 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | CodexのPermissionRequest、Stop、SessionEndを含むフックのイベントを定義する。 |
 | 3. 通知 | [Webhook Resource - Documentation - Discord](https://docs.discord.com/developers/resources/webhook) | ウェブフックによる投稿、`wait` による投稿の取得、投稿の編集、本文の長さ、`allowed_mentions` を定義する。 |
