@@ -30,6 +30,7 @@ PROJECT_DIR = HARNESS_DIR / "project"
 HISTORY_COLUMNS = ["no", "time", "commit", "label", "passed", "score", "log"]
 SCORE_LINE = re.compile(r"^SCORE\s+(\S+)\s*$")
 UNKNOWN_PATH = "?"
+SHELL_PREFIXES = {"{", "}", "!", "if", "then", "else", "elif", "do", "while", "until", "time", "command", "builtin", "exec"}
 WRITE_COMMANDS = {"rm", "mv", "cp", "tee", "truncate", "chmod", "chown", "ln", "install", "rsync", "dd", "touch", "unlink"}
 REMOVE_COMMANDS = {"rm", "rmdir", "unlink", "mv"}
 GIT_WRITE_SUBCOMMANDS = {"checkout", "restore", "rm", "mv", "clean", "apply"}
@@ -261,7 +262,9 @@ def evaluate_once(config, run_dir, label):
                 marker.unlink(missing_ok=True)
         finished = now()
         scores = [SCORE_LINE.match(line) for line in log.read_text(encoding="utf-8", errors="replace").splitlines()]
-        scores = [match.group(1) for match in scores if match and is_finite_number(match.group(1))]
+        # 最後のSCOREの行を採用し、数値として不正なら評価を失敗とする。
+        scores = [match.group(1) for match in scores if match][-1:]
+        scores = [score for score in scores if is_finite_number(score)]
         row = {
             "no": number,
             "time": finished.isoformat(timespec="seconds"),
@@ -488,13 +491,24 @@ def protected_write_in_shell(command, cwd, config):
         if re.search(pattern, command):
             return f"禁止されたコマンドに一致した: {pattern}"
     # 改行と、バックグラウンド実行の & もコマンドの区切りとして扱う。2>&1 などのリダイレクトは区切らない。
+    # サブシェルの中のcdは外側に影響しないため、括弧ごとに作業ディレクトリを積む。
+    directories = []
+    pending_closes = 0
     for segment in re.split(r"&&|\|\||;|\||\n|(?<![>&])&(?![>&])", command):
+        for _ in range(pending_closes):
+            if directories:
+                cwd = directories.pop()
+        stripped = segment.strip()
+        directories.extend([cwd] * (len(stripped) - len(stripped.lstrip("("))))
+        pending_closes = len(stripped) - len(stripped.rstrip(")"))
         try:
             tokens = shlex.split(segment)
         except ValueError:
             tokens = segment.split()
-        # サブシェルの括弧は、コマンドの判定と対象のパスから外す。
+        # 括弧と、コマンドの前に置かれる予約語は、コマンドの判定と対象のパスから外す。
         tokens = [token.strip("()") for token in tokens if token.strip("()")]
+        while tokens and tokens[0] in SHELL_PREFIXES:
+            tokens = tokens[1:]
         if tokens and Path(tokens[0]).name in ("cd", "pushd"):
             cwd = changed_directory(tokens[1] if len(tokens) > 1 else "~", cwd)
             continue
