@@ -192,26 +192,39 @@ def group_alive(pgid):
     try:
         os.killpg(pgid, 0)
         return True
-    except ProcessLookupError:
+    except (ProcessLookupError, PermissionError):
+        # macOSでは、回収前の終了済みプロセスだけが残るグループへの送信がPermissionErrorになる。
         return False
 
 
 def stop_process_group(process, grace_seconds):
     """プロセスグループ全体を止め、子プロセスを残さない。"""
+    stop_group(process.pid, grace_seconds, process)
+    process.wait()
+
+
+def stop_group(pgid, grace_seconds, process=None):
     try:
-        os.killpg(process.pid, signal.SIGTERM)
-    except ProcessLookupError:
-        pass
+        os.killpg(pgid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        return
     limit = time.monotonic() + grace_seconds
     while time.monotonic() < limit:
-        if process.poll() is not None and not group_alive(process.pid):
+        if (process is None or process.poll() is not None) and not group_alive(pgid):
             return
         time.sleep(0.2)
     try:
-        os.killpg(process.pid, signal.SIGKILL)
-    except ProcessLookupError:
+        os.killpg(pgid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
         pass
-    process.wait()
+
+
+def stop_running_evaluation(run_dir):
+    """エージェントと一緒に止まらない、別グループの評価を止める。"""
+    marker = run_dir / "evaluating.pid"
+    if marker.exists():
+        stop_group(int(marker.read_text(encoding="utf-8")), 15)
+        marker.unlink(missing_ok=True)
 
 
 def evaluate_once(config, run_dir, label):
@@ -222,6 +235,10 @@ def evaluate_once(config, run_dir, label):
         started = now()
         with log.open("w", encoding="utf-8") as out:
             process = subprocess.Popen([str(PROJECT_DIR / "evaluate.sh")], cwd=ROOT, stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
+            # 評価は別のプロセスグループで動くため、この処理が止められた時と起動スクリプトの停止時に止められるようにする。
+            marker = run_dir / "evaluating.pid"
+            marker.write_text(str(process.pid), encoding="utf-8")
+            previous = {number: signal.signal(number, lambda *_: (stop_process_group(process, 5), sys.exit(1))) for number in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT)}
             try:
                 exit_code = process.wait(timeout=config["evaluate_timeout_seconds"])
             except subprocess.TimeoutExpired:
@@ -229,6 +246,10 @@ def evaluate_once(config, run_dir, label):
                 stop_process_group(process, 15)
                 out.write("\n評価がタイムアウトした。\n")
                 exit_code = -1
+            finally:
+                for number, handler in previous.items():
+                    signal.signal(number, handler)
+                marker.unlink(missing_ok=True)
         finished = now()
         scores = [SCORE_LINE.match(line) for line in log.read_text(encoding="utf-8", errors="replace").splitlines()]
         scores = [match.group(1) for match in scores if match]
@@ -353,6 +374,7 @@ def watch(process, config, run_dir, finished):
     while not finished.is_set():
         if now() >= deadline or (run_dir / "STOP").exists():
             stop_process_group(process, 15)
+            stop_running_evaluation(run_dir)
             return
         finished.wait(5)
 
