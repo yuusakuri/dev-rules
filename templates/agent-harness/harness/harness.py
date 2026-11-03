@@ -102,11 +102,20 @@ def passed_scores(rows):
 
 
 def baseline_of(config, rows):
-    baseline_rows = [row for row in rows if row["label"] == "baseline" and row["passed"] == "true"]
-    if not baseline_rows:
+    # 直近の基準の測定に失敗した実行があるコミットは採用せず、その前に受け入れた基準を使う。
+    commits = []
+    for row in rows:
+        if row["label"] == "baseline":
+            if row["commit"] in commits:
+                commits.remove(row["commit"])
+            commits.append(row["commit"])
+    for commit in reversed(commits):
+        runs = [row for row in rows if row["label"] == "baseline" and row["commit"] == commit][-config["baseline_runs"]:]
+        if all(row["passed"] == "true" for row in runs):
+            break
+    else:
         return None
-    commit = baseline_rows[-1]["commit"]
-    scores = [float(row["score"]) for row in baseline_rows if row["commit"] == commit][-config["baseline_runs"]:]
+    scores = [float(row["score"]) for row in runs]
     median = statistics.median(scores)
     noise = (max(scores) - min(scores)) / abs(median) if len(scores) >= 2 and median else 0.0
     return {"commit": commit, "median": median, "runs": len(scores), "noise": noise}
@@ -404,9 +413,9 @@ def cmd_run(args):
                 finished.set()
                 # 停止の処理が終わる前に起動スクリプトが終わると、子プロセスと評価が残る。
                 watcher.join()
-            if phase_at(config, now()) == "ended" or (run_dir / "STOP").exists():
-                stop_group(process.pid, 15)
-                stop_running_evaluation(run_dir)
+            # 再開の前に、前回の実行が残した子プロセスと評価を止める。
+            stop_group(process.pid, 15)
+            stop_running_evaluation(run_dir)
         write_json(session_file, session)
         print(f"{now():%H:%M:%S} エージェントが終了した（終了コード {process.returncode}）。", flush=True)
         prompt = read_prompt("resume")
