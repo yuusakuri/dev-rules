@@ -402,7 +402,8 @@ def cmd_run(args):
         with (run_dir / f"agent-{args.agent}.jsonl").open("a", encoding="utf-8") as log, (run_dir / f"agent-{args.agent}.stderr.log").open("a", encoding="utf-8") as errors:
             process = subprocess.Popen(command, cwd=ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=errors, text=True, start_new_session=True)
             finished = threading.Event()
-            threading.Thread(target=watch, args=(process, config, run_dir, finished), daemon=True).start()
+            watcher = threading.Thread(target=watch, args=(process, config, run_dir, finished), daemon=True)
+            watcher.start()
             for line in process.stdout:
                 log.write(line)
                 log.flush()
@@ -411,10 +412,15 @@ def cmd_run(args):
                     write_json(session_file, session)
             process.wait()
             finished.set()
+            # 停止の処理が終わる前に起動スクリプトが終わると、子プロセスと評価が残る。
+            watcher.join()
+            if phase_at(config, now()) == "ended" or (run_dir / "STOP").exists():
+                stop_group(process.pid, 15)
+                stop_running_evaluation(run_dir)
         write_json(session_file, session)
         print(f"{now():%H:%M:%S} エージェントが終了した（終了コード {process.returncode}）。", flush=True)
         prompt = read_prompt("resume")
-        if time.monotonic() - started < 60:
+        if time.monotonic() - started < 60 and phase_at(config, now()) != "ended" and not (run_dir / "STOP").exists():
             time.sleep(config["restart_backoff_seconds"])
     print(f"{now():%H:%M:%S} ハーネスを終了する。", flush=True)
 
