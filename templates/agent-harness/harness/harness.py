@@ -355,7 +355,13 @@ def watch(process, config, run_dir, finished):
         finished.wait(5)
 
 
+def raise_interrupt(signum, frame):
+    raise KeyboardInterrupt
+
+
 def cmd_run(args):
+    for signum in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(signum, raise_interrupt)
     config = load_config()
     run_dir = run_dir_of(config)
     spec = config["agents"][args.agent]
@@ -381,16 +387,23 @@ def cmd_run(args):
             finished = threading.Event()
             watcher = threading.Thread(target=watch, args=(process, config, run_dir, finished), daemon=True)
             watcher.start()
-            for line in process.stdout:
-                log.write(line)
-                log.flush()
-                if source != "generate" and not session["id"]:
-                    session["id"] = extract_session_id(line, source)
-                    write_json(session_file, session)
-            process.wait()
-            finished.set()
-            # 停止の処理が終わる前に起動スクリプトが終わると、子プロセスと評価が残る。
-            watcher.join()
+            try:
+                for line in process.stdout:
+                    log.write(line)
+                    log.flush()
+                    if source != "generate" and not session["id"]:
+                        session["id"] = extract_session_id(line, source)
+                        write_json(session_file, session)
+                process.wait()
+            except BaseException:
+                # 起動スクリプトが止められた時も、エージェントと評価を残さない。
+                stop_process_group(process, 15)
+                stop_running_evaluation(run_dir)
+                raise
+            finally:
+                finished.set()
+                # 停止の処理が終わる前に起動スクリプトが終わると、子プロセスと評価が残る。
+                watcher.join()
             if phase_at(config, now()) == "ended" or (run_dir / "STOP").exists():
                 stop_group(process.pid, 15)
                 stop_running_evaluation(run_dir)
