@@ -102,11 +102,20 @@ def passed_scores(rows):
 
 
 def baseline_of(config, rows):
-    baseline_rows = [row for row in rows if row["label"] == "baseline" and row["passed"] == "true"]
-    if not baseline_rows:
+    # 直近の基準の測定に失敗した実行があるコミットは採用せず、その前に受け入れた基準を使う。
+    commits = []
+    for row in rows:
+        if row["label"] == "baseline":
+            if row["commit"] in commits:
+                commits.remove(row["commit"])
+            commits.append(row["commit"])
+    for commit in reversed(commits):
+        runs = [row for row in rows if row["label"] == "baseline" and row["commit"] == commit][-config["baseline_runs"]:]
+        if all(row["passed"] == "true" for row in runs):
+            break
+    else:
         return None
-    commit = baseline_rows[-1]["commit"]
-    scores = [float(row["score"]) for row in baseline_rows if row["commit"] == commit][-config["baseline_runs"]:]
+    scores = [float(row["score"]) for row in runs]
     median = statistics.median(scores)
     noise = (max(scores) - min(scores)) / abs(median) if len(scores) >= 2 and median else 0.0
     return {"commit": commit, "median": median, "runs": len(scores), "noise": noise}
@@ -224,6 +233,8 @@ def evaluate_once(config, run_dir, label):
             finally:
                 for signum, handler in previous.items():
                     signal.signal(signum, handler)
+                # 評価が終わった後に残った子プロセスを止めてから、記録を消す。
+                stop_group(process.pid, 5)
                 marker.unlink(missing_ok=True)
         finished = now()
         scores = [SCORE_LINE.match(line) for line in log.read_text(encoding="utf-8", errors="replace").splitlines()]
@@ -355,7 +366,13 @@ def watch(process, config, run_dir, finished):
         finished.wait(5)
 
 
+def raise_interrupt(signum, frame):
+    raise KeyboardInterrupt
+
+
 def cmd_run(args):
+    for signum in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(signum, raise_interrupt)
     config = load_config()
     run_dir = run_dir_of(config)
     spec = config["agents"][args.agent]
@@ -381,19 +398,26 @@ def cmd_run(args):
             finished = threading.Event()
             watcher = threading.Thread(target=watch, args=(process, config, run_dir, finished), daemon=True)
             watcher.start()
-            for line in process.stdout:
-                log.write(line)
-                log.flush()
-                if source != "generate" and not session["id"]:
-                    session["id"] = extract_session_id(line, source)
-                    write_json(session_file, session)
-            process.wait()
-            finished.set()
-            # 停止の処理が終わる前に起動スクリプトが終わると、子プロセスと評価が残る。
-            watcher.join()
-            if phase_at(config, now()) == "ended" or (run_dir / "STOP").exists():
-                stop_group(process.pid, 15)
+            try:
+                for line in process.stdout:
+                    log.write(line)
+                    log.flush()
+                    if source != "generate" and not session["id"]:
+                        session["id"] = extract_session_id(line, source)
+                        write_json(session_file, session)
+                process.wait()
+            except BaseException:
+                # 起動スクリプトが止められた時も、エージェントと評価を残さない。
+                stop_process_group(process, 15)
                 stop_running_evaluation(run_dir)
+                raise
+            finally:
+                finished.set()
+                # 停止の処理が終わる前に起動スクリプトが終わると、子プロセスと評価が残る。
+                watcher.join()
+            # 再開の前に、前回の実行が残した子プロセスと評価を止める。
+            stop_group(process.pid, 15)
+            stop_running_evaluation(run_dir)
         write_json(session_file, session)
         print(f"{now():%H:%M:%S} エージェントが終了した（終了コード {process.returncode}）。", flush=True)
         prompt = read_prompt("resume")
