@@ -46,6 +46,7 @@
 | --- | --- | --- |
 | 確認や入力を待っている | Notificationフック（matcherは `permission_prompt`、`idle_prompt`、`agent_needs_input` など） | PermissionRequestフック |
 | 応答を返して止まった | Stopフック（入力の `last_assistant_message` に最後の応答がある） | `config.toml` の `notify`（`agent-turn-complete` のJSONが引数で渡される）、またはStopフック |
+| APIのエラーでターンが終わった | StopFailureフック（matcherはエラーの種類で、`rate_limit`、`authentication_failed`、`billing_error` など） | 該当するフックはない。`codex exec` で動かす場合は、終了コードで検知する。 |
 | セッションが終了した | SessionEndフック | SessionEndフック |
 
 Stopフックを作業の継続の判断にも使う場合は、通知の送信を別のフックとして登録し、判断の処理と分ける。
@@ -189,7 +190,7 @@ Slackのスレッド1つに、エージェントのセッション1つを対応�
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 3. 通知 | [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks) | Claude CodeのNotification、Stop、SessionEndの各フックのきっかけと入力を定義する。 |
+| 3. 通知 | [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks) | Claude CodeのNotification、Stop、StopFailure、SessionEndの各フックのきっかけと入力を定義する。 |
 | 3. 通知 | [Advanced Configuration \| ChatGPT Learn](https://learn.chatgpt.com/docs/config-file/config-advanced) | Codexの `notify` の設定と、`agent-turn-complete` のJSONの項目を定義する。 |
 | 3. 通知 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | CodexのPermissionRequest、Stop、SessionEndを含むフックのイベントを定義する。 |
 | 3. 通知 | [Sending messages using incoming webhooks \| Slack Developer Docs](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks) | Incoming Webhookの作成方法と送信形式を示す。 |
