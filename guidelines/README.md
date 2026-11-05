@@ -17,7 +17,7 @@
 | 実装 | [Rust実装ガイドライン](implementation/rust-guidelines.md) | Rust実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Windows PowerShellモジュール実装ガイドライン](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュール実装のガイドライン。 | ソフトウェア設計ガイドライン、リポジトリガイドライン |
-| AI | [RAG構築ガイドライン](ai/rag-guidelines.md) | LLMが外部の文書を根拠に回答するRAGの、取り込み、索引、検索、生成、評価、運用と実現手段のガイドライン。 | なし |
+| AI | [RAG構築ガイドライン](ai/rag-guidelines.md) | LLMが外部の文書を根拠に回答するRAGの、取り込み、索引、検索、アクセス権限、生成、評価、運用と実現手段のガイドライン。 | なし |
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現、レイアウト、状態、動きのガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
