@@ -362,14 +362,14 @@ Anthropicのアプリケーション開発の例では、200件を超える機�
 | 5. スキルとサブエージェント | [Loop engineering: Getting started with loops \| Claude by Anthropic](https://claude.com/blog/getting-started-with-loops) | 画面の変更を確かめるスキルの手順の例を示す。 |
 | 5. スキルとサブエージェント | [How Anthropic teams use Claude Code \| Claude by Anthropic](https://claude.com/blog/how-anthropic-teams-use-claude-code) | 広告の分析と広告文の作成をサブエージェントに分ける例など、Anthropicの各チームの利用の例を示す。 |
 | 2. 基本の考え方 | [My AI Adoption Journey – Mitchell Hashimoto](https://mitchellh.com/writing/my-ai-adoption-journey) | エージェントの失敗のたびに、指示やツールを追加して同じ失敗を防ぐことを示す。 |
-| 2. 基本の考え方<br>4. プロジェクト指示<br>6. エージェントが使うツールと環境<br>7. 検査 | [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/) | 目次としての短いAGENTS.md、リポジトリを知識の置き場とすること、リンターと構造のテストによるアーキテクチャの強制、作業ツリーごとの起動と観測、定期的な劣化の修正を示す。 |
+| 2. 基本の考え方<br>4. プロジェクト指示<br>6. エージェントが使うツールと環境<br>7. 検査 | [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/) | 目次としての短いAGENTS.md、リポジトリを知識の置き場とすること、リンターと構造のテストによるアーキテクチャの強制、worktreeごとの起動と観測、定期的な劣化の修正を示す。 |
 | 2. 基本の考え方<br>5. スキルとサブエージェント | [Harness design for long-running apps \ Anthropic](https://www.anthropic.com/engineering/harness-design-long-running-apps) | 生成エージェントと評価エージェントの分離、評価エージェントの較正、モデルの改善に合わせたハーネスの簡素化を示す。 |
 | 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Extend Claude Code - Claude Code Docs](https://code.claude.com/docs/en/features-overview) | Claude Codeのプロジェクト指示、範囲を限定した指示、スキル、サブエージェント、フック、MCPの使い分け、コンテキストへの影響、追加するきっかけを示す。 |
 | 3. 構成要素の選び方<br>4. プロジェクト指示 | [How Claude remembers your project - Claude Code Docs](https://code.claude.com/docs/en/memory) | CLAUDE.mdの読み込みの範囲と大きさの目安、`.claude/rules/` の `paths` による範囲の限定、`@` による取り込み、AGENTS.mdの読み込みを定義する。 |
 | 3. 構成要素の選び方<br>4. プロジェクト指示 | [Custom instructions with AGENTS.md \| ChatGPT Learn](https://learn.chatgpt.com/docs/agent-configuration/agents-md) | CodexがAGENTS.mdを探索する範囲、結合の順序、大きさの上限を定義する。 |
 | 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Extend Claude with skills - Claude Code Docs](https://code.claude.com/docs/en/skills) | Claude Codeのスキルの置き場所、説明による選択、自動で起動させない設定を定義する。 |
 | 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Build skills \| ChatGPT Learn](https://learn.chatgpt.com/docs/build-skills) | Codexのスキルの置き場所と形式を定義する。 |
-| 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeのサブエージェントの定義、使えるツールの指定、作業ツリーでの実行を定義する。 |
+| 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeのサブエージェントの定義、使えるツールの指定、worktreeでの実行を定義する。 |
 | 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Subagents \| ChatGPT Learn](https://learn.chatgpt.com/docs/agent-configuration/subagents) | Codexのサブエージェントの定義を示す。 |
 | 3. 構成要素の選び方<br>7. 検査<br>8. 状態の引き継ぎ | [Automate actions with hooks - Claude Code Docs](https://code.claude.com/docs/en/hooks-guide) | ファイルの変更後の検査、圧縮の後の状態の再注入など、Claude Codeのフックの使い方を示す。 |
 | 3. 構成要素の選び方<br>7. 検査 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | Codexのフックのイベント、入力、出力を定義する。 |
