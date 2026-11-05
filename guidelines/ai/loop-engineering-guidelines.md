@@ -37,8 +37,8 @@
 | ループ | 停止条件を満たすまで、エージェントが計画、実行、観察、検証を繰り返す制御の単位。 |
 | トリガー | ループの1回の実行を始めるきっかけ。人の指示、時刻、外部のイベントがある。 |
 | 停止条件 | ループを終える条件。完了の条件と、上限や異常による打ち切りの条件からなる。 |
-| 作成役 | 成果物を作るエージェント。 |
-| 検証役 | 作成役とは別のコンテキストで、成果物が完了の条件を満たすかを判定するエージェントまたはプログラム。 |
+| 生成エージェント | 成果物を作るエージェント。 |
+| レビュアー | 生成エージェントとは別のコンテキストで、成果物が完了の条件を満たすかを判定するエージェント。 |
 | 状態 | 反復の間で引き継ぐ、計画、進捗、判断の記録。会話の外のファイルやデータベースに置く。 |
 
 ---
@@ -59,7 +59,7 @@
 | 人の確認点 | どの操作の前に人が判断するか。 | 報告者への返信は、担当者が内容を確かめて送る。 |
 | 記録 | 反復ごとに何を残すか。 | 実行のID、処理件数、人へ回した件数、トークンの量を `runs.jsonl` に追記する。 |
 
-構成要素は、ループの設定とともに作業場所の文書へ書き、ループの変更と一緒に更新する。
+構成要素は、ループの設定とともにリポジトリの文書へ書き、ループの変更と一緒に更新する。
 
 ### 1回の反復では1つの作業単位を扱う
 
@@ -93,8 +93,8 @@ Anthropicは、200件を超える機能からなるアプリケーションの�
 | --- | --- | --- | --- |
 | ターンベース | 通常の対話と、検証の手順を書いたスキル | 通常の対話と、検証の手順を書いたスキル | なし |
 | ゴールベース | `/goal`、Stopフック | `/goal`、Stopフック | 外側のスクリプトが非対話モードのエージェントを繰り返し起動し、検証のコマンドの終了コードで止める。 |
-| 時間ベース | セッション内の `/loop`、デスクトップアプリのスケジュールされたタスク、クラウドのスケジュールされたタスク（`/schedule`）、GitHub Actionsの `schedule` | アプリのスケジュールされたタスク、Codex GitHub Actionと `schedule` | cronなどから非対話モードのエージェントを起動する。 |
-| イベント駆動 | クラウドのスケジュールされたタスクのGitHubとAPIのトリガー、Claude Code GitHub Actions、channels | イベントで起動するスケジュールされたタスク（Gmail、Slack、GitHub）、Codex GitHub Action | Webhookを受けて、非対話モードのエージェントかSDKを起動する。 |
+| 時間ベース | セッション内の `/loop`、Desktop スケジュールタスク、クラウドスケジュールタスク（`/schedule`）、GitHub Actionsの `schedule` | アプリのスケジュールタスク、Codex GitHub Actionと `schedule` | cronなどから非対話モードのエージェントを起動する。 |
+| イベント駆動 | クラウドスケジュールタスクのGitHubとAPIのトリガー、Claude Code GitHub Actions、channels | イベントで起動するスケジュールタスク（Gmail、Slack、GitHub）、Codex GitHub Action | Webhookを受けて、非対話モードのエージェントかSDKを起動する。 |
 | 期限付きの最適化 | 起動スクリプト、Stopフック、評価のCLI | 起動スクリプト、Stopフック、評価のCLI | [エージェントハーネス](../../templates/agent-harness/README.md)のテンプレートを使う。 |
 
 ループの制御を自分のプログラムに組み込む場合は、Claude CodeはAgent SDK（Python、TypeScript）、CodexはCodex SDK（TypeScript、Python）を使う。
@@ -127,10 +127,10 @@ Anthropicは、200件を超える機能からなるアプリケーションの�
 
 | 方法 | 判定する者 | 強制の強さ | 例 |
 | --- | --- | --- | --- |
-| 指示の中で自己検証を求める | 作成役自身 | 弱い。誤った完了をそのまま報告することがある。 | 「認証のテストを実行し、通るまで続ける」 |
-| 検証の手順をスキルにする | 手順に従う作成役 | 弱い。手順を省くことがある。 | 画面を操作して前後を撮影し、コンソールの新しいエラーが0件であることを確かめるスキル。 |
+| 指示の中で自己検証を求める | 生成エージェント自身 | 弱い。誤った完了をそのまま報告することがある。 | 「認証のテストを実行し、通るまで続ける」 |
+| 検証の手順をスキルにする | 手順に従う生成エージェント | 弱い。手順を省くことがある。 | 画面を操作して前後を撮影し、コンソールの新しいエラーが0件であることを確かめるスキル。 |
 | ツールの組み込みの判定（`/goal`） | 判定用のモデル | 中程度。判定用のモデルは会話の内容だけを読み、コマンドを実行しない。 | `/goal test/auth の全てのテストが通り、リントのエラーが0件である` |
-| 別のコンテキストの検証役 | サブエージェント | 中程度。検証役も推論で判定する。 | 差分を `SPEC.md` と照合し、未実装の要件だけを報告するサブエージェント。 |
+| 別のコンテキストのレビュアー | サブエージェント | 中程度。レビュアーも推論で判定する。 | 差分を `SPEC.md` と照合し、未実装の要件だけを報告するサブエージェント。 |
 | Stopフックで検証のコマンドを実行する | フックのスクリプト | 強い。検証が通るまで停止を阻止する。 | `pnpm tsc --noEmit` が失敗する間は、終了コード2で停止を阻止する。 |
 | 外側のスクリプトやSDKで検証のコマンドを実行する | ループの外のプログラム | 強い。検証の結果で次の反復を決める。 | `files.txt` のファイルを1件ずつ `claude -p --max-turns 20` に渡す。各実行の後にスクリプトが `grep` で古いAPIの呼び出しを数えてテストを実行し、エージェントの応答ではなく、その結果で次へ進む。 |
 
@@ -138,15 +138,15 @@ Anthropicは、200件を超える機能からなるアプリケーションの�
 
 ### 生成と検証を分ける
 
-作成役が自分の成果物を検証すると、誤りを見逃しやすい。検証役は作成役と別のコンテキストで動かし、既定で不合格とする。検証役には、成果物、完了の条件、検査の出力を必ず渡す。
+生成エージェントが自分の成果物を検証すると、誤りを見逃しやすい。レビュアーは生成エージェントと別のコンテキストで動かし、既定で不合格とする。レビュアーには、成果物、完了の条件、検査の出力を必ず渡す。
 
-Anthropicの例では、単独のエージェントは20分と9ドルでゲームの作成ツールを作ったが中心の機能が動かなかった。計画役、作成役、ブラウザーで操作して採点する評価役に分けた構成は、6時間と200ドルを使って動くアプリケーションを作った。
+Anthropicの例では、単独のエージェントは20分と9ドルでゲームの作成ツールを作ったが中心の機能が動かなかった。計画エージェント、生成エージェント、ブラウザーで操作して採点する評価エージェントに分けた構成は、6時間と200ドルを使って動くアプリケーションを作った。
 
 ### 主観的な目標は確認できる部分だけを自動化する
 
-読みやすさやデザインのように機械で確認できない目標は、ループで完了を判定しない。確認できる部分だけをループに任せ、残りは人か評価の基準で較正した検証役が判定する。
+読みやすさやデザインのように機械で確認できない目標は、ループで完了を判定しない。確認できる部分だけをループに任せ、残りは人か評価の基準で較正したレビュアーが判定する。
 
-| 目標 | ループに任せる部分 | 人か検証役が判定する部分 |
+| 目標 | ループに任せる部分 | 人かレビュアーが判定する部分 |
 | --- | --- | --- |
 | 提案書を読みやすくする | 必須の見出しの有無、1文の長さの上限、用語の統一、リンク切れ | 論旨が顧客の課題に答えているか。 |
 | 画面のデザインを整える | コントラスト比、コンソールのエラー、画面の幅ごとの表示の崩れ | 全体の印象と独自性。 |
@@ -170,7 +170,7 @@ Anthropicの例では、単独のエージェントは20分と9ドルでゲー�
 | 回数 | 非対話モードの `--max-turns 20`、Agent SDKの `maxTurns`、`/goal` の条件の「20ターンで止める」 | `/goal` の条件の「20ターンで止める」 |
 | 費用 | 非対話モードの `--max-budget-usd 5.00`、Agent SDKの `maxBudgetUsd` | `/goal` のトークンの予算 |
 | 時間 | 起動スクリプトの終了時刻、ジョブのタイムアウトの30分 | 起動スクリプトの終了時刻、ジョブのタイムアウトの30分 |
-| 期間 | セッション内の `/loop` は7日で失効する。 | スケジュールされたタスクを人が停止する。 |
+| 期間 | セッション内の `/loop` は7日で失効する。 | スケジュールタスクを人が停止する。 |
 
 上限に達して止まった場合は、達成できなかったことと現在の状態を人へ通知する。
 
@@ -202,7 +202,7 @@ StopフックでClaude Codeの停止を阻止する場合は、入力の `stop_h
 
 ### 状態は会話の外に置く
 
-計画、進捗、未完了の項目、判断の理由は、作業場所のファイル、変更の履歴、課題の管理の仕組みに置く。会話の中だけにある情報は、圧縮やセッションの切り替えで失われる。たとえば、Ralphループは、毎回同じ `PROMPT.md` を渡し、残りの項目を `fix_plan.md` で引き継ぐ。
+計画、進捗、未完了の項目、判断の理由は、リポジトリのファイル、変更履歴、課題トラッカーに置く。会話の中だけにある情報は、圧縮やセッションの切り替えで失われる。たとえば、Ralphループは、毎回同じ `PROMPT.md` を渡し、残りの項目を `fix_plan.md` で引き継ぐ。
 
 ### 反復ごとのコンテキストの扱いを決める
 
@@ -225,9 +225,9 @@ StopフックでClaude Codeの停止を阻止する場合は、入力の `stop_h
 
 ## 7. 並列と競合
 
-### 並列のエージェントは作業場所を分ける
+### 並列のエージェントは作業ディレクトリを分ける
 
-複数のエージェントを並列に動かす場合は、作業場所をエージェントごとに分ける。Claude CodeとCodexは、Gitの作業ツリーで作業場所を分けられる。Anthropicの例では、バグ報告1件に対して3つの修正案を別々の作業ツリーで作り、判定役のエージェントが批判的に比べて選ぶ。
+複数のエージェントを並列に動かす場合は、作業ディレクトリをエージェントごとに分ける。Claude CodeとCodexは、Gitのworktreeで作業ディレクトリを分けられる。Anthropicの例では、バグ報告1件に対して3つの修正案を別々のworktreeで作り、判定するエージェントが批判的に比べて選ぶ。
 
 ### 同じ対象を複数のループが操作しない
 
@@ -291,7 +291,7 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 | --- | --- | --- | --- |
 | セッション内（Claude Codeの `/loop`） | 必要。セッションを開いておく。 | 使える。 | 作業中の短い確認（例：`/loop 15m` でCIの結果を確認し、失敗なら直す） |
 | 端末のアプリ（Claude Codeのデスクトップアプリ、Codexのアプリ） | 必要。アプリを起動しておく。 | 使える。 | ローカルの環境が必要な定期作業（例：毎朝9時に手元のフォルダの請求書を集計する） |
-| クラウド（Claude Codeのクラウドのスケジュールされたタスク、GitHub Actions） | 不要 | 使えない。毎回作業場所を取得し直す。 | 端末に依存しない定期作業（例：毎晩、依存関係の更新を確かめて提案する） |
+| クラウド（Claude Codeのクラウドスケジュールタスク、GitHub Actions） | 不要 | 使えない。毎回リポジトリを取得し直す。 | 端末に依存しない定期作業（例：毎晩、依存関係の更新を確かめて提案する） |
 
 間隔は、対象が変化する頻度に合わせる。外部の処理の完了や返答を待つ場合は、イベントで起動する方法を優先する。
 
@@ -348,11 +348,11 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 - トリガー、作業の単位、状態、検証、停止条件、人の確認点、記録を全て決め、文書に書いた。
 - 完了の条件を、終了コード、数値、件数で確認できる形にした。
 - 無人で動かすループで、外側から強制する検証を使っている。
-- 生成と検証を別のコンテキストに分け、検証役に検査の出力を渡している。
+- 生成と検証を別のコンテキストに分け、レビュアーに検査の出力を渡している。
 - 回数、費用、時間のうち少なくとも1つの上限があり、上限で止まった時に人へ通知する。
 - 進まない状態を検出して止め、人がいつでも止められる。
 - 状態を会話の外に置き、途中で止まっても再開できる。
-- 並列のエージェントが作業場所を分け、同じ対象を同時に操作しない。
+- 並列のエージェントが作業ディレクトリを分け、同じ対象を同時に操作しない。
 - 報告の段階から始めている。
 
 ---
@@ -366,22 +366,22 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 | 4. 検証<br>5. 停止条件と予算<br>9. 型ごとの規則 | [Best practices for Claude Code - Claude Code Docs](https://code.claude.com/docs/en/best-practices) | 具体的な指示の書き方、合否を返す検査、証拠を求めること、Stopフック、1ファイルずつ処理するスクリプト、少数で試してから全件を流すことを示す。 |
 | 4. 検証<br>5. 停止条件と予算 | [ループエンジニアリング — Claude Code で自律ループを作ってみる \| DevelopersIO](https://dev.classmethod.jp/articles/loop-engineering-claude-code-autonomous/) | 検証の方法を強制の強さで分類し、完了の条件の書き換え方、Stopフックによる検証、上限と費用の管理を示す。 |
 | 2. ループの構成要素<br>6. 状態と再開 | [Ralph Wiggum as a "software engineer"](https://ghuntley.com/ralph/) | 同じ指示で新しいコンテキストのエージェントを繰り返し起動し、状態をファイルに置き、1回に1つの項目を扱い、テストと型検査で誤りを押し戻すループを示す。 |
-| 4. 検証<br>5. 停止条件と予算 | [Harness design for long-running apps \ Anthropic](https://www.anthropic.com/engineering/harness-design-long-running-apps) | 自己評価が甘くなること、別の評価役を較正して使う方法、単独のエージェントとの時間と費用の比較を示す。 |
+| 4. 検証<br>5. 停止条件と予算 | [Harness design for long-running apps \ Anthropic](https://www.anthropic.com/engineering/harness-design-long-running-apps) | 自己評価が甘くなること、別の評価エージェントを較正して使う方法、単独のエージェントとの時間と費用の比較を示す。 |
 | 4. 検証 | [Building effective AI agents \ Anthropic](https://www.anthropic.com/engineering/building-effective-agents) | 生成と評価を繰り返すワークフローなどの構成と、単純な構成から始める原則を示す。 |
 | 2. ループの構成要素<br>6. 状態と再開 | [Effective harnesses for long-running agents \ Anthropic](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) | 進捗のファイルとコミットで状態を引き継ぎ、1回のセッションで1つの機能を扱う方法を示す。 |
 | 3. ループの型の選び方<br>9. 型ごとの規則 | [Keep Claude working toward a goal - Claude Code Docs](https://code.claude.com/docs/en/goal) | Claude Codeの `/goal` の完了の条件の書き方、判定用のモデルの動作、非対話モードでの実行を定義する。 |
 | 3. ループの型の選び方<br>9. 型ごとの規則 | [Follow a goal \| ChatGPT use cases](https://learn.chatgpt.com/docs/use-cases/follow-goals) | Codexの `/goal` で1つの目標と停止条件を与える方法を示す。 |
 | 3. ループの型の選び方<br>5. 停止条件と予算 | [Using Goals in Codex](https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex) | Codexの目標の一時停止、再開、予算による停止を示す。 |
 | 3. ループの型の選び方<br>9. 型ごとの規則 | [Run prompts on a schedule - Claude Code Docs](https://code.claude.com/docs/en/scheduled-tasks) | Claude Codeの `/loop` と、クラウド、デスクトップアプリ、セッション内のスケジュールの比較、7日の失効を定義する。 |
-| 3. ループの型の選び方<br>9. 型ごとの規則 | [Automate work with scheduled tasks - Claude Code Docs](https://code.claude.com/docs/en/routines) | Claude Codeのクラウドのスケジュールされたタスクの、スケジュール、API、GitHubのイベントのトリガーを定義する。 |
+| 3. ループの型の選び方<br>9. 型ごとの規則 | [Automate work with scheduled tasks - Claude Code Docs](https://code.claude.com/docs/en/routines) | Claude Codeのクラウドスケジュールタスクの、スケジュール、API、GitHubのイベントのトリガーを定義する。 |
 | 3. ループの型の選び方<br>7. 並列と競合 | [Claude Code GitHub Actions - Claude Code Docs](https://code.claude.com/docs/en/github-actions) | GitHub ActionsでClaude Codeを起動する方法、ボットによる起動の扱い、回数とタイムアウトによる費用の管理を示す。 |
 | 3. ループの型の選び方 | [Agent SDK overview - Claude Code Docs](https://code.claude.com/docs/en/agent-sdk/overview) | Claude Codeのエージェントのループを自分のプログラムから制御するAgent SDKを示す。 |
 | 5. 停止条件と予算 | [CLI reference - Claude Code Docs](https://code.claude.com/docs/en/cli-reference) | 非対話モードの回数の上限（`--max-turns`）と費用の上限（`--max-budget-usd`）を定義する。 |
-| 3. ループの型の選び方<br>9. 型ごとの規則 | [Scheduled tasks \| ChatGPT Learn](https://learn.chatgpt.com/docs/automations) | Codexのスケジュールされたタスクの種類、イベントのトリガー、実行の場所を定義する。 |
+| 3. ループの型の選び方<br>9. 型ごとの規則 | [Scheduled tasks \| ChatGPT Learn](https://learn.chatgpt.com/docs/automations) | Codexのスケジュールタスクの種類、イベントのトリガー、実行の場所を定義する。 |
 | 3. ループの型の選び方 | [Codex GitHub Action \| ChatGPT Learn](https://learn.chatgpt.com/docs/github-action) | GitHub ActionsでCodexを起動する方法を示す。 |
 | 3. ループの型の選び方 | [Codex SDK \| ChatGPT Learn](https://learn.chatgpt.com/docs/codex-sdk) | Codexのエージェントを自分のプログラムから制御するSDKを示す。 |
 | 5. 停止条件と予算 | [Automate actions with hooks - Claude Code Docs](https://code.claude.com/docs/en/hooks-guide) | Stopフックが続けて停止を阻止できる回数の上限と、`stop_hook_active` による繰り返しの回避を定義する。 |
 | 6. 状態と再開 | [Run Claude Code programmatically - Claude Code Docs](https://code.claude.com/docs/en/headless) | Claude Codeの非対話モードでの実行とセッションの再開を示す。 |
 | 6. 状態と再開 | [Non-interactive mode \| ChatGPT Learn](https://learn.chatgpt.com/docs/non-interactive-mode) | `codex exec` の実行とセッションの再開を定義する。 |
-| 7. 並列と競合 | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeのサブエージェントを作業ツリーで動かす設定を定義する。 |
-| 7. 並列と競合 | [Worktrees \| ChatGPT Learn](https://learn.chatgpt.com/docs/environments/git-worktrees) | Codexのアプリで作業ツリーを使う方法を示す。 |
+| 7. 並列と競合 | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeのサブエージェントをworktreeで動かす設定を定義する。 |
+| 7. 並列と競合 | [Worktrees \| ChatGPT Learn](https://learn.chatgpt.com/docs/environments/git-worktrees) | Codexのアプリでworktreeを使う方法を示す。 |
