@@ -1,4 +1,4 @@
-# RAG構築ガイドライン
+# 検索システム構築ガイドライン
 
 ## 目次
 
@@ -36,13 +36,13 @@
 | RAG | 質問に関連する文書の断片を検索し、LLMへの入力に加えて回答を生成する方式。 |
 | チャンク | 索引と検索の単位として文書を分割した断片。 |
 | 埋め込み | 文章の意味を表す数値のベクトル。意味の近さで検索するために使う。 |
-| 密な検索 | 埋め込みの類似度で検索する方式。言い換えや表現の揺れに強い。 |
-| 語彙の検索 | BM25などの、語の一致で検索する方式。固有名詞、型番、エラーコードに強い。 |
-| ハイブリッド検索 | 密な検索と語彙の検索の結果を統合する方式。 |
-| 再順位付け | 検索した候補を、質問との関連度を精密に評価するモデルで並べ替える処理。 |
-| 文脈付きの検索 | チャンクに、文書全体から見た位置付けの説明を加えてから索引する方式。 |
-| エージェント型の検索 | エージェントが検索の道具を使い、検索語の作成、検索、読み込みを繰り返して必要な情報を集める方式。 |
-| GraphRAG | 文書から抽出した実体と関係のグラフを使って検索や要約を行う方式。 |
+| ベクトル検索 | 埋め込みの類似度で検索する方式。言い換えや表現の揺れに強い。 |
+| 全文検索 | BM25などの、語の一致で検索する方式。固有名詞、型番、エラーコードに強い。 |
+| ハイブリッド検索 | ベクトル検索と全文検索の結果を統合する方式。 |
+| リランキング | 検索した候補を、質問との関連度を精密に評価するモデルで並べ替える処理。 |
+| Contextual Retrieval | チャンクに、文書全体から見た位置付けの説明を加えてから索引する方式。 |
+| エージェント型の検索 | エージェントが検索のツールを使い、検索語の作成、検索、読み込みを繰り返して必要な情報を集める方式。 |
+| GraphRAG | 文書から抽出したエンティティと関係のグラフを使って検索や要約を行う方式。 |
 | コネクター | 業務システムから文書と権限の情報を取り込む部品。 |
 | 正本 | 複数の版や写しがある文書のうち、正しいものとして扱う文書。 |
 | アクセス制御リスト（ACL） | 文書ごとに、読める利用者とグループ、読めない利用者とグループを定めた一覧。 |
@@ -69,11 +69,11 @@
 | 方式 | 仕組み | 向く質問 | 費用 | 注意点 |
 | --- | --- | --- | --- | --- |
 | 全体の投入 | 文書の全体をプロンプトに入れる。 | 全ての質問 | 文書の量に比例する。キャッシュで下げられる。 | コンテキストに収まる量に限られる。 |
-| 密な検索だけのRAG | 埋め込みの類似度で上位のチャンクを渡す。 | 言い換えを含む質問 | 低い | 固有名詞、型番、コードの一致に弱い。 |
-| ハイブリッド検索と再順位付け | 密な検索と語彙の検索の候補を統合し、再順位付けする。 | 多くの質問 | 中程度 | 標準の構成とする。 |
+| ベクトル検索だけのRAG | 埋め込みの類似度で上位のチャンクを渡す。 | 言い換えを含む質問 | 低い | 固有名詞、型番、コードの一致に弱い。 |
+| ハイブリッド検索とリランキング | ベクトル検索と全文検索の候補を統合し、リランキングする。 | 多くの質問 | 中程度 | 標準の構成とする。 |
 | エージェント型の検索 | エージェントが検索と読み込みを繰り返す。 | 複数の段階を要する質問、コード | 推論の回数に比例して高い。 | 遅延が大きい。索引がなくても動く。 |
-| グラフを使う検索 | 実体と関係のグラフ、集団の要約を使う。 | 文書全体の主題、関係をたどる質問 | 索引の作成が高い方式がある。 | 局所的な質問では通常のRAGに劣ることがある。 |
-| ページの画像による検索 | ページの画像を埋め込み、遅延相互作用で照合する。 | 図表、帳票、スライドの多い文書 | 計算と保存の量が大きい。 | 大量の文書では索引の大きさが問題になる。 |
+| グラフを使う検索 | エンティティと関係のグラフ、コミュニティ要約を使う。 | 文書全体の主題、関係をたどる質問 | 索引の作成が高い方式がある。 | 局所的な質問では通常のRAGに劣ることがある。 |
+| ページの画像による検索 | ページの画像を埋め込み、Late Interactionで照合する。 | 図表、帳票、スライドの多い文書 | 計算と保存の量が大きい。 | 大量の文書では索引の大きさが問題になる。 |
 
 ### 改善は評価で確かめながら順に積み上げる
 
@@ -84,7 +84,7 @@ RAGは、次の順で改善する。前の段階で評価の結果が改善し�
 | 1 | 評価セットを作る。 | 以後の変更の効果を測れるようにする。 |
 | 2 | 文書の解析と分割を直す。 | 表、見出し、リストの崩れによる検索漏れを防ぐ。 |
 | 3 | ハイブリッド検索にする。 | 固有名詞、型番、コードの検索漏れを防ぐ。 |
-| 4 | 再順位付けを加える。 | 上位に渡すチャンクの関連度を上げる。 |
+| 4 | リランキングを加える。 | 上位に渡すチャンクの関連度を上げる。 |
 | 5 | チャンクに文脈を付与する。 | 文書から切り離したチャンクの意味の欠落を補う。 |
 | 6 | 質問の書き換えや分解を加える。 | 曖昧な質問や複合した質問に対応する。 |
 | 7 | エージェント型の検索、グラフを使う検索を加える。 | 複数の段階を要する質問、全体の主題を問う質問に対応する。 |
@@ -96,9 +96,9 @@ RAGは、次の順で改善する。前の段階で評価の結果が改善し�
 | 構成 | 上位20件の検索の失敗率 |
 | --- | --- |
 | 基準 | 5.7% |
-| 文脈付きの埋め込み | 3.7% |
-| 文脈付きの埋め込みとBM25 | 2.9% |
-| さらに再順位付け | 1.9% |
+| Contextual Embeddings | 3.7% |
+| Contextual EmbeddingsとContextual BM25 | 2.9% |
+| さらにリランキング | 1.9% |
 
 ---
 
@@ -114,7 +114,7 @@ RAGは、次の順で改善する。前の段階で評価の結果が改善し�
 | Wiki | Confluence、Notion | ページ、ページの階層、更新日時 | 階層を見出しとしてチャンクに加える。 |
 | チャット | Slack、Microsoft Teams | スレッド | スレッドを1つの単位にする。結論が出たチャンネルや期間に限る。 |
 | チケット | Jira、ServiceNow、Zendesk | 問題、対応、解決の状態 | 解決済みのものを、問題と解決の組にする。 |
-| 業務データ | Salesforce、会計システム | 取引先、案件、金額 | 「今月の受注額は？」のような集計は、検索せず、SQLやAPIを道具として渡す。 |
+| 業務データ | Salesforce、会計システム | 取引先、案件、金額 | 「今月の受注額は？」のような集計は、検索せず、SQLやAPIをツールとして渡す。 |
 
 ### 正本を決める
 
@@ -131,7 +131,7 @@ RAGは、次の順で改善する。前の段階で評価の結果が改善し�
 
 PDF、Office文書、HTMLは、見出し、段落、表、リスト、コードの構造を保ったMarkdownなどの形式へ変換してから分割する。表の行と列が崩れた文章や、段組みの順序が入れ替わった文章は、検索でも生成でも正しく扱えない。
 
-スキャンした文書や、図表に情報がある文書は、OCRとレイアウト解析を行う道具を使う。図の内容を文章で説明できない場合は、ページの画像による検索を検討する。
+スキャンした文書や、図表に情報がある文書は、OCRとレイアウト解析を行うツールを使う。図の内容を文章で説明できない場合は、ページの画像による検索を検討する。
 
 ### 構造に沿って分割する
 
@@ -149,7 +149,7 @@ PDF、Office文書、HTMLは、見出し、段落、表、リスト、コード�
 
 ### チャンクに文脈を付与する
 
-チャンクは、文書から切り離すと、何についての記述かが分からなくなることがある。各チャンクの先頭に、文書の全体を参照してLLMが作成した50〜100トークン程度の説明（どの文書のどの部分か、何について述べているか）を加え、その文章で埋め込みと語彙の索引の両方を作る。
+チャンクは、文書から切り離すと、何についての記述かが分からなくなることがある。各チャンクの先頭に、文書の全体を参照してLLMが作成した50〜100トークン程度の説明（どの文書のどの部分か、何について述べているか）を加え、その文章で埋め込みと全文検索の索引の両方を作る。
 
 | 状態 | チャンクの例 |
 | --- | --- |
@@ -189,19 +189,19 @@ PDF、Office文書、HTMLは、見出し、段落、表、リスト、コード�
 
 ### ハイブリッド検索を標準とする
 
-検索は、密な検索と語彙の検索を併用し、両方の候補をReciprocal Rank Fusion（RRF）などで統合する。密な検索は言い換えに、語彙の検索は固有名詞、型番、エラーコード、識別子に強く、互いの検索漏れを補う。
+検索は、ベクトル検索と全文検索を併用し、両方の候補をReciprocal Rank Fusion（RRF）などで統合する。ベクトル検索は言い換えに、全文検索は固有名詞、型番、エラーコード、識別子に強く、互いの検索漏れを補う。
 
 | 質問 | 効く検索 | 理由 |
 | --- | --- | --- |
-| 「契約をやめたい時の手続きは？」 | 密な検索 | 文書の「解約」「退会」と語が一致しなくても、意味で見つかる。 |
-| 「`ERR_CONN_RESET` の対処は？」 | 語彙の検索 | 識別子が完全に一致する文書を見つける。 |
+| 「契約をやめたい時の手続きは？」 | ベクトル検索 | 文書の「解約」「退会」と語が一致しなくても、意味で見つかる。 |
+| 「`ERR_CONN_RESET` の対処は？」 | 全文検索 | 識別子が完全に一致する文書を見つける。 |
 | 「型番 XR-2040 の保証期間は？」 | 両方 | 型番の一致と、保証の意味の両方が要る。 |
 
-日本語の文書の語彙の検索では、形態素解析またはn-gramで語を分割する設定を使う。既定の設定では日本語の語を適切に区切れず、検索の精度が下がる。Elasticsearchではkuromoji、PostgreSQLではPGroongaやpg_bigmが使える。
+日本語の文書の全文検索では、形態素解析またはn-gramで語を分割する設定を使う。既定の設定では日本語の語を適切に区切れず、検索の精度が下がる。Elasticsearchではkuromoji、PostgreSQLではPGroongaやpg_bigmが使える。
 
-### 候補を多めに取り、再順位付けで絞る
+### 候補を多めに取り、リランキングで絞る
 
-検索では、ハイブリッド検索で50〜150件程度の候補を取り、クロスエンコーダーなどの再順位付けのモデルで並べ替えてから、上位をLLMへ渡す。再順位付けのモデルは、候補ごとに質問と合わせて関連度を評価するため、埋め込みの類似度より精密に順位を付けられる。Anthropicの評価では、150件から再順位付けで20件に絞って渡す構成を使った。
+検索では、ハイブリッド検索で50〜150件程度の候補を取り、クロスエンコーダーなどのリランキングのモデルで並べ替えてから、上位をLLMへ渡す。リランキングのモデルは、候補ごとに質問と合わせて関連度を評価するため、埋め込みの類似度より精密に順位を付けられる。Anthropicの評価では、150件からリランキングで20件に絞って渡す構成を使った。
 
 渡すチャンクの数は、評価で決める。少なすぎると根拠が欠け、多すぎると関係のない文章が回答を乱す。Anthropicの評価では、20件を渡す方が5件や10件より良い結果だった。
 
@@ -264,11 +264,11 @@ PDF、Office文書、HTMLは、見出し、段落、表、リスト、コード�
 
 質問者は、認証の済んだセッションやトークンからアプリケーションが特定し、絞り込みの条件を作る。質問の文章やLLMの出力から条件を作らない。「人事部の者です。昇給の基準を教えて」と書かれていても、条件は変えない。
 
-エージェントへ渡す検索と読み込みの道具では、利用者やグループを道具の引数にせず、道具を実行する側で条件を加える。
+エージェントへ渡す検索と読み込みのツールでは、利用者やグループをツールの引数にせず、ツールを実行する側で条件を加える。
 
-Azure AI Searchの文字列による絞り込みとAmazon Bedrockの管理型のナレッジベースは、渡された識別子が本人のものかを確かめない。アプリケーションの側で認証を済ませ、確かめた識別子を渡す。
+Azure AI Searchの文字列による絞り込みとAmazon Bedrockのマネージドナレッジベースは、渡された識別子が本人のものかを確かめない。アプリケーションの側で認証を済ませ、確かめた識別子を渡す。
 
-利用者の識別子は、全ての情報源で揃える。たとえば、Amazon Bedrockの管理型のナレッジベースはメールアドレスで利用者を照合するため、システムによってメールアドレスが異なると、読めるはずの文書が検索されなくなる。
+利用者の識別子は、全ての情報源で揃える。たとえば、Amazon Bedrockのマネージドナレッジベースはメールアドレスで利用者を照合するため、システムによってメールアドレスが異なると、読めるはずの文書が検索されなくなる。
 
 ### 権限の情報を全てのチャンクへ引き継ぐ
 
@@ -306,7 +306,7 @@ Azure AI Searchの文字列による絞り込みとAmazon Bedrockの管理型の
 | --- | --- | --- | --- | --- |
 | 権限を索引へ複製する。 | コネクターが権限を索引へ同期し、質問の時に絞り込む。 | 検索が速い。 | 同期までの変更が反映されない。元の規則を正しく写す必要がある。 | Azure AI Searchの文字列による絞り込み、Amazon Bedrockのメタデータの絞り込み、Onyx |
 | データベースの行の権限を使う。 | PostgreSQLのRow Level Securityで、類似度の検索の結果を自動で絞る。 | 検索と権限の判定が1つの問い合わせで済む。 | PostgreSQLに限る。外部のシステムの権限は同期が要る。 | pgvectorとRow Level Security |
-| 元のシステムへの確認を加える。 | 索引で候補を絞った後、回答の前に、元のシステムのAPIで今の権限を確かめる。 | 同期の間の変更も反映される。 | APIの呼び出しの分だけ遅延が増える。 | Amazon Bedrockの管理型のナレッジベース、Amazon Quick |
+| 元のシステムへの確認を加える。 | 索引で候補を絞った後、回答の前に、元のシステムのAPIで今の権限を確かめる。 | 同期の間の変更も反映される。 | APIの呼び出しの分だけ遅延が増える。 | Amazon Bedrockのマネージドナレッジベース、Amazon Quick |
 
 元のシステムへの確認だけで全ての文書を判定すると、呼び出しの数が多すぎる。索引での絞り込みと組み合わせ、候補の文書に限って確認する。
 
@@ -339,17 +339,17 @@ LLMへ渡すチャンクには、文書のID、文書名、見出し、URLまた
 
 ## 7. エージェント型の検索
 
-### 検索をエージェントの道具として渡す
+### 検索をエージェントのツールとして渡す
 
-複数の段階を要する質問では、検索を道具としてエージェントに渡し、エージェントに検索語の作成、検索、読み込みを繰り返させる。道具は、MCPサーバーや関数呼び出しとして提供する。たとえば、「先月の障害の原因になった設定を、今のマニュアルはどう案内しているか」では、障害報告を検索して設定の名前を得てから、その名前でマニュアルを検索する。
+複数の段階を要する質問では、検索をツールとしてエージェントに渡し、エージェントに検索語の作成、検索、読み込みを繰り返させる。ツールは、MCPサーバーや関数呼び出しとして提供する。たとえば、「先月の障害の原因になった設定を、今のマニュアルはどう案内しているか」では、障害報告を検索して設定の名前を得てから、その名前でマニュアルを検索する。
 
-| 道具 | 返す内容 |
+| ツール | 返す内容 |
 | --- | --- |
 | 検索 | チャンクのID、出典、短い抜粋、スコア。件数の上限を設ける。 |
 | 読み込み | 指定したIDの文書の全体、または前後の範囲。 |
 | 一覧 | 文書の種類、製品、版などの絞り込みに使える値。 |
 
-道具の出力は短くし、続きを読むための手段（IDの指定、ページの指定）を用意する。
+ツールの出力は短くし、続きを読むための手段（IDの指定、ページの指定）を用意する。
 
 ### コードはファイルとシンボルの検索から始める
 
@@ -365,11 +365,11 @@ LLMへ渡すチャンクには、文書のID、文書名、見出し、URLまた
 
 ### 全体の主題を問う質問に使う
 
-「文書全体で繰り返し出てくる課題は何か」のように、文書の集合全体を要約する質問は、上位のチャンクを集めるだけでは答えられない。このような質問が多い場合は、文書から実体と関係を抽出したグラフと、その集団ごとの要約を使う検索を加える。
+「文書全体で繰り返し出てくる課題は何か」のように、文書の集合全体を要約する質問は、上位のチャンクを集めるだけでは答えられない。このような質問が多い場合は、文書からエンティティと関係を抽出したグラフと、そのコミュニティごとの要約を使う検索を加える。
 
 | 方式 | 特徴 |
 | --- | --- |
-| GraphRAG | 実体と関係のグラフと、集団ごとの要約を事前に作る。全体の主題を問う質問に強いが、索引の作成にLLMの呼び出しが多く要る。 |
+| GraphRAG | エンティティと関係のグラフと、コミュニティごとの要約を事前に作る。全体の主題を問う質問に強いが、索引の作成にLLMの呼び出しが多く要る。 |
 | LazyGraphRAG | 要約の作成を質問の時まで遅らせ、索引の作成の費用を通常のRAGと同程度に抑える。 |
 | LightRAG | グラフと通常の検索を組み合わせ、索引の作成と更新の費用を抑える。 |
 
@@ -379,7 +379,7 @@ LLMへ渡すチャンクには、文書のID、文書名、見出し、URLまた
 
 ### 要約に読める範囲の異なる文書を混ぜない
 
-集団の要約は、複数の文書から作る。読める範囲の異なる文書を混ぜると、質問者が読めない文書の内容が要約を通じて回答に現れる。グラフと要約を、全社向けと人事部向けのように読める範囲ごとに分ける。質問の時に要約を作る方式では、権限で絞り込んだ文書だけから要約を作る。
+コミュニティ要約は、複数の文書から作る。読める範囲の異なる文書を混ぜると、質問者が読めない文書の内容が要約を通じて回答に現れる。グラフと要約を、全社向けと人事部向けのように読める範囲ごとに分ける。質問の時に要約を作る方式では、権限で絞り込んだ文書だけから要約を作る。
 
 ---
 
@@ -411,8 +411,8 @@ LLMへ渡すチャンクには、文書のID、文書名、見出し、URLまた
 | --- | --- | --- |
 | 検索 | Recall@k | 正解のチャンクが上位k件に含まれる割合。 |
 | 検索 | MRR、nDCG | 正解のチャンクが上位に並ぶ度合い。 |
-| 検索 | 文脈の適合率（Context precision） | 渡したチャンクのうち、関連するものの割合と順位。 |
-| 検索 | 文脈の再現率（Context recall） | 回答に必要な情報のうち、渡したチャンクに含まれる割合。 |
+| 検索 | コンテキスト適合率（Context precision） | 渡したチャンクのうち、関連するものの割合と順位。 |
+| 検索 | コンテキスト再現率（Context recall） | 回答に必要な情報のうち、渡したチャンクに含まれる割合。 |
 | 検索 | 正本以外の混入 | 渡したチャンクのうち、旧版や下書きが占める割合。 |
 | 検索 | 権限の外の混入 | 渡したチャンクに、質問者が読めない文書が含まれた件数。 |
 | 生成 | 忠実性（Faithfulness） | 回答の主張が、渡したチャンクで裏付けられる割合。 |
@@ -437,13 +437,13 @@ LLMへ渡すチャンクには、文書のID、文書名、見出し、URLまた
 
 ### 変更のたびに評価を実行する
 
-分割の方式、埋め込みのモデル、検索の設定、再順位付け、プロンプトを変更するたびに、評価セットで評価し、結果を記録する。次の表は記録の形を示す例であり、数値は説明のための仮の値である。
+分割の方式、埋め込みのモデル、検索の設定、リランキング、プロンプトを変更するたびに、評価セットで評価し、結果を記録する。次の表は記録の形を示す例であり、数値は説明のための仮の値である。
 
 | 変更 | Recall@20 | 忠実性 | 判断 |
 | --- | --- | --- | --- |
 | 基準（512トークンの固定の分割） | 82% | 0.88 | なし |
 | 見出しに沿った分割 | 88% | 0.90 | 採用する。 |
-| 再順位付けの追加 | 88% | 0.94 | 採用する。 |
+| リランキングの追加 | 88% | 0.94 | 採用する。 |
 | 質問の書き換えの追加 | 88% | 0.94 | 遅延が増えるだけのため採用しない。 |
 
 ---
@@ -485,7 +485,7 @@ LLMへ渡すチャンクには、文書のID、文書名、見出し、URLまた
 | 対策 | 内容 |
 | --- | --- |
 | プロンプトキャッシュ | 共通の指示や文書をキャッシュする。 |
-| 候補の数の調整 | 検索と再順位付けの候補の数を、評価の結果を保てる範囲で減らす。 |
+| 候補の数の調整 | 検索とリランキングの候補の数を、評価の結果を保てる範囲で減らす。 |
 | 小さなモデルの利用 | 文脈の付与、質問の書き換え、採点に、小さく速いモデルを使う。 |
 | 結果のキャッシュ | 同じ質問の検索結果や回答を再利用する。読める文書が異なる利用者の間では共有しない。 |
 
@@ -493,7 +493,7 @@ LLMへ渡すチャンクには、文書のID、文書名、見出し、URLまた
 
 ## 11. 実現手段
 
-実現手段は、構築の手間と調整の自由度で選ぶ。マネージドサービスは構築が速く、自前の構成は分割、検索、再順位付けを細かく調整できる。
+実現手段は、構築の手間と調整の自由度で選ぶ。マネージドサービスは構築が速く、自前の構成は分割、検索、リランキングを細かく調整できる。
 
 ### マネージドサービス
 
@@ -501,8 +501,8 @@ LLMへ渡すチャンクには、文書のID、文書名、見出し、URLまた
 | --- | --- |
 | OpenAIのファイル検索 | ベクトルストアへファイルを登録すると、分割と埋め込みを自動で行い、意味と語の検索で回答の根拠を探す。回答にファイルの引用を付ける。 |
 | GeminiのFile Search | ファイルを登録すると、分割、埋め込み、検索を自動で行い、Gemini APIの生成から使える。 |
-| Amazon Bedrock Knowledge Bases | 文書の取り込み、検索、回答の生成を行う。管理型のナレッジベースは、S3、SharePoint、Confluence、Google Drive、OneDriveなどのコネクターを持ち、文書の権限による絞り込みと、元のシステムへの確認に対応する。 |
-| Azure AI Search | 語彙の検索とベクトル検索を統合するハイブリッド検索と、意味による再順位付けを提供する。文字列による権限の絞り込みに加え、Microsoft EntraとSharePointの権限による絞り込みをプレビューで提供する。 |
+| Amazon Bedrock Knowledge Bases | 文書の取り込み、検索、回答の生成を行う。マネージドナレッジベースは、S3、SharePoint、Confluence、Google Drive、OneDriveなどのコネクターを持ち、文書の権限による絞り込みと、元のシステムへの確認に対応する。 |
+| Azure AI Search | 全文検索とベクトル検索を統合するハイブリッド検索と、意味によるリランキングを提供する。文字列による権限の絞り込みに加え、Microsoft EntraとSharePointの権限による絞り込みをプレビューで提供する。 |
 | Google CloudのRAG Engine | 文書の取り込み、索引、検索をまとめて管理する。 |
 
 Claudeを使う場合は、検索は自前またはマネージドの検索で行い、結果を検索結果のブロックとして渡して、出典付きの回答を得る。
@@ -523,23 +523,23 @@ GitHubのStarが2,000以上で、継続して更新されているものを挙�
 | 文書の解析 | [MarkItDown](https://github.com/microsoft/markitdown) | 様々な形式のファイルをMarkdownへ変換する。 |
 | 文書の解析 | [MinerU](https://github.com/opendatalab/MinerU) | PDFのレイアウト、表、数式を解析してMarkdownへ変換する。 |
 | 文書の解析 | [Unstructured](https://github.com/Unstructured-IO/unstructured) | 様々な形式の文書を、見出しや表などの要素に分けて取り出す。 |
-| 検索エンジン | [Elasticsearch](https://github.com/elastic/elasticsearch)、[OpenSearch](https://github.com/opensearch-project/OpenSearch) | 語彙の検索とベクトル検索を1つのエンジンで行い、RRFで統合できる。 |
-| 検索エンジン | [Vespa](https://github.com/vespa-engine/vespa) | 語彙の検索、ベクトル検索、再順位付けを組み合わせた大規模な検索を行う。 |
+| 検索エンジン | [Elasticsearch](https://github.com/elastic/elasticsearch)、[OpenSearch](https://github.com/opensearch-project/OpenSearch) | 全文検索とベクトル検索を1つのエンジンで行い、RRFで統合できる。 |
+| 検索エンジン | [Vespa](https://github.com/vespa-engine/vespa) | 全文検索、ベクトル検索、リランキングを組み合わせた大規模な検索を行う。 |
 | データベースの拡張 | [pgvector](https://github.com/pgvector/pgvector) | PostgreSQLにベクトルの型と近似最近傍の索引を加える。既存のデータと同じデータベースで検索できる。 |
 | データベースの拡張 | [ParadeDB](https://github.com/paradedb/paradedb) | PostgreSQLにBM25の全文検索を加え、pgvectorと組み合わせたハイブリッド検索を行う。 |
-| ベクトルデータベース | [Qdrant](https://github.com/qdrant/qdrant) | 密なベクトルと疎なベクトルの検索、メタデータの絞り込みを行う。 |
+| ベクトルデータベース | [Qdrant](https://github.com/qdrant/qdrant) | 密ベクトルと疎ベクトルの検索、メタデータの絞り込みを行う。 |
 | ベクトルデータベース | [Milvus](https://github.com/milvus-io/milvus) | 大規模なベクトル検索を分散して行う。 |
 | ベクトルデータベース | [Weaviate](https://github.com/weaviate/weaviate) | ベクトル検索とBM25のハイブリッド検索を提供する。 |
 | ベクトルデータベース | [Chroma](https://github.com/chroma-core/chroma) | 小規模な用途や試作に使いやすいベクトルデータベース。 |
 | ベクトルデータベース | [LanceDB](https://github.com/lancedb/lancedb) | アプリケーションに組み込んで使える、ファイルに保存するベクトルデータベース。 |
 | ライブラリ | [Faiss](https://github.com/facebookresearch/faiss) | ベクトルの近似最近傍の検索を行うライブラリ。 |
-| 埋め込みと再順位付け | [Sentence Transformers](https://github.com/huggingface/sentence-transformers) | 埋め込みのモデルとクロスエンコーダーの利用と学習を行う。 |
-| 埋め込みと再順位付け | [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding) | BGEの埋め込みと再順位付けのモデルを提供する。 |
-| 遅延相互作用 | [ColBERT](https://github.com/stanford-futuredata/ColBERT) | 語ごとの埋め込みを照合する遅延相互作用の検索を行う。 |
-| 遅延相互作用 | [ColPali](https://github.com/illuin-tech/colpali) | ページの画像を埋め込み、遅延相互作用で文書を検索する。 |
-| グラフ | [GraphRAG](https://github.com/microsoft/graphrag) | 実体と関係のグラフと集団の要約を作り、全体と局所の検索を行う。 |
+| 埋め込みとリランキング | [Sentence Transformers](https://github.com/huggingface/sentence-transformers) | 埋め込みのモデルとクロスエンコーダーの利用と学習を行う。 |
+| 埋め込みとリランキング | [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding) | BGEの埋め込みとリランキングのモデルを提供する。 |
+| Late Interaction | [ColBERT](https://github.com/stanford-futuredata/ColBERT) | 語ごとの埋め込みを照合するLate Interactionの検索を行う。 |
+| Late Interaction | [ColPali](https://github.com/illuin-tech/colpali) | ページの画像を埋め込み、Late Interactionで文書を検索する。 |
+| グラフ | [GraphRAG](https://github.com/microsoft/graphrag) | エンティティと関係のグラフとコミュニティ要約を作り、グローバル検索とローカル検索を行う。 |
 | グラフ | [LightRAG](https://github.com/HKUDS/LightRAG) | グラフと通常の検索を組み合わせ、索引の更新の費用を抑える。 |
-| 評価 | [Ragas](https://github.com/vibrantlabsai/ragas) | 忠実性、回答の関連性、文脈の適合率と再現率などを評価する。 |
+| 評価 | [Ragas](https://github.com/vibrantlabsai/ragas) | 忠実性、回答の関連性、コンテキスト適合率と再現率などを評価する。 |
 | 評価 | [DeepEval](https://github.com/confident-ai/deepeval) | RAGとLLMの出力を、テストの形式で評価する。 |
 | 評価 | [TruLens](https://github.com/truera/trulens) | 検索と回答の記録を評価する。 |
 | 評価 | [MTEB](https://github.com/embeddings-benchmark/mteb) | 埋め込みのモデルを多数の課題で評価する。 |
@@ -549,11 +549,11 @@ GitHubのStarが2,000以上で、継続して更新されているものを挙�
 
 | 規模と目的 | 構成 |
 | --- | --- |
-| 試作、小規模 | マネージドサービスのファイル検索、またはChromaやLanceDBと密な検索。 |
-| 既存のデータベースがPostgreSQL | pgvectorとBM25の全文検索のハイブリッド検索、再順位付けのモデル。 |
-| 全文検索の基盤がある | ElasticsearchまたはOpenSearchのハイブリッド検索とRRF、再順位付けのモデル。 |
-| 大規模、高い検索の性能 | Qdrant、Milvus、Vespaなどの専用の基盤と、再順位付けのモデル。 |
-| 部署ごとに読める文書が異なる社内文書 | Amazon Bedrockの管理型のナレッジベース、Azure AI Search、Onyx、またはPostgreSQLのRow Level Securityとpgvector。 |
+| 試作、小規模 | マネージドサービスのファイル検索、またはChromaやLanceDBとベクトル検索。 |
+| 既存のデータベースがPostgreSQL | pgvectorとBM25の全文検索のハイブリッド検索、リランキングのモデル。 |
+| 全文検索の基盤がある | ElasticsearchまたはOpenSearchのハイブリッド検索とRRF、リランキングのモデル。 |
+| 大規模、高い検索の性能 | Qdrant、Milvus、Vespaなどの専用の基盤と、リランキングのモデル。 |
+| 部署ごとに読める文書が異なる社内文書 | Amazon Bedrockのマネージドナレッジベース、Azure AI Search、Onyx、またはPostgreSQLのRow Level Securityとpgvector。 |
 | 図表の多い文書 | Doclingなどでの解析、またはColPaliによるページの画像の検索。 |
 | 全体の主題を問う質問 | 通常のRAGに、GraphRAG、LazyGraphRAG、LightRAGを組み合わせる。 |
 
@@ -575,8 +575,8 @@ GitHubのStarが2,000以上で、継続して更新されているものを挙�
 - 権限の変更の反映までの遅れを文書の種類ごとに決め、遅れを許容しない文書は元のシステムへ確認している。
 - 権限の判定に失敗した文書を返さない。
 - 読める文書が異なる質問者を評価し、権限の外の混入が0件である。
-- 密な検索と語彙の検索のハイブリッド検索を使い、日本語の語彙の検索で語を分割する設定がある。
-- 候補を多めに取り、再順位付けで絞っている。
+- ベクトル検索と全文検索のハイブリッド検索を使い、日本語の全文検索で語を分割する設定がある。
+- 候補を多めに取り、リランキングで絞っている。
 - 埋め込みのモデルを、自分の評価セットの結果で選んだ。
 - 回答に出典が付き、文書にない質問には答えないことを確かめた。
 - 質問の書き換え、エージェント型の検索、グラフを使う検索は、評価で効果を確かめてから加えた。
@@ -590,30 +590,30 @@ GitHubのStarが2,000以上で、継続して更新されているものを挙�
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 1. はじめに | [[2005.11401] Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | 検索した文書をモデルの入力に加えて生成するRAGの方式を提案する。 |
-| 2. 方式の選び方<br>3. 文書の取り込み<br>4. 索引と検索 | [Contextual retrieval in AI systems \ Anthropic](https://www.anthropic.com/news/contextual-retrieval) | 20万トークン以下の文書は全体をプロンプトに入れること、チャンクへの文脈の付与、文脈付きのBM25、再順位付けによる検索の失敗率の低下、渡すチャンクの数の比較を示す。 |
+| 2. 方式の選び方<br>3. 文書の取り込み<br>4. 索引と検索 | [Contextual retrieval in AI systems \ Anthropic](https://www.anthropic.com/news/contextual-retrieval) | 20万トークン以下の文書は全体をプロンプトに入れること、チャンクへの文脈の付与、Contextual BM25、リランキングによる検索の失敗率の低下、渡すチャンクの数の比較を示す。 |
 | 2. 方式の選び方<br>6. 回答の生成<br>10. 運用 | [Prompt caching - Claude Platform Docs](https://platform.claude.com/docs/en/build-with-claude/prompt-caching) | プロンプトの共通の部分をキャッシュして、費用と遅延を減らす方法を定義する。 |
 | 4. 索引と検索 | [Reciprocal rank fusion \| Elasticsearch Reference](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion) | 複数の検索の結果を順位で統合するRRFを定義する。 |
-| 4. 索引と検索<br>11. 実現手段 | [Hybrid Search Overview - Azure AI Search \| Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/hybrid-search-overview) | 語彙の検索とベクトル検索を並行して行い、結果を統合するハイブリッド検索を示す。 |
-| 4. 索引と検索 | [[2004.12832] ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT](https://arxiv.org/abs/2004.12832) | 語ごとの埋め込みを照合する遅延相互作用の検索を提案する。 |
+| 4. 索引と検索<br>11. 実現手段 | [Hybrid Search Overview - Azure AI Search \| Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/hybrid-search-overview) | 全文検索とベクトル検索を並行して行い、結果を統合するハイブリッド検索を示す。 |
+| 4. 索引と検索 | [[2004.12832] ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT](https://arxiv.org/abs/2004.12832) | 語ごとの埋め込みを照合するLate Interactionの検索を提案する。 |
 | 4. 索引と検索 | [GitHub - embeddings-benchmark/mteb](https://github.com/embeddings-benchmark/mteb) | 埋め込みのモデルを多数の言語と課題で評価するベンチマーク。 |
 | 4. 索引と検索 | [GitHub - sbintuitions/JMTEB](https://github.com/sbintuitions/JMTEB) | 日本語の埋め込みのモデルを評価するベンチマーク。 |
-| 2. 方式の選び方<br>3. 文書の取り込み | [[2407.01449] ColPali: Efficient Document Retrieval with Vision Language Models](https://arxiv.org/abs/2407.01449) | ページの画像を埋め込み、遅延相互作用で照合する文書の検索を提案する。 |
+| 2. 方式の選び方<br>3. 文書の取り込み | [[2407.01449] ColPali: Efficient Document Retrieval with Vision Language Models](https://arxiv.org/abs/2407.01449) | ページの画像を埋め込み、Late Interactionで照合する文書の検索を提案する。 |
 | 6. 回答の生成<br>11. 実現手段 | [Search results - Claude Platform Docs](https://platform.claude.com/docs/en/build-with-claude/search-results) | 検索結果をブロックとして渡し、出典付きの引用を得る方法を定義する。 |
 | 6. 回答の生成 | [Citations - Claude Platform Docs](https://platform.claude.com/docs/en/build-with-claude/citations) | 渡した文書の該当箇所を引用として返す機能を定義する。 |
 | 6. 回答の生成<br>11. 実現手段 | [File search \| OpenAI API](https://developers.openai.com/api/docs/guides/tools-file-search) | ベクトルストアに対する意味と語の検索、メタデータの絞り込み、結果の件数、ファイルの引用の注釈を定義する。 |
 | 11. 実現手段 | [Vector Stores \| OpenAI API Reference](https://developers.openai.com/api/reference/resources/vector_stores) | ベクトルストアの作成と、ファイルの分割の設定を定義する。 |
-| 11. 実現手段 | [File search - Gemini API \| Google AI Studio](https://ai.google.dev/gemini-api/docs/file-search) | ファイルの分割、埋め込み、検索を自動で行うGemini APIの道具を示す。 |
+| 11. 実現手段 | [File search - Gemini API \| Google AI Studio](https://ai.google.dev/gemini-api/docs/file-search) | ファイルの分割、埋め込み、検索を自動で行うGemini APIのツールを示す。 |
 | 11. 実現手段 | [Retrieve data and generate AI responses with Amazon Bedrock Knowledge Bases - Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html) | 文書の取り込み、検索、回答の生成を管理するサービスを示す。 |
 | 7. エージェント型の検索 | [[2605.15184] Is Grep All You Need? How Agent Harnesses Reshape Agentic Search](https://arxiv.org/abs/2605.15184) | エージェントの検索で、文字列の検索とベクトル検索の精度が、ハーネスと結果の渡し方によって変わることを示す。 |
-| 8. グラフを使う検索 | [Welcome - GraphRAG](https://microsoft.github.io/graphrag/) | 実体と関係のグラフと集団の要約を使う、全体と局所の検索を示す。 |
+| 8. グラフを使う検索 | [Welcome - GraphRAG](https://microsoft.github.io/graphrag/) | エンティティと関係のグラフとコミュニティ要約を使う、グローバル検索とローカル検索を示す。 |
 | 8. グラフを使う検索 | [LazyGraphRAG: Setting a new standard for quality and cost - Microsoft Research](https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/) | 要約を質問の時まで遅らせ、索引の作成の費用を通常のRAGと同程度に抑える方式を示す。 |
 | 8. グラフを使う検索 | [[2410.05779] LightRAG: Simple and Fast Retrieval-Augmented Generation](https://arxiv.org/abs/2410.05779) | グラフと通常の検索を組み合わせ、索引の更新の費用を抑える方式を提案する。 |
 | 3. 文書の取り込み<br>5. アクセス権限 | [Overview - Onyx Documentation](https://docs.onyx.app/admins/connectors/overview) | コネクターの取り込みと削除の周期、元のシステムとの権限の同期を定義する。 |
 | 5. アクセス権限<br>11. 実現手段 | [Document-Level Access Control - Azure AI Search \| Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/search-document-level-access-overview) | 文書単位の権限の4つの方式、質問の時の判定、同期の後に権限の変更が反映されることを定義する。 |
 | 5. アクセス権限 | [Security Filter Pattern - Azure AI Search \| Microsoft Learn](https://learn.microsoft.com/en-us/azure/search/search-security-trimming-for-azure-search) | グループのIDを持つフィールドと `search.in` で検索の結果を絞る方法を示す。識別子は文字列の比較であり、認証を行わないことを示す。 |
 | 5. アクセス権限<br>11. 実現手段 | [Access Control Lists awareness enablement - Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-managed-acl.html) | 検索の前の絞り込みと元のシステムへの確認、読めない設定の優先、メールアドレスでの照合、判定に失敗した文書を返さないことを定義する。 |
-| 11. 実現手段 | [Build a managed knowledge base - Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-build-managed.html) | 管理型のナレッジベースの機能とコネクターを、顧客が管理する構成と比べて示す。 |
+| 11. 実現手段 | [Build a managed knowledge base - Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-build-managed.html) | マネージドナレッジベースの機能とコネクターを、顧客が管理する構成と比べて示す。 |
 | 5. アクセス権限 | [Rethinking access control for RAG with Amazon Quick and Amazon Bedrock \| Artificial Intelligence](https://aws.amazon.com/blogs/machine-learning/rethinking-access-control-for-rag-with-amazon-quick-and-amazon-bedrock/) | 権限を索引へ複製する方式の弱点と、検索の前の絞り込みと元のシステムへの確認を組み合わせる構成を示す。 |
 | 5. アクセス権限 | [Implement effective data authorization mechanisms to secure your data used in generative AI applications – part 2 \| AWS Security Blog](https://aws.amazon.com/blogs/security/implement-effective-data-authorization-mechanisms-to-secure-your-data-used-in-generative-ai-applications-part-2) | 絞り込みの条件をプロンプトではなくAPIの要求に含めること、権限をLLMに判断させないことを示す。 |
 | 5. アクセス権限 | [RAG with Permissions \| Supabase Docs](https://supabase.com/docs/guides/ai/rag-with-permissions) | PostgreSQLのRow Level Securityで、ベクトル検索の結果を読める文書に絞る方法を示す。 |
-| 9. 評価 | [List of available metrics - Ragas](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/) | 文脈の適合率と再現率、忠実性、回答の関連性などの指標を定義する。 |
+| 9. 評価 | [List of available metrics - Ragas](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/) | コンテキスト適合率と再現率、忠実性、回答の関連性などの指標を定義する。 |
