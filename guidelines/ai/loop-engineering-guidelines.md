@@ -28,7 +28,7 @@
 
 本書は、Claude CodeやCodexなどのAIエージェントを、どのきっかけで起動し、どの条件で作業を繰り返し、どう検証し、いつ止めるかの設計を規定する。
 
-ループの中でエージェントに与える指示、道具、検査は、[ハーネスエンジニアリングガイドライン](harness-engineering-guidelines.md)による。
+ループの中でエージェントに与える指示、ツール、検査は、[ハーネスエンジニアリングガイドライン](harness-engineering-guidelines.md)による。
 
 ### 1.3 用語及び定義
 
@@ -130,7 +130,7 @@ Anthropicは、200件を超える機能からなるアプリケーションの�
 | 指示の中で自己検証を求める | 作成役自身 | 弱い。誤った完了をそのまま報告することがある。 | 「認証のテストを実行し、通るまで続ける」 |
 | 検証の手順をスキルにする | 手順に従う作成役 | 弱い。手順を省くことがある。 | 画面を操作して前後を撮影し、コンソールの新しいエラーが0件であることを確かめるスキル。 |
 | ツールの組み込みの判定（`/goal`） | 判定用のモデル | 中程度。判定用のモデルは会話の内容だけを読み、コマンドを実行しない。 | `/goal test/auth の全てのテストが通り、リントのエラーが0件である` |
-| 別のコンテキストの検証役 | 補助エージェント | 中程度。検証役も推論で判定する。 | 差分を `SPEC.md` と照合し、未実装の要件だけを報告する補助エージェント。 |
+| 別のコンテキストの検証役 | サブエージェント | 中程度。検証役も推論で判定する。 | 差分を `SPEC.md` と照合し、未実装の要件だけを報告するサブエージェント。 |
 | Stopフックで検証のコマンドを実行する | フックのスクリプト | 強い。検証が通るまで停止を阻止する。 | `pnpm tsc --noEmit` が失敗する間は、終了コード2で停止を阻止する。 |
 | 外側のスクリプトやSDKで検証のコマンドを実行する | ループの外のプログラム | 強い。検証の結果で次の反復を決める。 | `files.txt` のファイルを1件ずつ `claude -p --max-turns 20` に渡す。各実行の後にスクリプトが `grep` で古いAPIの呼び出しを数えてテストを実行し、エージェントの応答ではなく、その結果で次へ進む。 |
 
@@ -178,9 +178,9 @@ Anthropicの例では、単独のエージェントは20分と9ドルでゲー�
 
 ### 進まない状態を検出して止める
 
-同じ失敗を繰り返す、残る問題が変わらない、道具を使わずに応答だけを繰り返す状態は、上限を待たずに止める。たとえば、同じエラーの文面が3回続いた時や、未処理の件数が3回の反復で減らない時に止めて、人へ回す。
+同じ失敗を繰り返す、残る問題が変わらない、ツールを使わずに応答だけを繰り返す状態は、上限を待たずに止める。たとえば、同じエラーの文面が3回続いた時や、未処理の件数が3回の反復で減らない時に止めて、人へ回す。
 
-StopフックでClaude Codeの停止を阻止する場合は、入力の `stop_hook_active` を確認し、同じ理由で阻止を繰り返さないようにする。Claude Codeは、道具の実行を挟まずにStopフックが8回続けて停止を阻止すると、フックを無視して停止する。
+StopフックでClaude Codeの停止を阻止する場合は、入力の `stop_hook_active` を確認し、同じ理由で阻止を繰り返さないようにする。Claude Codeは、ツールの実行を挟まずにStopフックが8回続けて停止を阻止すると、フックを無視して停止する。
 
 ### 人がいつでも止められるようにする
 
@@ -383,5 +383,5 @@ Claude Codeの `/goal` の判定用のモデルは、会話に表れた内容だ
 | 5. 停止条件と予算 | [Automate actions with hooks - Claude Code Docs](https://code.claude.com/docs/en/hooks-guide) | Stopフックが続けて停止を阻止できる回数の上限と、`stop_hook_active` による繰り返しの回避を定義する。 |
 | 6. 状態と再開 | [Run Claude Code programmatically - Claude Code Docs](https://code.claude.com/docs/en/headless) | Claude Codeの非対話モードでの実行とセッションの再開を示す。 |
 | 6. 状態と再開 | [Non-interactive mode \| ChatGPT Learn](https://learn.chatgpt.com/docs/non-interactive-mode) | `codex exec` の実行とセッションの再開を定義する。 |
-| 7. 並列と競合 | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeの補助エージェントを作業ツリーで動かす設定を定義する。 |
+| 7. 並列と競合 | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeのサブエージェントを作業ツリーで動かす設定を定義する。 |
 | 7. 並列と競合 | [Worktrees \| ChatGPT Learn](https://learn.chatgpt.com/docs/environments/git-worktrees) | Codexのアプリで作業ツリーを使う方法を示す。 |
