@@ -370,6 +370,19 @@ def raise_interrupt(signum, frame):
     raise KeyboardInterrupt
 
 
+def copy_agent_output(process, log, session, session_file, source):
+    try:
+        for line in process.stdout:
+            log.write(line)
+            log.flush()
+            if source != "generate" and not session["id"]:
+                session["id"] = extract_session_id(line, source)
+                write_json(session_file, session)
+    except (OSError, ValueError):
+        # 読み取りを打ち切ってログを閉じた後の出力は捨てる。
+        pass
+
+
 def cmd_run(args):
     for signum in (signal.SIGTERM, signal.SIGHUP):
         signal.signal(signum, raise_interrupt)
@@ -398,14 +411,13 @@ def cmd_run(args):
             finished = threading.Event()
             watcher = threading.Thread(target=watch, args=(process, config, run_dir, finished), daemon=True)
             watcher.start()
+            # 子プロセスが標準出力を持ち続けても、エージェントの終了を検知できるように別のスレッドで読む。
+            reader = threading.Thread(target=copy_agent_output, args=(process, log, session, session_file, source), daemon=True)
+            reader.start()
             try:
-                for line in process.stdout:
-                    log.write(line)
-                    log.flush()
-                    if source != "generate" and not session["id"]:
-                        session["id"] = extract_session_id(line, source)
-                        write_json(session_file, session)
                 process.wait()
+                stop_group(process.pid, 15)
+                reader.join(5)
             except BaseException:
                 # 起動スクリプトが止められた時も、エージェントと評価を残さない。
                 stop_process_group(process, 15)
@@ -415,8 +427,7 @@ def cmd_run(args):
                 finished.set()
                 # 停止の処理が終わる前に起動スクリプトが終わると、子プロセスと評価が残る。
                 watcher.join()
-            # 再開の前に、前回の実行が残した子プロセスと評価を止める。
-            stop_group(process.pid, 15)
+            # 再開の前に、前回の実行が残した評価を止める。
             stop_running_evaluation(run_dir)
         write_json(session_file, session)
         print(f"{now():%H:%M:%S} エージェントが終了した（終了コード {process.returncode}）。", flush=True)
