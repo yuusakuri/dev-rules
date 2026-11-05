@@ -102,7 +102,7 @@ def passed_scores(rows):
 
 
 def baseline_of(config, rows):
-    # 直近の基準の測定に失敗した実行があるコミットは採用せず、その前に受け入れた基準を使う。
+    # 直近の測定が規定の回数に満たないコミットと、失敗した実行があるコミットは採用せず、その前に受け入れた基準を使う。
     commits = []
     for row in rows:
         if row["label"] == "baseline":
@@ -111,7 +111,7 @@ def baseline_of(config, rows):
             commits.append(row["commit"])
     for commit in reversed(commits):
         runs = [row for row in rows if row["label"] == "baseline" and row["commit"] == commit][-config["baseline_runs"]:]
-        if all(row["passed"] == "true" for row in runs):
+        if len(runs) == config["baseline_runs"] and all(row["passed"] == "true" for row in runs):
             break
     else:
         return None
@@ -129,7 +129,7 @@ def verdict_of(config, rows, commit):
     if any(row["passed"] != "true" for row in candidates):
         return "revert（評価に失敗した実行がある）"
     if baseline is None:
-        return "基準が未測定。evaluate --label baseline で基準を測る"
+        return f"基準が未測定。evaluate --label baseline --repeat {config['baseline_runs']} で基準を測る"
     median = statistics.median(passed_scores(candidates))
     if baseline["median"] == 0:
         # 基準が0の場合は相対変化を定義できないため、スコアの向きだけで判断する。
@@ -471,6 +471,8 @@ def stop(payload, config, run_dir):
     idle_stops = state.get("idle_stops", 0) + 1 if state.get("evaluations_at_stop") == evaluations else 1
     state.update(idle_stops=idle_stops, evaluations_at_stop=evaluations)
     write_json(state_file, state)
+    if phase == "final":
+        return {"decision": "block", "reason": read_prompt("final-continue", status=status_text(config, run_dir))}
     reason = read_prompt("continue", status=status_text(config, run_dir))
     if idle_stops >= 3:
         reason += "\n\n" + read_prompt("stall", minutes=config["stall_minutes"])
