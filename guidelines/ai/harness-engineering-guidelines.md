@@ -6,8 +6,8 @@
 2. [基本の考え方](#2-基本の考え方)
 3. [構成要素の選び方](#3-構成要素の選び方)
 4. [常設の指示](#4-常設の指示)
-5. [スキルと補助エージェント](#5-スキルと補助エージェント)
-6. [エージェントが使う道具と環境](#6-エージェントが使う道具と環境)
+5. [スキルとサブエージェント](#5-スキルとサブエージェント)
+6. [エージェントが使うツールと環境](#6-エージェントが使うツールと環境)
 7. [検査](#7-検査)
 8. [状態の引き継ぎ](#8-状態の引き継ぎ)
 9. [ハーネスの改善](#9-ハーネスの改善)
@@ -21,7 +21,7 @@
 
 ### 1.1 目的
 
-本書の目的は、AIエージェントが少ない監督で正しい成果物を出せるように、エージェントを取り囲む指示、道具、検査を一貫した基準で設計できるようにすることである。
+本書の目的は、AIエージェントが少ない監督で正しい成果物を出せるように、エージェントを取り囲む指示、ツール、検査を一貫した基準で設計できるようにすることである。
 
 ### 1.2 適用範囲
 
@@ -33,7 +33,7 @@
 
 | 用語 | 定義 |
 | --- | --- |
-| ハーネス | モデルの外側で、エージェントに与える指示、道具、検査、記録の仕組みの全体。本書では、ツールの提供者が組み込んだ部分を除き、利用者が追加する部分を指す。 |
+| ハーネス | モデルの外側で、エージェントに与える指示、ツール、検査、記録の仕組みの全体。本書では、ツールの提供者が組み込んだ部分を除き、利用者が追加する部分を指す。 |
 | 作業場所 | エージェントが読み書きするファイルを置くディレクトリ。常設の指示、スキル、設定もここに置く。 |
 | 成果物 | エージェントが作る文書、データ、プログラム、設定などの作業の結果。 |
 | ガイド | エージェントが行動する前に、望ましい行動へ誘導する仕組み。常設の指示、スキル、ひな形などがある。 |
@@ -47,9 +47,9 @@
 
 ### エージェントの失敗はハーネスの不足として扱う
 
-エージェントが誤った手順を使う、規約に反する、確認を省くといった失敗をした場合は、その場で修正を指示するだけで終えない。同じ失敗が二度と起きないように、指示、道具、検査のいずれかを変更する。
+エージェントが誤った手順を使う、規約に反する、確認を省くといった失敗をした場合は、その場で修正を指示するだけで終えない。同じ失敗が二度と起きないように、指示、ツール、検査のいずれかを変更する。
 
-失敗が繰り返す場合は、エージェントに不足している道具、規則、ひな形、資料を特定し、作業場所へ追加する。
+失敗が繰り返す場合は、エージェントに不足しているツール、規則、ひな形、資料を特定し、作業場所へ追加する。
 
 | 起きた失敗 | 変更 |
 | --- | --- |
@@ -108,8 +108,8 @@ Anthropicのアプリケーション開発のハーネスでは、Claude Sonnet 
 | 常設の指示 | 全ての作業で必要な事実と規則を伝える。 | 常に入る。 | `CLAUDE.md`。`AGENTS.md` も読み込める。 | `AGENTS.md`、`AGENTS.override.md` |
 | 範囲を限定した指示 | 特定のディレクトリやファイルの種類だけに効く規則を伝える。 | 該当する範囲で入る。 | `.claude/rules/*.md`（`paths` で対象を限定する）、サブディレクトリの `CLAUDE.md` | サブディレクトリの `AGENTS.md` |
 | スキル | 手順、参照資料、確認の方法を必要な時に読み込む。 | 説明だけが常に入り、本体は使う時に入る。 | `.claude/skills/<名前>/SKILL.md` | `.agents/skills/<名前>/SKILL.md` |
-| 補助エージェント | 独立したコンテキストで作業させ、要約だけを受け取る。 | 主のコンテキストには結果だけが入る。 | `.claude/agents/*.md` | `.codex/agents/*.toml` |
-| 外部の道具 | 外部のサービスやデータへ接続する。 | 道具の名前と説明が入る。 | MCPサーバー | MCPサーバー |
+| サブエージェント | 独立したコンテキストで作業させ、要約だけを受け取る。 | 主のコンテキストには結果だけが入る。 | `.claude/agents/*.md` | `.codex/agents/*.toml` |
+| 外部のツール | 外部のサービスやデータへ接続する。 | ツールの名前と説明が入る。 | MCPサーバー | MCPサーバー |
 | フック | 決まった時点で処理を必ず実行する。 | 出力を返した時だけ入る。 | `.claude/settings.json` の `hooks` | `.codex/hooks.json` |
 | 検査 | 成果物を検査し、修正を促す。 | 失敗の出力だけが入る。 | フックや定期的な処理から実行する。 | フックや定期的な処理から実行する。 |
 
@@ -122,8 +122,8 @@ Anthropicのアプリケーション開発のハーネスでは、Claude Sonnet 
 | 同じ規約や手順を2回誤った。 | 常設の指示へ追記する。 | 「テストは `pnpm test <ファイル>` で実行する」 |
 | 一部のディレクトリだけで必要な規則が、常設の指示を長くしている。 | 範囲を限定した指示へ移す。 | `reports/**` だけに効く集計の規則を、`paths` を付けたファイルへ移す。 |
 | 同じ手順を3回以上説明した。 | スキルにする。 | 月次の締めの手順を `monthly-close` にする。 |
-| エージェントが見えない画面やシステムから、人が情報を写している。 | 外部の道具として接続する。 | チケットの内容を貼り付ける代わりに、課題管理のMCPサーバーを接続する。 |
-| 調査の出力が主のコンテキストを埋めている。 | 補助エージェントへ渡す。 | 仕様書100件の検索を任せ、該当箇所の要約だけを受け取る。 |
+| エージェントが見えない画面やシステムから、人が情報を写している。 | 外部のツールとして接続する。 | チケットの内容を貼り付ける代わりに、課題管理のMCPサーバーを接続する。 |
+| 調査の出力が主のコンテキストを埋めている。 | サブエージェントへ渡す。 | 仕様書100件の検索を任せ、該当箇所の要約だけを受け取る。 |
 | 毎回必ず実行させたい処理がある。 | フックにする。 | ファイルの変更後にフォーマッターを実行する。 |
 | 同じ構成を別の作業場所でも使う。 | プラグインやテンプレートにまとめる。 | 2つ目のサービスへ、同じスキルとフックを配布する。 |
 
@@ -164,7 +164,7 @@ Claude CodeとCodexの両方で使う作業場所では、常設の指示を `AG
 
 ---
 
-## 5. スキルと補助エージェント
+## 5. スキルとサブエージェント
 
 ### 繰り返す手順をスキルにする
 
@@ -185,15 +185,15 @@ Claude CodeとCodexの両方で使う作業場所では、常設の指示を `AG
 | `verify-log-hygiene` | エラーの処理のログにリクエストIDがあり、リクエストの本文を含まないことを確かめる。違反をファイルと行で報告し、修正する。 |
 | `verify-monthly-report` | 全部門の行があることを確かめる。部門の合計と会計システムの総額が1円単位で一致することを確かめる。前月比の計算を再計算して照合する。不一致の部門と差額を報告する。 |
 
-### 大量の読み込みと独立した作業は補助エージェントへ渡す
+### 大量の読み込みと独立した作業はサブエージェントへ渡す
 
-多数のファイルの調査、記録の分析、独立した部分の作業は補助エージェントへ渡し、主のコンテキストには要約だけを戻す。
+多数のファイルの調査、記録の分析、独立した部分の作業はサブエージェントへ渡し、主のコンテキストには要約だけを戻す。
 
-たとえば、Anthropicのマーケティングのチームは、数百件の広告のCSVから成果の悪い広告を見つける補助エージェントと、文字数の制限の中で広告文の案を作る補助エージェントに分けている。
+たとえば、Anthropicのマーケティングのチームは、数百件の広告のCSVから成果の悪い広告を見つけるサブエージェントと、文字数の制限の中で広告文の案を作るサブエージェントに分けている。
 
 ### 生成と評価を別のコンテキストに分ける
 
-エージェントは、自分が作った成果物を甘く評価する。成果物の評価は、生成したコンテキストとは別の補助エージェントに行わせる。評価役には、生成の経緯ではなく、成果物、評価の基準、検査の出力を渡す。
+エージェントは、自分が作った成果物を甘く評価する。成果物の評価は、生成したコンテキストとは別のサブエージェントに行わせる。評価役には、生成の経緯ではなく、成果物、評価の基準、検査の出力を渡す。
 
 評価役が甘い判定をする場合は、評価の記録を読み、人の判断と食い違った箇所を手順と基準へ反映する。主観的な基準には、点数の内訳を付けた評価の例を与える。
 
@@ -208,19 +208,19 @@ Claude CodeとCodexの両方で使う作業場所では、常設の指示を `AG
 
 レビューを頼まれた役は、問題を必ず何か見つけようとする。依頼では対象を絞り、たとえば「差分を `SPEC.md` と照合し、未実装の要件と、挙げた例外の処理の漏れだけを報告する。書き方の好みは報告しない」と指示する。
 
-### 補助エージェントの道具を役割に合わせて選ぶ
+### サブエージェントのツールを役割に合わせて選ぶ
 
-調査役や評価役の補助エージェントには、読み取りの道具だけを与える。書き込みが必要な補助エージェントを並列に動かす場合は、作業場所を分ける。
+調査役や評価役のサブエージェントには、読み取りのツールだけを与える。書き込みが必要なサブエージェントを並列に動かす場合は、作業場所を分ける。
 
 ---
 
-## 6. エージェントが使う道具と環境
+## 6. エージェントが使うツールと環境
 
 ### エージェントが自分で結果を確かめられるようにする
 
-エージェントが成果物を確かめるための道具を用意し、常設の指示かスキルで使い方を示す。
+エージェントが成果物を確かめるためのツールを用意し、常設の指示かスキルで使い方を示す。
 
-| 道具 | 例 |
+| ツール | 例 |
 | --- | --- |
 | 変更した部分だけを検査するコマンド | `pnpm test src/auth/session.test.ts`、`markdownlint docs/pricing.md` |
 | 成果物を実際に使って確かめる手段 | Playwrightで画面を操作して撮影する。生成したPDFを画像にして確かめる。SQLで移行後の件数を集計する。 |
@@ -228,24 +228,24 @@ Claude CodeとCodexの両方で使う作業場所では、常設の指示を `AG
 
 ### 環境の準備を1つのコマンドにする
 
-道具の導入、データの準備、実行環境の起動は、`./init.sh` のような1つのコマンドで実行できるようにする。エージェントが準備の方法を毎回調べると、時間を浪費し、準備の誤りが作業の誤りに見える。
+ツールの導入、データの準備、実行環境の起動は、`./init.sh` のような1つのコマンドで実行できるようにする。エージェントが準備の方法を毎回調べると、時間を浪費し、準備の誤りが作業の誤りに見える。
 
-### 道具の出力をエージェントが読める形にする
+### ツールの出力をエージェントが読める形にする
 
-道具の出力は、必要な情報だけを短く返す。エラーの出力には、違反した規則と、修正の方法を含める。長い出力はファイルへ保存し、要約と保存先を返す。
+ツールの出力は、必要な情報だけを短く返す。エラーの出力には、違反した規則と、修正の方法を含める。長い出力はファイルへ保存し、要約と保存先を返す。
 
 | 出力の良否 | 例 |
 | --- | --- |
 | 修正できない | `check failed` |
 | 修正できる | `reports/2026-10.md:12 営業部の合計が会計の総額と1,200円一致しない。data/ledger.csv の10月分から再集計する。` |
 
-### 道具の数と重複を抑える
+### ツールの数と重複を抑える
 
-役割が重なる道具が多いと、エージェントは使う道具を誤る。道具は役割が重ならないように選び、使わない外部の道具は接続しない。
+役割が重なるツールが多いと、エージェントは使うツールを誤る。ツールは役割が重ならないように選び、使わない外部のツールは接続しない。
 
-### 広く使われていて資料のそろった道具を選ぶ
+### 広く使われていて資料のそろったツールを選ぶ
 
-エージェントが扱う道具、形式、ライブラリは、広く使われていて、資料がそろい、挙動を説明できるものを選ぶ。
+エージェントが扱うツール、形式、ライブラリは、広く使われていて、資料がそろい、挙動を説明できるものを選ぶ。
 
 ---
 
@@ -317,7 +317,7 @@ Anthropicのアプリケーション開発の例では、200件を超える機�
 
 | 失敗の原因 | 変更する構成要素 | 例 |
 | --- | --- | --- |
-| 誤ったコマンドや道具を使った。 | 常設の指示、道具 | テストを全件で実行し続けた → 1ファイルだけのコマンドを書く。 |
+| 誤ったコマンドやツールを使った。 | 常設の指示、ツール | テストを全件で実行し続けた → 1ファイルだけのコマンドを書く。 |
 | 手順を飛ばした、順序を誤った。 | スキル | 照合の前にレポートを完了とした → 照合を手順に含める。 |
 | 誤りが検出されずに残った。 | 検査 | 税込と税抜の取り違えが残った → 会計の総額との照合を加える。 |
 | 必要な知識がなかった。 | 作業場所の資料、スキル | 会議で決めた締め日を知らなかった → 決定を文書にして参照する。 |
@@ -344,7 +344,7 @@ Anthropicのアプリケーション開発の例では、200件を超える機�
 - Claude CodeとCodexの両方で使う場合に、常設の指示が `AGENTS.md` の1か所にある。
 - 必ず守らせる規則を、指示ではなくフックと検査で強制している。
 - 規則ごとに、事前に誘導するガイドと、事後に検出するセンサーがある。
-- エージェントが自分で成果物を確かめるための道具と、その使い方の説明がある。
+- エージェントが自分で成果物を確かめるためのツールと、その使い方の説明がある。
 - 速い検査を変更のたびに、重い検査を作業の区切りで実行している。
 - 成果物の評価を、生成とは別のコンテキストで行っている。
 - 進捗と判断の理由が、コンテキストの外のファイルに残る。
@@ -357,21 +357,21 @@ Anthropicのアプリケーション開発の例では、200件を超える機�
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 1. はじめに<br>2. 基本の考え方<br>7. 検査 | [Harness engineering for coding agent users](https://martinfowler.com/articles/harness-engineering.html) | 利用者が追加するハーネスを、事前に誘導するガイドと事後に検出するセンサー、決定的な検査と推論による検査に分け、検査を実行する時期とテンプレートによる共有を示す。 |
-| 2. 基本の考え方<br>4. 常設の指示<br>5. スキルと補助エージェント | [Best practices for Claude Code - Claude Code Docs](https://code.claude.com/docs/en/best-practices) | 指示とフックの使い分け、常設の指示に書く事項の判断、完了の証拠を求めること、仕様と照合するレビューの依頼の仕方を示す。 |
-| 5. スキルと補助エージェント | [Building verification loops in Claude Code with skills \| Claude by Anthropic](https://claude.com/blog/building-verification-loops-in-claude-code-with-skills) | 確認の手順をスキルにする方法と、ログの書き方やデータ移行の規則を検査するスキルの例を示す。 |
-| 5. スキルと補助エージェント | [Loop engineering: Getting started with loops \| Claude by Anthropic](https://claude.com/blog/getting-started-with-loops) | 画面の変更を確かめるスキルの手順の例を示す。 |
-| 5. スキルと補助エージェント | [How Anthropic teams use Claude Code \| Claude by Anthropic](https://claude.com/blog/how-anthropic-teams-use-claude-code) | 広告の分析と広告文の作成を補助エージェントに分ける例など、Anthropicの各チームの利用の例を示す。 |
-| 2. 基本の考え方 | [My AI Adoption Journey – Mitchell Hashimoto](https://mitchellh.com/writing/my-ai-adoption-journey) | エージェントの失敗のたびに、指示や道具を追加して同じ失敗を防ぐことを示す。 |
-| 2. 基本の考え方<br>4. 常設の指示<br>6. エージェントが使う道具と環境<br>7. 検査 | [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/) | 目次としての短いAGENTS.md、リポジトリを知識の置き場とすること、リンターと構造のテストによるアーキテクチャの強制、作業ツリーごとの起動と観測、定期的な劣化の修正を示す。 |
-| 2. 基本の考え方<br>5. スキルと補助エージェント | [Harness design for long-running apps \ Anthropic](https://www.anthropic.com/engineering/harness-design-long-running-apps) | 生成役と評価役の分離、評価役の較正、モデルの改善に合わせたハーネスの簡素化を示す。 |
-| 3. 構成要素の選び方<br>5. スキルと補助エージェント | [Extend Claude Code - Claude Code Docs](https://code.claude.com/docs/en/features-overview) | Claude Codeの常設の指示、範囲を限定した指示、スキル、補助エージェント、フック、MCPの使い分け、コンテキストへの影響、追加するきっかけを示す。 |
+| 2. 基本の考え方<br>4. 常設の指示<br>5. スキルとサブエージェント | [Best practices for Claude Code - Claude Code Docs](https://code.claude.com/docs/en/best-practices) | 指示とフックの使い分け、常設の指示に書く事項の判断、完了の証拠を求めること、仕様と照合するレビューの依頼の仕方を示す。 |
+| 5. スキルとサブエージェント | [Building verification loops in Claude Code with skills \| Claude by Anthropic](https://claude.com/blog/building-verification-loops-in-claude-code-with-skills) | 確認の手順をスキルにする方法と、ログの書き方やデータ移行の規則を検査するスキルの例を示す。 |
+| 5. スキルとサブエージェント | [Loop engineering: Getting started with loops \| Claude by Anthropic](https://claude.com/blog/getting-started-with-loops) | 画面の変更を確かめるスキルの手順の例を示す。 |
+| 5. スキルとサブエージェント | [How Anthropic teams use Claude Code \| Claude by Anthropic](https://claude.com/blog/how-anthropic-teams-use-claude-code) | 広告の分析と広告文の作成をサブエージェントに分ける例など、Anthropicの各チームの利用の例を示す。 |
+| 2. 基本の考え方 | [My AI Adoption Journey – Mitchell Hashimoto](https://mitchellh.com/writing/my-ai-adoption-journey) | エージェントの失敗のたびに、指示やツールを追加して同じ失敗を防ぐことを示す。 |
+| 2. 基本の考え方<br>4. 常設の指示<br>6. エージェントが使うツールと環境<br>7. 検査 | [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/) | 目次としての短いAGENTS.md、リポジトリを知識の置き場とすること、リンターと構造のテストによるアーキテクチャの強制、作業ツリーごとの起動と観測、定期的な劣化の修正を示す。 |
+| 2. 基本の考え方<br>5. スキルとサブエージェント | [Harness design for long-running apps \ Anthropic](https://www.anthropic.com/engineering/harness-design-long-running-apps) | 生成役と評価役の分離、評価役の較正、モデルの改善に合わせたハーネスの簡素化を示す。 |
+| 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Extend Claude Code - Claude Code Docs](https://code.claude.com/docs/en/features-overview) | Claude Codeの常設の指示、範囲を限定した指示、スキル、サブエージェント、フック、MCPの使い分け、コンテキストへの影響、追加するきっかけを示す。 |
 | 3. 構成要素の選び方<br>4. 常設の指示 | [How Claude remembers your project - Claude Code Docs](https://code.claude.com/docs/en/memory) | CLAUDE.mdの読み込みの範囲と大きさの目安、`.claude/rules/` の `paths` による範囲の限定、`@` による取り込み、AGENTS.mdの読み込みを定義する。 |
 | 3. 構成要素の選び方<br>4. 常設の指示 | [Custom instructions with AGENTS.md \| ChatGPT Learn](https://learn.chatgpt.com/docs/agent-configuration/agents-md) | CodexがAGENTS.mdを探索する範囲、結合の順序、大きさの上限を定義する。 |
-| 3. 構成要素の選び方<br>5. スキルと補助エージェント | [Extend Claude with skills - Claude Code Docs](https://code.claude.com/docs/en/skills) | Claude Codeのスキルの置き場所、説明による選択、自動で起動させない設定を定義する。 |
-| 3. 構成要素の選び方<br>5. スキルと補助エージェント | [Build skills \| ChatGPT Learn](https://learn.chatgpt.com/docs/build-skills) | Codexのスキルの置き場所と形式を定義する。 |
-| 3. 構成要素の選び方<br>5. スキルと補助エージェント | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeの補助エージェントの定義、使える道具の指定、作業ツリーでの実行を定義する。 |
-| 3. 構成要素の選び方<br>5. スキルと補助エージェント | [Subagents \| ChatGPT Learn](https://learn.chatgpt.com/docs/agent-configuration/subagents) | Codexの補助エージェントの定義を示す。 |
+| 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Extend Claude with skills - Claude Code Docs](https://code.claude.com/docs/en/skills) | Claude Codeのスキルの置き場所、説明による選択、自動で起動させない設定を定義する。 |
+| 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Build skills \| ChatGPT Learn](https://learn.chatgpt.com/docs/build-skills) | Codexのスキルの置き場所と形式を定義する。 |
+| 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Create custom subagents - Claude Code Docs](https://code.claude.com/docs/en/sub-agents) | Claude Codeのサブエージェントの定義、使えるツールの指定、作業ツリーでの実行を定義する。 |
+| 3. 構成要素の選び方<br>5. スキルとサブエージェント | [Subagents \| ChatGPT Learn](https://learn.chatgpt.com/docs/agent-configuration/subagents) | Codexのサブエージェントの定義を示す。 |
 | 3. 構成要素の選び方<br>7. 検査<br>8. 状態の引き継ぎ | [Automate actions with hooks - Claude Code Docs](https://code.claude.com/docs/en/hooks-guide) | ファイルの変更後の検査、圧縮の後の状態の再注入など、Claude Codeのフックの使い方を示す。 |
 | 3. 構成要素の選び方<br>7. 検査 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | Codexのフックのイベント、入力、出力を定義する。 |
-| 6. エージェントが使う道具と環境<br>8. 状態の引き継ぎ | [Effective context engineering for AI agents \ Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | コンテキストを有限の資源として扱い、道具の重複を避け、必要な時に情報を取得し、圧縮、記録、補助エージェントで長い作業を扱うことを示す。 |
+| 6. エージェントが使うツールと環境<br>8. 状態の引き継ぎ | [Effective context engineering for AI agents \ Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | コンテキストを有限の資源として扱い、ツールの重複を避け、必要な時に情報を取得し、圧縮、記録、サブエージェントで長い作業を扱うことを示す。 |
 | 8. 状態の引き継ぎ | [Effective harnesses for long-running agents \ Anthropic](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) | 進捗のファイル、JSONの機能の一覧、環境の準備のスクリプト、1回のセッションで1つの機能を扱うことで、セッションをまたいで作業を引き継ぐ方法を示す。 |
