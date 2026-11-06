@@ -1,25 +1,14 @@
 # ソフトウェア設計ガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [責務の分離](#2-責務の分離)
-3. [依存関係の管理](#3-依存関係の管理)
-4. [複雑性の制御](#4-複雑性の制御)
-5. [型とカプセル化](#5-型とカプセル化)
-6. [設計パターン](#6-設計パターン)
-7. [命名](#7-命名)
-8. [エラーハンドリング](#8-エラーハンドリング)
-9. [並行処理](#9-並行処理)
-10. [ログ](#10-ログ)
-11. [コードコメント](#11-コードコメント)
-12. [参考資料](#12-参考資料)
+### 1.1 目的
 
----
+本書の目的は、変更しやすく理解しやすいソフトウェアを設計するための共通の基準を示すことである。
 
-## 1. 概要
+### 1.2 適用範囲
 
-本書は、言語やフレームワークに依存しないソフトウェア設計ガイドラインを定義する。
+本書は、言語やフレームワークに依存しないソフトウェア設計について規定する。
 
 本書に示すガイドラインは、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
@@ -28,6 +17,10 @@
 ---
 
 ## 2. 責務の分離
+
+### 責務の分け方は有名OSSを根拠にする
+
+モジュール、ディレクトリ、型への責務の分け方は、自分たちだけの判断を根拠にせず、同じ領域、同じ種類のソフトウェアで広く使われているOSSが実際にどう分割しているかを根拠にする。
 
 ### 中核ロジックを外部技術から独立させる
 
@@ -425,7 +418,9 @@ impl UserRepo for InMemoryUserRepo {
 
 | ルール | 内容 |
 | --- | --- |
+| 有名OSSを根拠にする | 名前は、対象言語の標準ライブラリや、同じ領域で広く使われているOSSの命名を根拠にする。本書の「単語」に記載がない概念も、独自の造語を根拠にせず、実際に使われている名前を採用する。 |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Do`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
+| 複合名の語順 | 複数の語を組み合わせる名前では、中心となる概念を末尾に置き、その種類や対象を表す語を前に置く。OK: `FakeHttpServer`、NG: `HttpFakeServer` |
 | 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: [`tower`の`Timeout`](https://docs.rs/tower/latest/tower/timeout/struct.Timeout.html)、[`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html) |
 | 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: [`github`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`s3`](https://github.com/apache/opendal/tree/main/core/services/s3) |
 | 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
@@ -707,9 +702,9 @@ impl UserRepo for InMemoryUserRepo {
 
 ---
 
-## 12. 参考資料
+## 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 3. 依存関係の管理 | [Inversion of Control Containers and the Dependency Injection pattern](https://martinfowler.com/articles/injection.html) | 依存性注入とService Locatorを比較し、構成と利用の分離を説明する。 |
 | 3. 依存関係の管理 | [Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/) | Composition Rootをアプリケーションの起動点付近に置き、アプリケーションごとに一つ設ける考え方を説明する。 |
