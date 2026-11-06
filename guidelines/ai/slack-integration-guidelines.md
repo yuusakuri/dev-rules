@@ -4,19 +4,31 @@
 
 ### 1.1 目的
 
-本書の目的は、Claude Code、CodexなどのAIエージェントをSlackと連携させ、作業の通知、作業の依頼及び実行中のエージェントとの対話を行えるようにすることである。
+本書の目的は、AIエージェントの運用者が、Slackから作業の状況を確認し、必要な指示をエージェントへ届けられるようにすることである。
 
 ### 1.2 適用範囲
 
 本書は、AIエージェントとSlackとの連携の方法について規定する。個人の端末、サーバー又はクラウドのいずれでエージェントを実行する場合にも適用する。
 
----
+### 1.3 用語及び定義
+
+この文書で用いる主な用語及び定義は、[表1](#table-1)による。
+
+<a id="table-1"></a>表1−用語及び定義
+
+| 用語 | 定義 |
+| --- | --- |
+| ウェブフック | 指定したURLへのHTTP要求によって、外部からメッセージ又はイベントを送る仕組み。 |
+| ブリッジ | チャットサービスとエージェントとの間で、指示及び応答を中継するプログラム。 |
+| セッション | 会話履歴及び実行状態を引き継ぐ、エージェントとの作業の単位。 |
+| DM（direct message） | 指定した利用者又はボットと直接送受信するメッセージ。 |
+| MCP（Model Context Protocol） | AIアプリケーションと外部のツール又はデータを接続するための通信規約。 |
 
 ## 2 連携の型の選び方
 
-連携は、情報の向きとエージェントの実行場所によって、[表1](#table-1)の三つの型に分ける。目的に合う型を選び、複数の目的がある場合は型を組み合わせる。
+連携は、情報の向きとエージェントの実行場所によって、[表2](#table-2)の三つの型に分ける。目的に合う型を選び、複数の目的がある場合は型を組み合わせる。
 
-<a id="table-1"></a>表1−連携の型
+<a id="table-2"></a>表2−連携の型
 
 | 型 | 情報の向き | エージェントの実行場所 | 実現方法 | 適する用途 |
 | --- | --- | --- | --- | --- |
@@ -26,17 +38,15 @@
 
 公式連携で足りる場合は、ブリッジを作らない。ブリッジは、スレッドとセッションの対応づけ又は障害時の再開を自分で実装する必要がある。
 
----
-
 ## 3 通知
 
 ### 3.1 状態が変わった場合だけ送る
 
-通知は、人の対応が必要な状態か、作業の区切りに限定する。ツールの実行ごと又は応答ごとに送ると、重要な通知が埋もれる。例えば、1 000ファイルの移行では、1ファイルごとではなく、全件の完了、失敗の発生、確認待ちの場合に送る。
+通知は、人の対応が必要な状態又は作業の区切りに限定する。送信回数を抑え、確認待ち、完了及び失敗を識別しやすくする。例えば、1 000ファイルの移行では、1ファイルごとではなく、全件の完了、失敗の発生、確認待ちの場合に送る。
 
-通知のきっかけには、各ツールの[表2](#table-2)の機能を使用する。
+通知のきっかけには、各ツールの[表3](#table-3)の機能を使用する。
 
-<a id="table-2"></a>表2−状態ごとの通知の機能
+<a id="table-3"></a>表3−状態ごとの通知の機能
 
 | 状態 | Claude Code | Codex |
 | --- | --- | --- |
@@ -47,7 +57,7 @@
 
 Stopフックを作業の継続の判断にも使用する場合は、通知の送信を別のフックとして登録し、判断の処理と分ける。
 
-### 3.2 送信先はIncoming Webhookを基本にする
+### 3.2 通知用のAPIを選ぶ
 
 通知だけを送る場合は、SlackアプリのIncoming Webhookを使用する。Incoming WebhookのURLは、一つのチャンネルに結び付く。
 
@@ -64,9 +74,9 @@ Stopフックを作業の継続の判断にも使用する場合は、通知の�
 - 起きた事象（確認待ち、完了、失敗）。
 - 最後の応答の要約。
 
-通知の本文の例は、[表3](#table-3)による。
+通知の本文の例は、[表4](#table-4)による。
 
-<a id="table-3"></a>表3−通知の本文の例
+<a id="table-4"></a>表4−通知の本文の例
 
 | 事象 | 本文の例 |
 | --- | --- |
@@ -82,17 +92,15 @@ Stopフックを作業の継続の判断にも使用する場合は、通知の�
 
 Slackの投稿は、一つのチャンネルにつき毎秒1件を目安に制限される。HTTP 429が返った場合は、`Retry-After` ヘッダーの秒数だけ待ってから再送する。
 
----
-
 ## 4 公式連携による依頼
 
 ### 4.1 Claude Code
 
 Claude Code in Slackでは、チャンネルで `@Claude` にメンションして作業を依頼すると、Claude Codeのクラウドセッションが起動する。進捗と結果はスレッドへ返信され、結果からプルリクエストを作成できる。
 
-Claude Code in Slackの利用条件は、[表4](#table-4)による。
+Claude Code in Slackの利用条件は、[表5](#table-5)による。
 
-<a id="table-4"></a>表4−Claude Code in Slackの利用条件
+<a id="table-5"></a>表5−Claude Code in Slackの利用条件
 
 | 項目 | 内容 |
 | --- | --- |
@@ -106,9 +114,9 @@ Claude Code in Slackの利用条件は、[表4](#table-4)による。
 
 Slackのアプリ（`@ChatGPT`）にメンションして作業を依頼すると、Codex Cloudのタスクが起動し、結果がスレッドへ返信される。
 
-Codexの利用条件は、[表5](#table-5)による。
+Codexの利用条件は、[表6](#table-6)による。
 
-<a id="table-5"></a>表5−Codexの利用条件
+<a id="table-6"></a>表6−Codexの利用条件
 
 | 項目 | 内容 |
 | --- | --- |
@@ -120,9 +128,9 @@ Codexの利用条件は、[表5](#table-5)による。
 
 - 依頼には、対象、期待する結果、完了の条件を書く。長いスレッドでは、最新の依頼に要点をまとめ直す。
 
-依頼の例は、[表6](#table-6)による。
+依頼の例は、[表7](#table-7)による。
 
-<a id="table-6"></a>表6−依頼の例
+<a id="table-7"></a>表7−依頼の例
 
 | 依頼の良否 | 例 |
 | --- | --- |
@@ -130,8 +138,6 @@ Codexの利用条件は、[表5](#table-5)による。
 | 具体的 | `@Claude acme/web で、セッションの期限切れの後にログインが失敗する不具合を直して。再現するテストを追加し、pnpm test が通ったらプルリクエストを作って` |
 
 - エージェントの成果物は、確認してから使用する。
-
----
 
 ## 5 ブリッジによる対話の中継
 
@@ -149,9 +155,9 @@ Claude Codeのチャネル機能は、実行中のセッションへ外部のメ
 
 ブリッジは、Socket Modeでイベントを受け取る。Socket Modeは、WebSocketでイベントを受け取るため、インターネットへ公開するHTTPのエンドポイントが要らない。受け取ったイベントは `envelope_id` で一つずつ確認応答し、接続の切断と再接続を処理する。
 
-Slackアプリには、[表7](#table-7)のスコープを付与する。
+Slackアプリには、[表8](#table-8)のスコープを付与する。
 
-<a id="table-7"></a>表7−Slackアプリのスコープ
+<a id="table-8"></a>表8−Slackアプリのスコープ
 
 | トークン | スコープ | 用途 |
 | --- | --- | --- |
@@ -165,9 +171,9 @@ Slackアプリには、[表7](#table-7)のスコープを付与する。
 
 Slackのスレッド一つに、エージェントのセッション一つを対応させる。スレッドの最初のメッセージで新しいセッションを開始し、セッションIDとスレッドの識別子の対応をファイルへ保存する。スレッドの識別子には、チャンネルIDと、メッセージに `thread_ts` があればその値を、なければ最初のメッセージ自身の `ts` を組み合わせて使用する（例：`C024BE91L:1730700000.000100`）。`ts` はチャンネルの中でだけ一意であり、チャンネルIDがないと別のチャンネルの会話を同じセッションへ渡してしまう。複数のワークスペースを扱う場合は、ワークスペースIDも加える。スレッドへの返信の `thread_ts` は、最初のメッセージの `ts` と一致する。同じスレッドへの返信は、そのセッションを再開して渡す。
 
-ツールごとのセッションの操作は、[表8](#table-8)による。
+ツールごとのセッションの操作は、[表9](#table-9)による。
 
-<a id="table-8"></a>表8−ツールごとのセッションの操作
+<a id="table-9"></a>表9−ツールごとのセッションの操作
 
 | ツール | 新しいセッション | セッションの再開 | セッションIDの取得 |
 | --- | --- | --- | --- |
@@ -184,9 +190,9 @@ Slackのスレッド一つに、エージェントのセッション一つを対
 
 メッセージを受け取ったら、すぐに受け付けたことをスレッドへ返信し、エージェントの実行が終わってから結果を返信する。エージェントの実行には数分から数時間かかるため、結果を待ってから最初の返信をしない。
 
-応答の例は、[表9](#table-9)による。
+応答の例は、[表10](#table-10)による。
 
-<a id="table-9"></a>表9−応答の例
+<a id="table-10"></a>表10−応答の例
 
 | 時点 | 返信の例 |
 | --- | --- |
@@ -196,8 +202,6 @@ Slackのスレッド一つに、エージェントのセッション一つを対
 
 結果は、最後の応答を4 000文字以内に要約して返信する。長い出力は、ファイルとしてアップロードするか、作業環境に保存して場所を示す。
 
----
-
 ## 6 チェックリスト
 
 - 通知、公式連携による依頼、ブリッジによる対話の中継から、目的に合う型を選んだ。
@@ -206,24 +210,22 @@ Slackのスレッド一つに、エージェントのセッション一つを対
 - ブリッジは、ボットのメッセージを無視する。
 - ブリッジは、スレッドとセッションを対応させ、同じセッションを同時に実行しない。
 
----
-
 ## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 3章 | [Hooks リファレンス - Claude Code Docs](https://code.claude.com/docs/ja/hooks) | Claude CodeのNotification、Stop、StopFailure、SessionEndの各フックのきっかけと入力を定義する。 |
-| 3章 | [Advanced Configuration \| ChatGPT Learn](https://learn.chatgpt.com/docs/config-file/config-advanced) | Codexの `notify` の設定と、`agent-turn-complete` のJSONの項目を定義する。 |
-| 3章 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | CodexのPermissionRequest、Stop、SessionEndを含むフックのイベントを定義する。 |
+| 3章 | [Hooks リファレンス - Claude Code Docs](https://code.claude.com/docs/ja/hooks) | Claude Codeのフックのイベント及び設定方法を定めたリファレンス。 |
+| 3章 | [Advanced Configuration \| ChatGPT Learn](https://learn.chatgpt.com/docs/config-file/config-advanced) | Codexの詳細な設定方法を示す文書。 |
+| 3章 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | Codexのフックのイベント及び設定方法を示す文書。 |
 | 3章 | [Sending messages using incoming webhooks \| Slack Developer Docs](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks) | Incoming Webhookの作成方法と送信形式を示す。 |
-| 3章<br>5章 | [chat.postMessage method \| Slack Developer Docs](https://docs.slack.dev/reference/methods/chat.postMessage) | 投稿に必要なスコープ、スレッドへの返信、本文の長さの推奨値を定義する。 |
+| 3章<br>5章 | [chat.postMessage method \| Slack Developer Docs](https://docs.slack.dev/reference/methods/chat.postMessage) | Slackへメッセージを投稿するAPIを定めたリファレンス。 |
 | 3章 | [chat.update method \| Slack Developer Docs](https://docs.slack.dev/reference/methods/chat.update) | チャンネルと `ts` で指定した投稿を更新する方法を定義する。 |
 | 5章 | [message event \| Slack Developer Docs](https://docs.slack.dev/reference/events/message) | メッセージのイベントと、受け取るために登録するイベントの種類を定義する。 |
 | 3章 | [Rate limits \| Slack Developer Docs](https://docs.slack.dev/apis/web-api/rate-limits) | 投稿の頻度の制限と、HTTP 429の `Retry-After` ヘッダーを定義する。 |
-| 4章 | [Slack での Claude Code - Claude Code Docs](https://code.claude.com/docs/ja/slack) | Claude Code in Slackの前提、設定、ルーティング、アクセスの制御、制限を示す。 |
+| 4章 | [Slack での Claude Code - Claude Code Docs](https://code.claude.com/docs/ja/slack) | SlackからClaude Codeへ作業を依頼する方法を示す文書。 |
 | 4章 | [Work with Claude Tag - Claude.ai Documentation](https://claude.com/docs/claude-tag/overview) | Team、Enterpriseのプランで使用する、組織が管理するSlackの `@Claude` を示す。 |
-| 4章 | [Use ChatGPT in Slack \| ChatGPT Learn](https://learn.chatgpt.com/docs/third-party/slack) | SlackからCodex Cloudのタスクを起動する前提、使い方、返信の公開範囲、制限を示す。 |
-| 5章 | [チャネルを使用して実行中のセッションにイベントをプッシュする - Claude Code Docs](https://code.claude.com/docs/ja/channels) | Claude Codeのチャネル機能と、リサーチプレビューに含まれるチャットのプラグインを示す。 |
+| 4章 | [Use ChatGPT in Slack \| ChatGPT Learn](https://learn.chatgpt.com/docs/third-party/slack) | SlackからChatGPT及びCodexを利用する方法を示す文書。 |
+| 5章 | [チャネルを使用して実行中のセッションにイベントをプッシュする - Claude Code Docs](https://code.claude.com/docs/ja/channels) | Claude Codeへ外部のイベントを届けるチャネル機能の利用ガイド。 |
 | 5章 | [Using Socket Mode \| Slack Developer Docs](https://docs.slack.dev/apis/events-api/using-socket-mode) | WebSocketによるイベントの受信、確認応答、再接続を定義する。 |
 | 5章 | [connections:write scope \| Slack Developer Docs](https://docs.slack.dev/reference/scopes/connections.write/) | Socket Modeの接続に必要なアプリレベルトークンのスコープを定義する。 |
 | 5章 | [Claude Code をプログラムで実行する - Claude Code Docs](https://code.claude.com/docs/ja/headless) | Claude Codeの非対話モードでの実行とセッションの再開を示す。 |
