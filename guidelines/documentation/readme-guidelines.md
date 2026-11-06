@@ -1,6 +1,14 @@
 # READMEガイドライン
 
-本書は、リポジトリの `README.md` に記載する内容と見出しの構成を定めます。
+## 1 はじめに
+
+### 1.1 目的
+
+本書の目的は、READMEの構成を統一することです。
+
+### 1.2 適用範囲
+
+本書は、リポジトリの `README.md` に記載する内容と見出しの構成について規定します。
 [リポジトリガイドライン](../development/repository-guidelines.md)を前提とします。
 
 ## 記載の方針
@@ -46,9 +54,9 @@ READMEを新しく作るときは、[oss-repo-template](https://github.com/yuusa
 リポジトリの外にある文書へは、その文書のURLを指定します。
 リンク切れがないことを確認します。
 
-## 参考資料
+## 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 記載の方針 | [リポジトリの README ファイルについて - GitHub Docs](https://docs.github.com/ja/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) | READMEで読者に伝える情報と、相対リンクの使い方を説明しています。 |
 | 見出しの構成<br>リンク | [Standard Readme — Specification](https://github.com/RichardLitt/standard-readme/blob/main/spec.md) | 見出しの名前、順序、必須と任意の区別、リンク切れとlintに関する規定を示しています。 |
