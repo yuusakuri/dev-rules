@@ -8,7 +8,7 @@
 
 ### 1.2 適用範囲
 
-本書は、TypeScriptによる実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
+本書は、TypeScriptによる実装及びJavaScriptのプロジェクトのパッケージ管理について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
 ## 2 フォルダ構成
 
@@ -52,6 +52,44 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 | 利用者の主要な操作と、停止時の影響が大きい処理経路の破壊を検出する。 | `tests/e2e/`に配置したE2Eテスト。 | `package.json`の`test:e2e`スクリプト |
 | 依存関係に含まれる既知の脆弱性を検出する。 | リポジトリ内のすべてのJavaScript向けロックファイル。 | `osv-scanner scan source -r .` |
 
+## 5 パッケージ管理
+
+依存関係は、pnpmで管理する。パッケージマネージャーを統一し、ロックファイルを`pnpm-lock.yaml`の一つに保つためである。npm及びYarnは、依存関係の操作に使用しない。
+
+pnpmのバージョンは、`package.json`の`devEngines.packageManager`で指定し、pnpm 11以降を使用する。pnpmは、実行中のバージョンが指定と異なる場合に、指定のバージョンをダウンロードして実行する。npmは、`name`が`npm`以外の場合に、`npm install`などをエラーで終了する。
+
+次の例は、pnpm 11の範囲を指定する（出典：[package.json \| pnpm](https://pnpm.io/ja/package_json)）。
+
+```json
+{
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=11.0.0 <12.0.0",
+      "onFail": "download"
+    }
+  }
+}
+```
+
+`pnpm-lock.yaml`は、リポジトリにコミットする。
+
+モノレポでは、ルートに`pnpm-workspace.yaml`を置き、workspace間の依存関係を`workspace:`プロトコルで指定する。
+
+パッケージの操作には、[表3](#table-3)のコマンドを使用する。
+
+<a id="table-3"></a>表3−パッケージの操作に使用するコマンド
+
+| 操作 | コマンド |
+| --- | --- |
+| 依存関係をインストールする。 | `pnpm install` |
+| CIで依存関係をインストールする。 | `pnpm install --frozen-lockfile` |
+| 依存関係を追加する。 | `pnpm add <package>` |
+| 開発用の依存関係を追加する。 | `pnpm add -D <package>` |
+| 依存関係を削除する。 | `pnpm remove <package>` |
+| `package.json`のスクリプトを実行する。 | `pnpm run <script>` |
+| 依存関係に追加せずにパッケージを実行する。 | `pnpm dlx <package>` |
+
 ## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
@@ -60,3 +98,13 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 | 4章 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を示す。 |
 | 4章 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を示す。 |
 | 4章 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を示す。 |
+| 5章 | [package.json \| pnpm](https://pnpm.io/ja/package_json) | `devEngines.packageManager`の形式及び動作を定義する。 |
+| 5章 | [CLI & Node.js Settings \| pnpm](https://pnpm.io/ja/settings/cli) | 指定と異なるバージョンのpnpmを実行した場合の動作を定義する。 |
+| 5章 | [package.json \| npm Docs](https://docs.npmjs.com/cli/v11/configuring-npm/package-json) | npmが`devEngines`を確認するコマンド及び動作を定義する。 |
+| 5章 | [Git との連携 \| pnpm](https://pnpm.io/ja/git) | `pnpm-lock.yaml`のコミットを推奨する。 |
+| 5章 | [pnpm install \| pnpm](https://pnpm.io/ja/cli/install) | `pnpm install`及び`--frozen-lockfile`を定義する。 |
+| 5章 | [pnpm add <pkg> \| pnpm](https://pnpm.io/ja/cli/add) | `pnpm add`を定義する。 |
+| 5章 | [pnpm remove \| pnpm](https://pnpm.io/ja/cli/remove) | `pnpm remove`を定義する。 |
+| 5章 | [pnpm run \| pnpm](https://pnpm.io/ja/cli/run) | `pnpm run`を定義する。 |
+| 5章 | [pnx \| pnpm](https://pnpm.io/cli/dlx) | `pnpm dlx`を定義する。 |
+| 5章 | [ワークスペース \| pnpm](https://pnpm.io/ja/workspaces) | `pnpm-workspace.yaml`及び`workspace:`プロトコルを定義する。 |

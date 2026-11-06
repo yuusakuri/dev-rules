@@ -18,7 +18,7 @@
 
 PowerPointのファイル（`.pptx`）は、[PptxGenJS](https://gitbrent.github.io/PptxGenJS/)を用いたスクリプトで生成する。
 
-PptxGenJSは、`npm install pptxgenjs`で導入する。
+PptxGenJSは、`pnpm add pptxgenjs`で導入する。
 
 スクリプトは、TypeScriptで記述する。
 
