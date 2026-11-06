@@ -8,7 +8,7 @@
 
 ### 1.2 適用範囲
 
-本書は、PowerPointのプレゼンテーションの作成方法について規定する。本書は、[TypeScript実装ガイドライン](../implementation/typescript-guidelines.md)を前提とする。
+本書は、PowerPointのプレゼンテーションの作成方法について規定する。本書は、[JavaScript実装ガイドライン](../implementation/javascript-guidelines.md)を前提とする。
 
 文章の書き方は、[技術文書作成ガイドライン](technical-document-guidelines.md)に従う。
 
@@ -18,7 +18,7 @@
 
 PowerPointのファイル（`.pptx`）は、[PptxGenJS](https://gitbrent.github.io/PptxGenJS/)を用いたスクリプトで生成する。
 
-PptxGenJSは、`npm install pptxgenjs`で導入する。
+PptxGenJSは、`pnpm add pptxgenjs`で導入する。
 
 スクリプトは、TypeScriptで記述する。
 
