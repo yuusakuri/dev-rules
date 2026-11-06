@@ -675,8 +675,8 @@ Claudeを使用する場合は、検索は自前又はマネージドの検索�
 | 4章 | [Reciprocal rank fusion \| Elasticsearch Reference](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion) | 複数の検索の結果を順位で統合するRRFを定義する。 |
 | 4章<br>11章 | [ハイブリッド検索の概要 - Azure AI Search \| Microsoft Learn](https://learn.microsoft.com/ja-jp/azure/search/hybrid-search-overview) | 全文検索及びベクトル検索を並行して行い、結果を統合するハイブリッド検索を示す。 |
 | 4章 | [[2004.12832] ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT](https://arxiv.org/abs/2004.12832) | 語ごとの埋め込みを照合するLate Interactionの検索を提案する。 |
-| 4章 | [GitHub - embeddings-benchmark/mteb](https://github.com/embeddings-benchmark/mteb) | 埋め込みのモデルを多数の言語と課題で評価するベンチマーク。 |
-| 4章 | [GitHub - sbintuitions/JMTEB](https://github.com/sbintuitions/JMTEB) | 日本語の埋め込みのモデルを評価するベンチマーク。 |
+| 4章 | [GitHub - embeddings-benchmark/mteb: MTEB: State-of-the-art evaluation of embeddings across languages and modalities · GitHub](https://github.com/embeddings-benchmark/mteb) | 埋め込みのモデルを多数の言語と課題で評価するベンチマーク。 |
+| 4章 | [GitHub - sbintuitions/JMTEB: The evaluation scripts of JMTEB (Japanese Massive Text Embedding Benchmark) · GitHub](https://github.com/sbintuitions/JMTEB) | 日本語の埋め込みのモデルを評価するベンチマーク。 |
 | 2章<br>3章 | [[2407.01449] ColPali: Efficient Document Retrieval with Vision Language Models](https://arxiv.org/abs/2407.01449) | ページの画像を埋め込み、Late Interactionで照合する文書の検索を提案する。 |
 | 6章<br>11章 | [検索結果 - Claude Platform Docs](https://platform.claude.com/docs/ja/build-with-claude/search-results) | 検索結果をブロックとして渡し、出典付きの引用を得る方法を定義する。 |
 | 6章 | [引用 - Claude Platform Docs](https://platform.claude.com/docs/ja/build-with-claude/citations) | 渡した文書の該当箇所を引用として返す機能を定義する。 |
