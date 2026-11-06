@@ -131,7 +131,7 @@ APIのバージョンは、`/v1/users`のようにURLパスの先頭に置く。
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 2章 | [OpenAPI Specification](https://spec.openapis.org/oas/latest.html) | HTTP APIの契約を記述する形式を定めた仕様。 |
+| 2章 | [OpenAPI Specification v3.2.1](https://spec.openapis.org/oas/latest.html) | HTTP APIの契約を記述する形式を定めた仕様。 |
 | 4章<br>6章 | [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html) | HTTPメソッド及びステータスコードの意味を定めた仕様。 |
 | 4章 | [RFC 5789: PATCH Method for HTTP](https://www.rfc-editor.org/rfc/rfc5789.html) | HTTPの部分更新メソッドを定めた仕様。 |
 | 6章 | [RFC 9457: Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457.html) | HTTP APIのエラー情報の表現形式を定めた仕様。 |
