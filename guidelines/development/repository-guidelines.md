@@ -1,16 +1,14 @@
 # リポジトリガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [構成](#2-構成)
-3. [参考資料](#3-参考資料)
+### 1.1 目的
 
----
+本書の目的は、リポジトリに置くファイル、ディレクトリの構成を統一することである。
 
-## 1. 概要
+### 1.2 適用範囲
 
-本書は、使用する言語、フレームワーク、パッケージマネージャによらず、リポジトリに共通するファイル、ディレクトリの役割を定義する。
+本書は、使用する言語、フレームワーク、パッケージマネージャによらず、リポジトリに共通するファイル、ディレクトリの役割について規定する。
 
 ---
 
@@ -19,11 +17,11 @@
 | パス | 要否 | 説明 |
 | --- | --- | --- |
 | `README.md` | 必須 | プロジェクトの目的と利用開始方法を案内する。内容と構成は[READMEガイドライン](../documentation/readme-guidelines.md)に従う。 |
-| `LICENSE.md` | 推奨 | 新規プロジェクトでは、別のライセンスが明示的に指定されていない限り、Apache License 2.0（SPDXライセンス識別子: `Apache-2.0`）を採用する。採用したライセンスの原文をそのまま収録し、利用許諾条件を明記する。 |
+| `LICENSE` | 推奨 | 新規プロジェクトでは、別のライセンスが明示的に指定されていない限り、Apache License 2.0（SPDXライセンス識別子: `Apache-2.0`）を採用する。採用したライセンスの原文をそのまま収録し、利用許諾条件を明記する。 |
 | `CONTRIBUTING.md` | 推奨 | 開発環境の構築、ブランチ運用、テスト実行、コーディング規約、PRの出し方など、貢献に必要な手順を記載する。 |
 | `CODE_OF_CONDUCT.md` | 任意 | コミュニティ内での行動規範と、違反時の連絡先、対応手順を定める。Contributor Covenantなど既存の規範を採用してよい。 |
 | `SECURITY.md` | 任意 | 脆弱性を公開Issueではなく非公開で報告する方法と、対応対象バージョンを明記する。 |
-| `CHANGELOG.md` | 推奨 | バージョンごとの変更点を時系列で記録する。[Keep a Changelog](https://keepachangelog.com/)の形式に従う。 |
+| `CHANGELOG.md` | 任意 | バージョンごとの変更点を時系列で記録する。[Keep a Changelog](https://keepachangelog.com/)の形式に従う。 |
 | `MAINTAINERS` | 任意 | 各領域の責任者を、担当範囲とともに一覧化する。バージョン管理システムやホスティングサービスに依存せず読める形式にする。 |
 | `SUPPORT.md` | 任意 | 質問や利用相談の受付先（Issue、Discussions、メーリングリストなど）を明記する。 |
 | `GOVERNANCE.md` | 任意 | 意思決定の方法、メンテナへの昇格基準など、プロジェクトの運営体制を定める。 |
@@ -33,12 +31,11 @@
 | `.gitattributes` | 推奨 | 改行コードの統一、バイナリファイルの扱い、言語統計など、Gitの属性を指定する。 |
 | `.editorconfig` | 任意 | インデント幅や文字コードなど、エディタ間で共通化できる基本的な書式設定を統一する。 |
 | `docker/` | 任意 | Dockerfileとコンテナ関連の定義を配置する。 |
-| `kubernetes/` | 任意 | Kubernetesのマニフェストとデプロイ定義を配置する。 |
-| `terraform/` | 任意 | Terraformなどのインフラ定義コードを配置する。 |
 | `tools/` | 任意 | 開発、検証を補助する自作のツールやユーティリティを配置する。単発のスクリプトではなく、独立したプログラムとして保守するものに使う。 |
 | `scripts/` | 任意 | タスクランナーへ集約するほどではない、個別の開発支援スクリプトを配置する。 |
 | `justfile` | 任意 | `just`コマンドで実行する、開発、検証処理をサブコマンド単位で定義するタスクランナー。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。`dev.sh`と役割が重なるため、どちらか一方だけを使う。 |
 | `dev.sh` | 任意 | シェルスクリプトで実装する、開発、検証処理をサブコマンド単位で実行するタスクランナー。引数を指定しない場合は、利用可能なサブコマンドと使用方法を表示する。`justfile`と役割が重なるため、どちらか一方だけを使う。 |
+| `.claude/settings.json` | 任意 | Claude Codeがプロジェクト全体へ適用する権限、フック、環境変数を定義する。ひな形は[oss-repo-template](https://github.com/yuusakuri/oss-repo-template)にある。 |
 | `.github/ISSUE_TEMPLATE/` | 推奨 | Issue作成時のひな形（バグ報告、機能要望など）を提供し、必要な情報の記入漏れを防ぐ。 |
 | `.github/PULL_REQUEST_TEMPLATE.md` | 推奨 | PR作成時のひな形を提供し、変更内容とテスト方法の記載を促す。 |
 | `.github/CODEOWNERS` | 推奨 | ファイル、ディレクトリごとの責任者を定義し、該当箇所を変更するPRへ自動的にレビューを依頼する。 |
@@ -51,13 +48,14 @@
 
 ---
 
-## 3. 参考資料
+## 参考文献
 
-| 参考資料 |
+| 参考文献 |
 | --- |
 | [Creating a default community health file - GitHub Docs](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file) |
 | [About issue and pull request templates - GitHub Docs](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/about-issue-and-pull-request-templates) |
 | [Keep a Changelog](https://keepachangelog.com/) |
+| [Settings files and precedence - Claude Code Docs](https://code.claude.com/docs/en/settings) |
 | [Diátaxis](https://diataxis.fr/) |
 | [REUSE Software](https://reuse.software/) |
 | [OpenSSF Best Practices Badge](https://www.bestpractices.dev/) |

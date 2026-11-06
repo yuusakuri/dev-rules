@@ -1,41 +1,26 @@
 # ソフトウェア設計ガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [責務の分離](#2-責務の分離)
-3. [依存関係の管理](#3-依存関係の管理)
-4. [複雑性の制御](#4-複雑性の制御)
-5. [型とカプセル化](#5-型とカプセル化)
-6. [設計パターン](#6-設計パターン)
-7. [命名](#7-命名)
-8. [エラーハンドリング](#8-エラーハンドリング)
-9. [並行処理](#9-並行処理)
-10. [ログ](#10-ログ)
-11. [コードコメント](#11-コードコメント)
-12. [参考資料](#12-参考資料)
+### 1.1 目的
 
----
+本書の目的は、変更しやすく理解しやすいソフトウェアを設計するための共通の基準を示すことである。
 
-## 1. 概要
+### 1.2 適用範囲
 
-本書は、言語やフレームワークに依存しないソフトウェア設計ガイドラインを定義する。
+本書は、言語やフレームワークに依存しないソフトウェア設計について規定する。
 
 本書に示すガイドラインは、使用する言語、フレームワークの標準的な書き方へ落とし込んで適用する。
 
-本書のコード例と名前の例は、次のいずれかに当てはまるRust OSSの実装から採用する。
-
-- Rust公式のプロジェクト。
-- 大手企業が開発し、本番環境で使用されているもの。
-- GitHubのStarが2,000以上のもの。
-
-コード例は、対応する規則の直下へ短く置く。実装からの抜粋とし、規則に関係しない部分は削るか`// ...`、`/* ... */`で省略する。複数の型や引数を独自の型へまとめる、名前を変更するなどの書き換えは行わない。抜粋元は固定コミットへのリンクで「参考資料」に記載する。各コード例の直前に、そのコードが何をしているかを説明する文を置く。
-
-名前の例は、型名または関数名と、その定義へのリンクを記載する。そのリンクは、「参考資料」へ重ねて記載しない。
+本書のコード例と名前の例には、Rust OSSの実装を使用する。
 
 ---
 
 ## 2. 責務の分離
+
+### 責務の分け方は有名OSSを根拠にする
+
+モジュール、ディレクトリ、型への責務の分け方は、自分たちだけの判断を根拠にせず、同じ領域、同じ種類のソフトウェアで広く使われているOSSが実際にどう分割しているかを根拠にする。
 
 ### 中核ロジックを外部技術から独立させる
 
@@ -285,9 +270,19 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ## 4. 複雑性の制御
 
+### 既存のコードで解決できないか先に確かめる
+
+変更を始める前に、同じ目的を果たす関数、型、設定が既にあるかを探し、それで足りる場合は書き足さない。探さずに書くと、同じ知識が複数箇所へ散らばり、どちらが正しいのかを読み手が判断できなくなる。
+
 ### 必要になるまで作らない（YAGNI）
 
 将来使うかもしれない機能、抽象化、汎用化は、今は作らない。使われない実装も保守の対象になり、読み手はどこで使われているのか探索してしまう。実際に要件が来たときには、想定と違っていることも多い。
+
+### 要件に直結する処理だけを実装する
+
+要件や目的に直結するコアロジックのみを実装する。明示的に要求されていない場合、セキュリティ対策、安全対策、入力検証、エラーハンドリング、例外処理は必要最小限とする。
+
+省略した処理は、制限事項、追加提案、質問事項として示す。
 
 ### 最も単純な方法を選ぶ（KISS）
 
@@ -309,7 +304,7 @@ A → B → A のような循環依存は、モジュール間の境界が崩れ
 
 ファイル書き込み、ネットワーク送受信、グローバル状態の変更などの副作用を、ロジックを担う関数の中へ混ぜない。
 
-ロジック層の関数は、同じ入力なら常に同じ結果を返す処理だけを行う。副作用を持つ処理は、Infrastructure層、ハンドラー、エントリポイントなど、あらかじめ決めた境界にのみ書く。ロジック層のテストに実際のI/Oは要らず、外の世界に触れている箇所も探さずに分かる。
+ロジック層の関数は、同じ入力なら常に同じ結果を返す処理だけを行う。副作用を持つ処理は、外部資源へ接続するモジュール、ハンドラー、エントリポイントなど、あらかじめ決めた境界にのみ書く。ロジック層のテストに実際のI/Oは要らず、外の世界に触れている箇所も探さずに分かる。
 
 ### リファクタリングは振る舞いを保った小さな変更に分ける
 
@@ -423,11 +418,14 @@ impl UserRepo for InMemoryUserRepo {
 
 | ルール | 内容 |
 | --- | --- |
+| 有名OSSを根拠にする | 名前は、対象言語の標準ライブラリや、同じ領域で広く使われているOSSの命名を根拠にする。本書の「単語」に記載がない概念も、独自の造語を根拠にせず、実際に使われている名前を採用する。 |
 | 名前の具体性 | 名前だけで役割、対象、処理内容が推測できるようにする。接続先、扱うデータ、責務を含め、`Abstract`、`Base`、`Common`、`Shared`、`Manager`、`Helper`、`Process`、`Do`、`Util`、`Object`、`Raw` のような汎用名は使わない。責務を表す具体的な名前を使う。 |
+| 複合名の語順 | 複数の語を組み合わせる名前では、中心となる概念を末尾に置き、その種類や対象を表す語を前に置く。OK: `FakeHttpServer`、NG: `HttpFakeServer` |
 | 層やパターンの名前 | 型名に`UseCase`、`Interactor`、`Logic`のような層やパターンの区分を付けない。その型が実行する責務を名前にする。NG: `SignInUseCase`、`AuthLogic`、OK: [`tower`の`Timeout`](https://docs.rs/tower/latest/tower/timeout/struct.Timeout.html)、[`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html) |
 | 外部境界の配置名 | 外部システムや外部資源に依存する実装を置くモジュールとディレクトリは、型の役割ではなく、実際の接続先または外部資源で命名する。NG: `connectors`、`clients`、`gateways`、OK: [`github`](https://github.com/apache/opendal/tree/main/core/services/github)、[`mysql`](https://github.com/apache/opendal/tree/main/core/services/mysql)、[`s3`](https://github.com/apache/opendal/tree/main/core/services/s3) |
 | 外部境界の型名 | 外部との境界を表す型は、その型が実際に行う役割で命名する。複数の実装を区別する場合は、具体型に接続先または供給元を含める。NG: `PaymentConnector`、`SettingsGateway`、OK: [`notify`の`Watcher`](https://docs.rs/notify/latest/notify/trait.Watcher.html)、[`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
-| 省略、略語 | 独自略語は禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table` `uuid` |
+| 省略、略語 | 独自略語は原則として禁止する。業界標準の略語は使用してよい。NG: `tbl`、OK: `table`、`uuid` |
+| 変数名 | 変数名には、広く使われる略語を積極的に使用する。NG: `parameters`、`arguments`、OK: `params`、`args` |
 | 短く命名する | 文脈上明らかな語は省き、意味を損なわない範囲で簡潔にする。型名が4単語以上、関数名が5単語以上になる場合は見直す。名前空間、型名、メソッド名のどこかで既に表現されている概念を、隣接する層で繰り返さない。NG: `reqwest::RequestBuilder::send_request`、`aws_sdk_s3::S3Client`、OK: [`reqwest`の`RequestBuilder::send`](https://docs.rs/reqwest/latest/reqwest/struct.RequestBuilder.html#method.send)、[`aws-sdk-s3`の`Client`](https://docs.rs/aws-sdk-s3/latest/aws_sdk_s3/struct.Client.html) |
 | 抽象と具体、インターフェース | 抽象側（インターフェース）には汎用的、概念的な名前を付ける。`I` プレフィックスと `Impl` サフィックスは禁止。具体側（実装）には詳細、技術的な名前を付ける。インターフェースは能力、役割を表す名詞または形容詞にする。NG: `ITransport` / `TransportImpl`、OK: [`lettre`の`Transport`](https://docs.rs/lettre/latest/lettre/trait.Transport.html) / [`SmtpTransport`](https://docs.rs/lettre/latest/lettre/transport/smtp/struct.SmtpTransport.html) |
 | データ構造 | 内部の処理状態を名前に含めない。データ構造としてふさわしいドメイン名を付ける。NG: `ParsedMessage`、`RawFrame`、OK: [`tungstenite`の`Message`](https://docs.rs/tungstenite/latest/tungstenite/protocol/enum.Message.html)、[`Frame`](https://docs.rs/tungstenite/latest/tungstenite/protocol/frame/struct.Frame.html) |
@@ -704,9 +702,9 @@ impl UserRepo for InMemoryUserRepo {
 
 ---
 
-## 12. 参考資料
+## 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 3. 依存関係の管理 | [Inversion of Control Containers and the Dependency Injection pattern](https://martinfowler.com/articles/injection.html) | 依存性注入とService Locatorを比較し、構成と利用の分離を説明する。 |
 | 3. 依存関係の管理 | [Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/) | Composition Rootをアプリケーションの起動点付近に置き、アプリケーションごとに一つ設ける考え方を説明する。 |

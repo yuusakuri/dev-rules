@@ -1,20 +1,16 @@
 # Rust実装ガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [フォルダ構成](#2-フォルダ構成)
-3. [ディスパッチ](#3-ディスパッチ)
-4. [検証](#4-検証)
-5. [参考資料](#5-参考資料)
+### 1.1 目的
 
----
+本書の目的は、Rustの実装の構成と記述方法をそろえることである。
 
-## 1. 概要
+### 1.2 適用範囲
 
-本書は、Rust実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)を前提とする。
+本書は、Rustによる実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)を前提とする。
 
-記述方法は、「参考資料」のThe Rust Style GuideとRust API Guidelinesに従う。
+記述方法は、「参考文献」のThe Rust Style GuideとRust API Guidelinesに従う。
 
 ---
 
@@ -23,6 +19,8 @@
 `<crate>`は`Cargo.toml`を置くcrateのルートを表す。Cargoの標準配置ではソースルートを`src/`とし、`Cargo.toml`でtargetのパスを指定した場合はその設定に従う。
 
 [アプリケーション設計ガイドライン](../software/application-design-guidelines.md)のソース構成をソースルート内のモジュールとして表す。次の表では、RustとCargoに固有の配置だけを示す。
+
+crateは、コンパイル単位または依存境界を独立して保証する必要がある場合に分ける。`no_std`環境や別の実行環境への対応、独立した公開と再利用、依存できるライブラリの制限、複数の実行単位からの共有がこれに当たる。標準ライブラリがcoreクレートとstdクレートに分かれているのも、標準ライブラリなしで使える範囲を依存境界として固定するためである。
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
@@ -79,12 +77,14 @@ let using_generic = Router::new()
 
 ---
 
-## 5. 参考資料
+## 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 1. 概要 | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
-| 1. 概要 | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
+| 1 はじめに | [The Rust Style Guide](https://doc.rust-lang.org/style-guide/) | Rustコードの書式と記述方法を確認する。 |
+| 1 はじめに | [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) | 公開APIの命名、型、ドキュメントの基準を確認する。 |
 | 2. フォルダ構成 | [Cargo Guide: Package Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html) | Cargoパッケージの標準的なファイルとフォルダの配置を確認する。 |
+| 2. フォルダ構成 | [core - Rust](https://doc.rust-lang.org/core/) | coreクレートが、標準ライブラリにも実行環境にも依存しない基盤として定義されていることを確認する。 |
+| 2. フォルダ構成 | [rust/library/std/src at master · rust-lang/rust](https://github.com/rust-lang/rust/tree/master/library/std/src) | 提供する機能の名前をそのままモジュール名とし、抽象的な名前の階層を挟まない配置を確認する。 |
 | 3. ディスパッチ | [axum `examples/dependency-injection`](https://github.com/tokio-rs/axum/blob/3d78036dcac289d6c1d54934708acb6a5bd73686/examples/dependency-injection/src/main.rs#L23-L149) | ジェネリクスで実装型を保持する構成と、trait objectで実装型を隠す構成を示す。 |
 | 4. 検証 | [Clippy Documentation](https://doc.rust-lang.org/clippy/) | Clippyの実行方法とlintの設定を確認する。 |

@@ -1,18 +1,14 @@
 # TypeScript実装ガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [フォルダ構成](#2-フォルダ構成)
-3. [型](#3-型)
-4. [検証](#4-検証)
-5. [参考資料](#5-参考資料)
+### 1.1 目的
 
----
+本書の目的は、TypeScriptの実装の構成と記述方法をそろえることである。
 
-## 1. 概要
+### 1.2 適用範囲
 
-本書は、TypeScript実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
+本書は、TypeScriptによる実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
 ---
 
@@ -22,13 +18,13 @@
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
-| `apps/<app-name>/src/features/<feature>/index.ts` | `apps/myproject-web/src/features/auth/index.ts` | Featureの公開境界。Feature外へ公開する型、関数、Component、Handler、契約、各実装の生成関数だけをexportする。 |
-| `apps/<app-name>/src/features/<feature>/presentation/screens/` | `apps/myproject-web/src/features/auth/presentation/screens/sign_in_screen.tsx` | ルーティングの遷移先となるScreen Componentを配置する。 |
-| `apps/<app-name>/src/features/<feature>/presentation/components/` | `apps/myproject-web/src/features/auth/presentation/components/password_field.tsx` | Featureが所有する表示で再利用するComponentを配置する。別Featureでも再利用するComponentは、`index.ts`から明示的にexportする。 |
-| `apps/<app-name>/src/features/<feature>/presentation/state/` | `apps/myproject-web/src/features/auth/presentation/state/sign_in_store.ts` | Signal、Store、Contextと表示状態の操作を配置する。 |
-| `<file>.test.ts`、`<component>.test.tsx` | `apps/myproject-web/src/features/auth/sign_in_validator.test.ts` | 単体テストとComponentテストを、実装ファイルと同じフォルダへ配置する。 |
-| `apps/<app-name>/tests/integration/<feature>.test.ts` | `apps/myproject-web/tests/integration/auth.test.ts` | Feature間またはFeatureと外部I/Oとの結合を検証するテストを配置する。 |
-| `apps/<app-name>/tests/e2e/<flow>.test.ts` | `apps/myproject-web/tests/e2e/sign_in.test.ts` | E2Eテスト。 |
+| `apps/<app-name>/src/<feature>/index.ts` | [Blueskyの`src/state/session/index.tsx`](https://github.com/bluesky-social/social-app/blob/main/src/state/session/index.tsx) | Featureの公開境界。Feature外へ公開する型、関数、Component、Handler、契約、各実装の生成関数だけをexportする。 |
+| `apps/<app-name>/src/<feature>/presentation/screens/` | [Blueskyの`src/screens/Login`](https://github.com/bluesky-social/social-app/tree/main/src/screens/Login) | ルーティングの遷移先となるScreen Componentを配置する。 |
+| `apps/<app-name>/src/<feature>/presentation/components/` | [Blueskyの`src/screens/Login/components`](https://github.com/bluesky-social/social-app/tree/main/src/screens/Login/components) | Featureが所有する表示で再利用するComponentを配置する。別Featureでも再利用するComponentは、`index.ts`から明示的にexportする。 |
+| `apps/<app-name>/src/<feature>/presentation/state/` | [Blueskyの`src/state/session`](https://github.com/bluesky-social/social-app/tree/main/src/state/session) | Signal、Store、Contextと表示状態の操作を配置する。 |
+| `<file>.test.ts`、`<component>.test.tsx` | [Blueskyの`bskylink/src/index.test.ts`](https://github.com/bluesky-social/social-app/blob/main/bskylink/src/index.test.ts) | 単体テストとComponentテストを、実装ファイルと同じフォルダへ配置する。 |
+| `apps/<app-name>/tests/integration/<feature>.test.ts` | [VS Codeの`test/integration/browser/src`](https://github.com/microsoft/vscode/tree/main/test/integration/browser/src) | Feature間またはFeatureと外部I/Oとの結合を検証するテストを配置する。 |
+| `apps/<app-name>/tests/e2e/<flow>.test.ts` | [Cal.comの`login.e2e.ts`](https://github.com/calcom/cal.com/blob/main/apps/web/playwright/login.e2e.ts) | E2Eテスト。 |
 
 ---
 
@@ -58,11 +54,11 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 
 ---
 
-## 5. 参考資料
+## 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 1. 概要、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
+| 1 はじめに、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
 | 4. 検証 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
 | 4. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
 | 4. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を確認する。 |

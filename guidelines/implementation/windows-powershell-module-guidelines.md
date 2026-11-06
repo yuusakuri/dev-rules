@@ -1,37 +1,14 @@
 # Windows PowerShellモジュール実装ガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [環境](#2-環境)
-3. [リポジトリ構成](#3-リポジトリ構成)
-4. [ソースファイル形式](#4-ソースファイル形式)
-5. [モジュールマニフェスト](#5-モジュールマニフェスト)
-6. [ビルド](#6-ビルド)
-7. [命名](#7-命名)
-8. [関数](#8-関数)
-9. [パイプライン](#9-パイプライン)
-10. [出力](#10-出力)
-11. [エラー処理](#11-エラー処理)
-12. [状態変更](#12-状態変更)
-13. [外部呼び出し](#13-外部呼び出し)
-14. [ファイル](#14-ファイル)
-15. [通信](#15-通信)
-16. [コードスタイル](#16-コードスタイル)
-17. [ヘルプ](#17-ヘルプ)
-18. [自動フォーマット](#18-自動フォーマット)
-19. [構文チェック](#19-構文チェック)
-20. [静的解析](#20-静的解析)
-21. [テスト](#21-テスト)
-22. [CI](#22-ci)
-23. [PowerShell Gallery](#23-powershell-gallery)
-24. [参考資料](#24-参考資料)
+### 1.1 目的
 
----
+本書の目的は、Windows PowerShell 5.1向けモジュールの構成、実装、検証の方法をそろえることである。
 
-## 1. 概要
+### 1.2 適用範囲
 
-本書は、Windows PowerShell 5.1向けモジュールの実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)と[リポジトリガイドライン](../development/repository-guidelines.md)を前提とする。
+本書は、Windows PowerShell 5.1向けモジュールの実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)と[リポジトリガイドライン](../development/repository-guidelines.md)を前提とする。
 
 ---
 
@@ -142,9 +119,9 @@ C#アセンブリの名前にはモジュール名と責務を含め、他のモ
 
 | パス | 用途 |
 | --- | --- |
-| `tests/unit/` | 単体テスト。 |
-| `tests/integration/` | OS や外部コンポーネントとの統合テスト。 |
-| `tests/contract/` | ビルド済みマニフェストと公開関数の Help の契約テスト。 |
+| `tests/unit/` | Unit Test。 |
+| `tests/integration/` | OS や外部コンポーネントとの Integration Test。 |
+| `tests/contract/` | ビルド済みマニフェストと公開関数の Help の Contract Test。 |
 | `tests/<ModuleName>.<Purpose>/` | Pesterテストから読み込むテスト専用C#プロジェクト。Pesterの `Mock` やPowerShellコードだけでは適切に表現できないテスト用実装がある場合だけ配置する。 |
 
 ### 3.3 開発と検証の設定
@@ -316,7 +293,7 @@ C#アセンブリを使用する場合も、PowerShellモジュールと実行�
 
 C# のビルド出力をそのまま配布ディレクトリとして使用せず、中間出力から必要な実行時ファイルだけをモジュールの配布構成へ配置する。`bin/`、`obj/`、`.cs`、`.csproj` など、モジュールの実行に必要ない開発用ファイルは配布成果物へ含めない。
 
-C# プロジェクトのビルドに必要な `dotnet` コマンドが存在しない場合は、ビルドを終了エラーにする。
+C#プロジェクトのビルドに必要な `dotnet` コマンドが存在しない場合は、ビルドを終了エラーにする。
 
 ---
 
@@ -450,6 +427,10 @@ if ($PSBoundParameters.ContainsKey('Limit')) {
 
 Contract Testでは追加した同名関数が優先されること、元のCmdletがモジュール修飾名で呼び出せること、元のCmdletとパラメーター名が一致することを確認する。
 
+### 8.12 スクリプトブロック
+
+`ScriptBlock` を変数へ代入して関数として利用することは避け、名前付き関数を定義して利用することを優先する。ただし、`Where-Object`、`ForEach-Object`、`ValidateScript()` など、コマンドが引数として `ScriptBlock` を要求する場合は `ScriptBlock` を使用する。
+
 ---
 
 ## 9. パイプライン
@@ -574,6 +555,8 @@ function Measure-MyModuleValue {
 
 `Write-Host` は使用しない。
 
+メッセージを表示するかどうかは呼び出し元の設定に従い、`-InformationAction Continue` や `-Verbose` を指定して、利用者が非表示にしたメッセージを強制表示しない。
+
 ### 10.3 表示形式
 
 公開関数では、通常の戻り値を `Format-Table`、`Format-List` などの `Format-*` で加工しない。表示形式を定義する必要がある場合は `.format.ps1xml` を使用し、関数自体は元のオブジェクトを返す。
@@ -603,19 +586,25 @@ $json = $value | ConvertTo-Json -Depth 10
 
 ### 11.2 エラーの捕捉と伝播
 
-下位コマンドレットのエラーを現在の処理で捕捉する場合は、対象呼び出しに `-ErrorAction Stop` を指定して `try/catch` を使用する。捕捉した `ErrorRecord` を非終了エラーとして伝播する場合は `Write-Error -ErrorRecord $_` を使用する。
+下位コマンドレットの非終了エラーを捕捉する場合は、対象呼び出しに `-ErrorAction Stop` を指定して `try/catch` を使用する。終了エラーをそのまま上位へ伝える場合は捕捉せず、捕捉後に元の終了エラーを再送出する場合は `catch` 内で引数のない `throw` を使用する。捕捉した `ErrorRecord` を非終了エラーとして伝える場合は `Write-Error -ErrorRecord $_` を使用する。
 
 ```powershell
-foreach ($pathItem in $Path) {
-    try {
-        $content = Get-Content -LiteralPath $pathItem -ErrorAction Stop
-    }
-    catch {
-        Write-Error -ErrorRecord $_
-        continue
-    }
+try {
+    Get-Content -LiteralPath $Path -ErrorAction Stop
+} catch {
+    Write-Error -ErrorRecord $_
+}
+```
 
-    # Processing
+### 11.3 原因を保持したエラーへの変換
+
+捕捉したエラーに処理の文脈を加えて新しい終了エラーを作る場合は、元の例外 `$_.Exception` を新しい例外の `InnerException` に渡し、原因をたどれるようにする。
+
+```powershell
+try {
+    Get-Content -LiteralPath $Path -ErrorAction Stop
+} catch {
+    throw [System.InvalidOperationException]::new("Failed to read the configuration file: $Path", $_.Exception)
 }
 ```
 
@@ -674,15 +663,23 @@ function Set-MyModuleMonitorInternal {
 
 ## 13. 外部呼び出し
 
-### 13.1 実行
+### 13.1 実行方法の選択
 
-外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。確認した結果が `$null` の場合は、関数を続行できないため終了エラーにする。
+外部実行ファイルの存在確認には `Get-Command` を使用し、`-CommandType Application` と `-ErrorAction Ignore` を指定する。出力が `$null` の場合は、コマンドが利用できない。
 
-外部実行ファイルは、基本的に呼び出し演算子 `&` でコマンド名を直接指定することで実行する。別ウィンドウ、待機、資格情報などのプロセス制御が必要な場合は `Start-Process` を使用する。
+外部実行ファイルの実行方法は、以下の表のように用途別で選ぶ。
 
-### 13.2 引数
+| 実行方法 | 用途 | 出力先 | 作業ディレクトリ | プロセス制御 |
+| --- | --- | --- | --- | --- |
+| 呼び出し演算子 `&` でコマンド名を直接指定する。 | 出力を解析して戻り値や判定に使う。 | PowerShell のストリーム。標準出力を変数へ受けられる。 | PowerShell のファイルシステム上の現在の場所。 | 指定できない。 |
+| `System.Diagnostics.Process` に `ProcessStartInfo` を指定する。 | 引数の境界、標準出力と標準エラーの区別、終了コードを正確に扱う。 | 標準出力と標準エラーをリダイレクトした場合は `StandardOutput` と `StandardError`。リダイレクトしない場合はコンソール。 | 既定は PowerShell プロセスのカレントディレクトリで、PowerShell の現在の場所と一致するとは限らない。作業ディレクトリに依存する外部実行ファイルには `WorkingDirectory` を明示する。 | 環境変数、ウィンドウ、資格情報などを `ProcessStartInfo` で指定できる。 |
+| `Start-Process` | 出力を処理せず、コンソールに表示する。昇格や関連付けられたプログラムでの起動が必要な場合にも使う。 | `-NoNewWindow` を指定した場合は現在のコンソール、指定しない場合は新しいウィンドウ。`-RedirectStandardOutput` と `-RedirectStandardError` を指定した場合はファイル。PowerShell のストリームを経由しないため、関数の戻り値へ混入しない。 | 既定は起動する実行ファイルの場所。作業ディレクトリに依存する外部実行ファイルには `-WorkingDirectory` を明示する。 | `-Wait` で子孫プロセスを含む終了を待機し、`-PassThru` でプロセスオブジェクトを取得する。資格情報、`-Verb` による昇格などを指定できる。 |
 
-コマンドと引数は分離し、引数は配列で管理する。
+### 13.2 呼び出し演算子 `&`
+
+#### 13.2.1 引数
+
+コマンドと引数は分離し、引数は値ごとの配列で管理する。
 
 ```powershell
 $arguments = @(
@@ -693,18 +690,120 @@ $arguments = @(
 & example.exe $arguments
 ```
 
-### 13.3 終了コードと出力
+Windows PowerShell 5.1 は、解析した引数を空白区切りの1つの文字列へ結合して `ProcessStartInfo.Arguments` へ設定する。値に含まれる二重引用符は自動的にエスケープされないため、二重引用符を含む値は `\"` のように対象プログラムの解析規則に従ってエスケープする。値の境界を正確に保証する必要がある場合は、`System.Diagnostics.Process` を使用する。
 
-Windows PowerShell 5.1 では、外部実行ファイルの非0終了コードを PowerShell の終了エラーとして扱わない。外部実行ファイルの実行直後に `$LASTEXITCODE` を保存し、成否はその実行ファイル固有の終了コード仕様に従って判定する。
+停止解析トークン `--%` 以降では `%変数%` 形式の環境変数以外を展開できないため、PowerShell の変数から引数を組み立てる用途には使用しない。
+
+#### 13.2.2 終了コード
+
+終了コードは `$LASTEXITCODE` を参照する。実行から参照までの間に、他の外部実行ファイルを呼び出さない。
 
 ```powershell
 $output = & example.exe $arguments
-$exitCode = $LASTEXITCODE
+if ($LASTEXITCODE -ne 0) {
+    throw "example.exe failed with exit code $LASTEXITCODE."
+}
 ```
 
-標準出力を公開 API の出力として扱う場合は、必要に応じて解析し、構造化オブジェクトへ変換する。
+#### 13.2.3 標準出力と標準エラー
 
-### 13.4 標準入出力の文字コード
+標準出力は成功ストリームへ、標準エラーはエラーストリームへ流れる。標準出力を公開 API の出力として扱う場合は、必要に応じて解析し、構造化オブジェクトへ変換する。
+
+| 記述 | 用途 | 説明 |
+| --- | --- | --- |
+| `2>$null` | 標準エラーの内容が不要な場合。 | 標準エラーを破棄する。 |
+| `2>&1` | 標準エラーの内容を利用したい場合。 | 標準出力と標準エラーをまとめて受け取る。 |
+
+`2>&1` で受け取った結果は、標準出力の行が `String`、標準エラーの行が `ErrorRecord` となる配列であるため、文字列として利用する場合は `ToString()` で文字列に変換する。
+
+### 13.3 `System.Diagnostics.Process`
+
+#### 13.3.1 引数
+
+`ProcessStartInfo.Arguments` は1つの文字列であるため、値ごとの配列から対象プログラムの引数解析規則に従って引用した文字列を組み立てる。`CommandLineToArgvW` の規則で解析する実行ファイルには、次のように引用する。
+
+| 対象 | 引用方法 |
+| --- | --- |
+| 空白やタブを含む値、空文字列 | 値全体を二重引用符で囲む。 |
+| 値に含まれる二重引用符 | `\"` とする。直前にバックスラッシュが連続する場合は、その数を2倍にしてから `\"` を付ける。 |
+| 二重引用符で囲んだ値の末尾のバックスラッシュ | 数を2倍にする。 |
+
+`UseShellExecute` は .NET Framework では既定で `$true` であるため、`$false` を指定する。`$false` の場合、`WorkingDirectory` は実行ファイルの検索に使用されず、起動したプロセスの作業ディレクトリとなる。`WorkingDirectory` を指定しない場合は PowerShell の現在の場所ではなく PowerShell プロセスのカレントディレクトリが使用されるため、作業ディレクトリに依存する外部実行ファイルには明示する。
+
+#### 13.3.2 終了コード
+
+終了コードは `WaitForExit()` の後に `ExitCode` を参照する。
+
+#### 13.3.3 標準出力と標準エラー
+
+出力を捕捉する場合は、`RedirectStandardOutput` と `RedirectStandardError` をそれぞれ指定し、実行結果では両者を区別する。リダイレクトしない場合、出力はコンソールへ表示される。
+
+標準出力と標準エラーの両方をリダイレクトして同期的に順番に読み取ると、子プロセスが一方のストリームのバッファを満たして待機し、デッドロックする。少なくとも一方のストリームを非同期で読み取り、読み取りを開始してから `WaitForExit()` を呼び出す。
+
+```powershell
+$startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+$startInfo.FileName = $executablePath
+$startInfo.Arguments = $argumentLine
+$startInfo.WorkingDirectory = $workingDirectory
+$startInfo.UseShellExecute = $false
+$startInfo.RedirectStandardOutput = $true
+$startInfo.RedirectStandardError = $true
+
+$process = [System.Diagnostics.Process]::Start($startInfo)
+try {
+    $standardOutputTask = $process.StandardOutput.ReadToEndAsync()
+    $standardErrorTask = $process.StandardError.ReadToEndAsync()
+    $process.WaitForExit()
+
+    $standardOutput = $standardOutputTask.Result
+    $standardError = $standardErrorTask.Result
+    if ($process.ExitCode -ne 0) {
+        throw "example.exe failed with exit code $($process.ExitCode). $standardError"
+    }
+}
+finally {
+    $process.Dispose()
+}
+```
+
+### 13.4 `Start-Process`
+
+#### 13.4.1 引数
+
+`-ArgumentList` に配列を指定すると、各要素は空白1つで連結された1つの文字列となり、要素ごとには引用されない。空白や二重引用符を含む値は、エスケープした二重引用符で囲む。引数の境界が重要な場合は、必要な引用符を含めた1つの文字列を `-ArgumentList` に指定する。
+
+```powershell
+$argumentLine = "--name `"$Name`""
+```
+
+#### 13.4.2 終了コード
+
+終了コードは `-Wait` と `-PassThru` を指定し、戻り値の `ExitCode` を参照する。`-Wait` は起動したプロセスとその子孫プロセスがすべて終了するまで待機する。`-Wait` を指定しない場合、`Start-Process` は非同期で起動し、すぐに制御を返す。
+
+```powershell
+$process = Start-Process -FilePath 'example.exe' -ArgumentList $argumentLine -NoNewWindow -Wait -PassThru
+if ($process.ExitCode -ne 0) {
+    throw "example.exe failed with exit code $($process.ExitCode)."
+}
+```
+
+#### 13.4.3 標準出力と標準エラー
+
+出力は既定でコンソールへ表示される。`-NoNewWindow` を指定しない場合は新しいウィンドウで起動する。出力を保存する場合は、`-RedirectStandardOutput` と `-RedirectStandardError` にファイルを指定する。
+
+### 13.5 バッチファイルの引数
+
+`.cmd` / `.bat` への引数は、実行方法にかかわらず生のコマンドライン文字列として `cmd.exe` の解析を通る。通常の実行ファイル向けの引数引用をそのまま適用せず、値が正確かつ安全に渡せることを確認する。
+
+| `cmd.exe` の解析規則 | 影響 |
+| --- | --- |
+| `&`、`<`、`>`、`[`、`]`、`\|`、`{`、`}`、`^`、`=`、`;`、`!`、`'`、`+`、`,`、`` ` ``、`~`、空白は引用符で囲む必要がある。 | 引用しない場合、コマンドの区切りやリダイレクトとして解釈される。 |
+| `%変数%` は環境変数の値に置換される。 | 値に含まれる `%` が展開される。 |
+| 遅延展開が有効な場合、`!変数!` は実行時に環境変数の値に置換される。 | 値に含まれる `!` が展開される。 |
+
+`cmd.exe` に対して安全に表現できない値は明示的に拒否する。信頼できない入力は、バッチファイルの引数として渡さない。
+
+### 13.6 標準入出力の文字コード
 
 Windows PowerShell 5.1 では、PowerShell と外部実行ファイルの間で使用される文字コードが UTF-8 に統一されていない。
 
@@ -718,11 +817,11 @@ $OutputEncoding = $utf8
 $output = & example.exe $arguments
 ```
 
-### 13.5 C#アセンブリによるWindows API呼び出し
+### 13.7 C#アセンブリによるWindows API呼び出し
 
-PowerShell や .NET Framework が必要な Windows API を直接公開していない場合は、P/Invoke を C# プロジェクトへ実装し、ビルド済み DLL を PowerShell モジュールから使用する。保守対象となる C# コードは `.ps1` 内の `Add-Type -TypeDefinition` へ埋め込まず、`.csproj` に属する `.cs` ファイルとして管理する。
+PowerShell や .NET Framework が必要な Windows API を直接公開していない場合は、P/Invoke を C#プロジェクトへ実装し、ビルド済み DLL を PowerShellモジュールから使用する。保守対象となる C#コードは `.ps1` 内の `Add-Type -TypeDefinition` へ埋め込まず、`.csproj` に属する `.cs` ファイルとして管理する。
 
-#### 13.5.1 C#プロジェクト
+#### 13.7.1 C#プロジェクト
 
 C#プロジェクトには少なくとも次の設定を行う。
 
@@ -741,7 +840,7 @@ C#プロジェクトには少なくとも次の設定を行う。
 
 `TargetFramework` は、モジュールが対象とする Windows PowerShell 5.1 が読み込めるフレームワークに合わせて決定する。
 
-#### 13.5.2 Windows API呼び出し
+#### 13.7.2 Windows API呼び出し
 
 P/Invoke の型はモジュール固有の名前空間へ配置する。`StructLayout`、`DllImport`、引数型、戻り値型を明示し、戻り値のステータスを適切な終了エラーへ変換する。
 
@@ -761,9 +860,13 @@ if (-not [MyModule.NativeMethods]::CloseHandle($Handle)) {
 }
 ```
 
-ハンドルとアンマネージドメモリは `try/finally` で解放し、秘密値を含むメモリはゼロクリアしてから解放する。PowerShell 側は C# アセンブリが公開する型を呼び出し、メモリ確保、ポインター操作、構造体変換などの低レベル処理は可能な限り C# 側へ閉じ込める。
+ハンドルとアンマネージドメモリは `try/finally` で解放し、秘密値を含むメモリはゼロクリアしてから解放する。PowerShell 側は C#アセンブリが公開する型を呼び出し、メモリ確保、ポインター操作、構造体変換などの低レベル処理は可能な限り C# 側へ閉じ込める。
 
 状態変更関数では `ShouldProcess()` の承認後に Windows API 呼び出しを行う。Unit Test では呼び出し境界を `Mock` し、`-WhatIf` を指定した呼び出しで Windows API が呼び出されていないことを確認する。
+
+### 13.8 関数の責務
+
+外部実行ファイルの呼び出しをそのまま包むだけの関数は定義せず、機能の責務ごとに関数を定義する。
 
 ---
 
@@ -846,11 +949,27 @@ Windows PowerShell 5.1 では、既定のDOM解析がInternet Explorerのコン�
 
 Internet Explorerを利用できない環境では、`-UseBasicParsing` を指定する。`-UseBasicParsing` を指定した場合はDOM解析を行わないため、HTML要素を解析できない。
 
-Windows PowerShell 5.1 では、`Invoke-WebRequest` によるファイルのダウンロードが進捗表示によって大幅に遅くなる場合があるため、`$ProgressPreference = 'SilentlyContinue'` を設定する。
+Windows PowerShell 5.1 では、`Invoke-WebRequest` によるファイルのダウンロードが進捗表示によって大幅に遅くなる場合があるため、プロセス全体の進捗表示設定を変更するより、コマンド個別に制御する。PowerShell 7.4 以降では `ProgressAction` が共通パラメーターとして利用可能であるため、影響範囲を正確に限定できる。
 
 ```powershell
+Invoke-WebRequest `
+    -UseBasicParsing `
+    -Uri $Uri `
+    -OutFile $Path `
+    -ProgressAction SilentlyContinue
+```
+
+Windows PowerShell 5.1 では `ProgressAction` が利用できないため、プロセスの進捗表示設定を一時的に変更する場合は、狭い範囲に限定する。
+
+```powershell
+$previousProgressPreference = $ProgressPreference
 $ProgressPreference = 'SilentlyContinue'
-Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Path
+try {
+    Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Path
+}
+finally {
+    $ProgressPreference = $previousProgressPreference
+}
 ```
 
 #### 15.1.3 System.Net.Http.HttpClient
@@ -913,6 +1032,7 @@ foreach ($path in $paths) {
 | --- | --- |
 | インデント | 半角スペース4文字とする。 |
 | 波括弧 | 開始波括弧は宣言、制御文と同じ行に置く。 |
+| キーワードと演算子 | `if`、`foreach`、`function` などのキーワードと、`-eq`、`-and` などの演算子は小文字で記述する。 |
 
 ### 16.3 改行
 
@@ -925,11 +1045,13 @@ Get-Process |
     Select-Object -First 10
 ```
 
-行継続のためにバッククォートを使用しない。パイプ、括弧、配列、ハッシュテーブル、スプラッティングなど、PowerShell が自然に継続できる構文を使用する。
+行継続のためにバッククォートを使用しない。
+
+パイプ (`|`) や二項演算子 (`+`、`-eq` など) の後、配列のコンマ (`,`) の後、または `[`、`{`、`(` の開始文字の後で改行する。
 
 ### 16.4 コマンド名
 
-エイリアスではなく正式なコマンド名を使用する。
+PowerShell のコマンド名は、定義された大文字・小文字に合わせて完全な名前で記述する。エイリアスは使用しない。
 
 ### 16.5 動的コード実行
 
@@ -941,28 +1063,40 @@ Get-Process |
 
 ### 16.7 引数指定
 
-コマンド呼び出しでは位置引数に依存せず、パラメーター名を明示する。
+PowerShell のコマンド呼び出しでは位置引数に依存せず、パラメーター名を明示する。
 
 複数のパラメーターをまとめることでコマンド呼び出しが読みやすくなる場合はスプラッティングを使用する。
 
 ```powershell
-$parameters = @{
+$params = @{
     LiteralPath = $Path
     ErrorAction = 'Stop'
 }
 
-Get-Content @parameters
+Get-Content @params
 ```
 
 ### 16.8 比較
 
 `$null` を比較する場合は `$null` を左辺に置く。
 
+### 16.9 出力の破棄
+
+コマンドの出力を意図的に破棄する場合は、`$null` への代入ではなく `Out-Null` を使用する。
+
+```powershell
+Get-ChildItem -Path $Path | Out-Null
+```
+
 ---
 
 ## 17. ヘルプ
 
 公開関数にはコメントベースのヘルプを記述する。
+
+コピーして実行するコード例には、プロンプト文字列を含めない。
+
+Markdown では、実行するコードと実行結果を別々のコードブロックに記載する。
 
 | セクション | 規則 |
 | --- | --- |
@@ -1061,7 +1195,16 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 
 ## 20. 静的解析
 
-静的解析には PSScriptAnalyzer の `Invoke-ScriptAnalyzer` を使用し、リポジトリ直下の `PSScriptAnalyzerSettings.psd1` を使用する。既定ルールを使用し、重大度が `Error` または `Warning` の指摘を検査する。
+PowerShellコードの静的解析で使用するツールと検査対象を次の表に示す。
+
+| 目的 | 検査対象 | ツール |
+| --- | --- | --- |
+| PowerShellの構文エラーを防ぐ。 | 製品コード、テストコード、設定スクリプト。 | `System.Management.Automation.Language.Parser` の `ParseFile()` または `ParseInput()` |
+| 承認済み動詞、エイリアス、危険な構文、未使用要素などを検出する。 | 製品コード、テストコード。 | PSScriptAnalyzerの `Invoke-ScriptAnalyzer` と `PSScriptAnalyzerSettings.psd1` |
+| 関数の複雑度とネスト深度を抑える。 | PowerShellの関数。 | PSCodeHealthの `Invoke-PSCodeHealth` と `Test-PSCodeHealthCompliance` |
+| コードの書式を統一する。 | フォーマット対象のPowerShellファイル。 | PSScriptAnalyzerの `Invoke-Formatter` |
+
+次の設定例は、PSScriptAnalyzerで検査する重大度と除外ルールを指定する。
 
 ```powershell
 @{
@@ -1079,15 +1222,6 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 }
 ```
 
-| 項目 | 検査 |
-| --- | --- |
-| 承認済み動詞 | 公開関数を検査する。内部関数も同じ命名方針を適用する。 |
-| エイリアス | 正式なコマンド名を使用していることを検査する。 |
-| `ShouldProcess` | 状態変更を行う公開関数で `SupportsShouldProcess` が有効であり、公開関数または委譲先の内部関数で `ShouldProcess()` が1回だけ使用されていることを検査する。 |
-| 危険な構文 | `Invoke-Expression` などを検査する。 |
-| 未使用 | 未使用変数など PSScriptAnalyzer で検出可能なものを検査する。 |
-| BOM | PowerShellソースは UTF-8（BOMなし）かつ ASCII-only とするため、`PSUseBOMForUnicodeEncodedFile` は除外する。 |
-
 ## 21. テスト
 
 テストには Pester を使用する。Unit Test、Integration Test、Contract Test は、ビルド済みの `output/<ModuleName>/<ModuleName>.psd1` をインポートして実施する。
@@ -1097,10 +1231,6 @@ PowerShellコードの構文チェックには `System.Management.Automation.Lan
 ### 21.1 テスト専用C#プロジェクト
 
 PowerShellコマンドの振る舞いを置き換える場合は、Pesterの `Mock` を使用する。.NETの基底クラスやインターフェースを実装するテスト用代替実装（Test Double）、または外部プロセスとして実行するテスト用プログラムが必要な場合だけ、テスト専用C#プロジェクトを作成する。
-
-テスト専用C#プロジェクトは、Unit Test、Integration Test、Contract Testのうち、必要とするテストから使用する。
-
-プロジェクト名とアセンブリ名には、テストが置き換える境界または提供する振る舞いを含める。HTTP通信のテスト用代替実装には `<ModuleName>.HttpTestDoubles`、外部プロセスの振る舞いを提供するプログラムには `<ModuleName>.ProcessTestHost` のような名前を使用する。
 
 `run.ps1 test <TestType>` は、対象テストが必要とするC#プロジェクトをテスト実行前にビルドする。テストを実行する各PowerShellプロセスが読み込めるターゲットフレームワークを指定し、DLLを `artifacts/bin/<ProjectName>/<TargetFramework>/` から読み込む。
 
@@ -1197,59 +1327,72 @@ Publish-PSResource -Path './output/<ModuleName>' -ApiKey $apiKey -Repository PSG
 
 ---
 
-## 24. 参考資料
+## 参考文献
 
-| 本書の章 | 参考資料 |
-| --- | --- |
-| 2. 環境<br>5. モジュールマニフェスト | [about_PowerShell_Editions - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_editions?view=powershell-5.1) |
-| 2. 環境<br>18. 自動フォーマット<br>20. 静的解析<br>22. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) |
-| 2. 環境<br>21. テスト<br>22. CI | [Quick Start \| Pester](https://pester.dev/docs/v5/quick-start) |
-| 2. 環境<br>3. リポジトリ構成<br>6. ビルド | [ModuleBuilder](https://github.com/PoshCode/ModuleBuilder) |
-| 2. 環境<br>3. リポジトリ構成<br>6. ビルド<br>13. 外部呼び出し | [.NET SDK overview - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/sdk) |
-| 3. リポジトリ構成<br>5. モジュールマニフェスト | [Understanding a Windows PowerShell Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/developer/module/understanding-a-windows-powershell-module?view=powershell-5.1) |
-| 3. リポジトリ構成<br>13. 外部呼び出し | [MSBuild project file schema reference - Visual Studio (Windows) \| Microsoft Learn](https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-project-file-schema-reference?view=vs-2022) |
-| 3. リポジトリ構成<br>6. ビルド | [Artifacts output layout - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/sdk/artifacts-output) |
-| 6. ビルド<br>21. テスト | [PSReadLine.build.ps1 - PowerShell/PSReadLine](https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine.build.ps1) |
-| 22. CI | [setup-dotnet - GitHub Actions](https://github.com/actions/setup-dotnet) |
-| 4. ソースファイル形式<br>13. 外部呼び出し<br>14. ファイル | [about_Character_Encoding - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1) |
-| 14. ファイル | [Import-PowerShellDataFile (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/import-powershelldatafile?view=powershell-5.1) |
-| 5. モジュールマニフェスト<br>23. PowerShell Gallery | [about_Module_Manifests - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests?view=powershell-5.1) |
-| 5. モジュールマニフェスト | [New-ModuleManifest (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest?view=powershell-5.1) |
-| 7. 命名 | [Get-Verb (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/get-verb?view=powershell-5.1) |
-| 7. 命名 | [Strongly Encouraged Development Guidelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/strongly-encouraged-development-guidelines?view=powershell-5.1) |
-| 8. 関数<br>9. パイプライン | [about_Functions_Advanced_Parameters - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-5.1) |
-| 8. 関数 | [about_Functions_Advanced - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced?view=powershell-5.1) |
-| 8. 関数 | [about_Functions_OutputTypeAttribute - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute?view=powershell-5.1) |
-| 8. 関数<br>10. 出力 | [Everything you wanted to know about PSCustomObject - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-pscustomobject?view=powershell-5.1) |
-| 8. 関数 | [ProxyCommand.Create Method (System.Management.Automation) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.proxycommand.create?view=powershellsdk-7.4.0) |
-| 9. パイプライン<br>10. 出力 | [about_Pipelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-5.1) |
-| 10. 出力<br>11. エラー処理 | [about_Output_Streams - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_output_streams?view=powershell-5.1) |
-| 10. 出力 | [about_Return - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_return?view=powershell-5.1) |
-| 10. 出力 | [about_Format.ps1xml - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_format.ps1xml?view=powershell-5.1) |
-| 11. エラー処理 | [about_Error_Handling - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_error_handling?view=powershell-5.1) |
-| 12. 状態変更 | [Everything you wanted to know about ShouldProcess - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-shouldprocess?view=powershell-5.1) |
-| 13. 外部呼び出し | [about_Automatic_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1) |
-| 13. 外部呼び出し | [about_Preference_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1) |
-| 13. 外部呼び出し | [Add-Type (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/add-type?view=powershell-5.1) |
-| 14. ファイル | [about_Path_Syntax - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_path_syntax?view=powershell-5.1) |
-| 15. 通信 | [Invoke-RestMethod (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/Microsoft.PowerShell.Utility/invoke-restmethod?view=powershell-5.1) |
-| 15. 通信 | [Invoke-WebRequest (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-5.1) |
-| 15. 通信 | [HttpClient Class (System.Net.Http) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=netframework-4.8.1) |
-| 15. 通信 | [HttpCompletionOption Enum (System.Net.Http) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpcompletionoption?view=netframework-4.8.1) |
-| 15. 通信 | [Transport Layer Security (TLS) best practices with .NET Framework \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls) |
-| 15. 通信 | [AngleSharp](https://github.com/AngleSharp/AngleSharp) |
-| 16. コードスタイル | [about_Scopes - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scopes?view=powershell-5.1) |
-| 16. コードスタイル | [about_Splatting - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_splatting?view=powershell-5.1) |
-| 16. コードスタイル | [about_Comparison_Operators - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comparison_operators?view=powershell-5.1) |
-| 17. ヘルプ | [about_Comment_Based_Help - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1) |
-| 18. 自動フォーマット | [Invoke-Formatter (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-formatter?view=ps-modules) |
-| 19. 構文チェック | [Parser Class (System.Management.Automation.Language) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.parser?view=powershellsdk-7.4.0) |
-| 20. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) |
-| 5. モジュールマニフェスト<br>20. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) |
-| 21. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) |
-| 21. テスト | [Mocking with Pester \| Pester](https://pester.dev/docs/usage/mocking) |
-| 21. テスト | [Best practices for writing unit tests - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices) |
-| 21. テスト | [Test Double - Martin Fowler](https://martinfowler.com/bliki/TestDouble.html) |
-| 22. CI | [Workflow syntax for GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) |
-| 2. 環境 | [Install a package manager for PowerShell - PowerShell \| Microsoft Learn](https://learn.microsoft.com/powershell/gallery/powershellget/update-powershell-51) |
-| 2. 環境<br>23. PowerShell Gallery | [Microsoft.PowerShell.PSResourceGet Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/?view=powershellget-3.x) |
+| 本書の章 | 参考文献 | 概要 |
+| --- | --- | --- |
+| 2. 環境<br>5. モジュールマニフェスト | [about_PowerShell_Editions - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_editions?view=powershell-5.1) | `Desktop` と `Core` のエディションの違いと、`CompatiblePSEditions` の指定方法を示す。 |
+| 2. 環境<br>18. 自動フォーマット<br>20. 静的解析<br>22. CI | [PSScriptAnalyzer module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/overview?view=ps-modules) | フォーマットと静的解析を行うモジュールの導入方法と機能を示す。 |
+| 2. 環境<br>21. テスト<br>22. CI | [Quick Start \| Pester](https://pester.dev/docs/v5/quick-start) | テストの記述方法と実行方法を示す。 |
+| 2. 環境<br>3. リポジトリ構成<br>6. ビルド | [ModuleBuilder](https://github.com/PoshCode/ModuleBuilder) | ソースを単一のスクリプトモジュールへ統合するビルドの設定と動作を示す。 |
+| 2. 環境<br>3. リポジトリ構成<br>6. ビルド<br>13. 外部呼び出し | [.NET SDK overview - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/sdk) | C#プロジェクトのビルドに使用する SDK の構成と、バージョンを固定する方法を示す。 |
+| 3. リポジトリ構成<br>5. モジュールマニフェスト | [Understanding a Windows PowerShell Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/developer/module/understanding-a-windows-powershell-module?view=powershell-5.1) | モジュールの構成要素と、スクリプトモジュールの仕組みを示す。 |
+| 3. リポジトリ構成<br>13. 外部呼び出し | [MSBuild project file schema reference - Visual Studio (Windows) \| Microsoft Learn](https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-project-file-schema-reference?view=vs-2022) | `.csproj` へ記述できる要素とプロパティを定義する。 |
+| 3. リポジトリ構成<br>6. ビルド | [Artifacts output layout - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/sdk/artifacts-output) | ビルド成果物を `artifacts/` へ出力するレイアウトを示す。 |
+| 6. ビルド<br>21. テスト | [PSReadLine.build.ps1 - PowerShell/PSReadLine](https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine.build.ps1) | ModuleBuilder と Pester を組み合わせたビルドスクリプトの実装例を示す。 |
+| 22. CI | [setup-dotnet - GitHub Actions](https://github.com/actions/setup-dotnet) | GitHub Actions のランナーへ .NET SDK を導入する方法を示す。 |
+| 4. ソースファイル形式<br>13. 外部呼び出し<br>14. ファイル | [about_Character_Encoding - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-5.1) | PowerShell が読み書きで使用する文字コードと、既定のエンコーディングを示す。 |
+| 14. ファイル | [Import-PowerShellDataFile (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/import-powershelldatafile?view=powershell-5.1) | `.psd1` をハッシュテーブルとして読み込む方法を示す。 |
+| 5. モジュールマニフェスト<br>23. PowerShell Gallery | [about_Module_Manifests - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests?view=powershell-5.1) | マニフェストへ記載する項目とその意味を定義する。 |
+| 5. モジュールマニフェスト | [New-ModuleManifest (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest?view=powershell-5.1) | マニフェストを生成するコマンドのパラメーターを示す。 |
+| 7. 命名 | [Get-Verb (Microsoft.PowerShell.Core) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/get-verb?view=powershell-5.1) | 承認済みの動詞とその分類を示す。 |
+| 7. 命名 | [Strongly Encouraged Development Guidelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/strongly-encouraged-development-guidelines?view=powershell-5.1) | コマンドの命名とパラメーター設計で推奨される事項を示す。 |
+| 8. 関数<br>9. パイプライン | [about_Functions_Advanced_Parameters - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-5.1) | パラメーターの属性、検証属性、パイプライン入力の指定方法を示す。 |
+| 8. 関数 | [about_Functions_Advanced - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced?view=powershell-5.1) | `[CmdletBinding()]` を使用した高度な関数の仕組みを示す。 |
+| 8. 関数 | [about_Functions_OutputTypeAttribute - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute?view=powershell-5.1) | `[OutputType()]` の宣言方法と用途を示す。 |
+| 8. 関数<br>10. 出力 | [Everything you wanted to know about PSCustomObject - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-pscustomobject?view=powershell-5.1) | `[PSCustomObject]` の生成方法と `PSTypeName` の指定を示す。 |
+| 8. 関数 | [ProxyCommand.Create Method (System.Management.Automation) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.proxycommand.create?view=powershellsdk-7.4.0) | 既存のコマンドと同じパラメーターを持つ関数のひな形を生成する方法を示す。 |
+| 9. パイプライン<br>10. 出力 | [about_Pipelines - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-5.1) | パイプラインの処理順序と、`begin`、`process`、`end` の実行タイミングを示す。 |
+| 10. 出力<br>11. エラー処理 | [about_Output_Streams - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_output_streams?view=powershell-5.1) | 成功、エラー、警告、詳細、デバッグ、情報の各ストリームを定義する。 |
+| 10. 出力 | [about_Return - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_return?view=powershell-5.1) | `return` の動作と、値を出力することとの違いを示す。 |
+| 10. 出力 | [about_Format.ps1xml - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_format.ps1xml?view=powershell-5.1) | 表示形式を定義するファイルの記述方法を示す。 |
+| 11. エラー処理 | [about_Error_Handling - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_error_handling?view=powershell-5.1) | 終了エラーと非終了エラーの違いと、`try/catch` の動作を示す。 |
+| 11. エラー処理 | [about_Throw - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_throw?view=powershell-5.1) | `catch` 内の引数のない `throw` が現在のエラーを再送出することを示す。 |
+| 11. エラー処理 | [Exception.InnerException Property (System) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.exception.innerexception?view=netframework-4.8.1) | 新しい例外に元の例外を原因として保持する方法を示す。 |
+| 12. 状態変更 | [Everything you wanted to know about ShouldProcess - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-shouldprocess?view=powershell-5.1) | `SupportsShouldProcess` と、`-WhatIf`、`-Confirm` の動作を示す。 |
+| 13. 外部呼び出し | [about_Automatic_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1) | `$LASTEXITCODE`、`$PWD`、`$_` などの自動変数を定義する。 |
+| 13. 外部呼び出し | [Start-Process (Microsoft.PowerShell.Management) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-process?view=powershell-5.1) | `-NoNewWindow`、`-Wait`、`-PassThru`、`-WorkingDirectory` の動作と、戻り値のプロセスオブジェクトを示す。 |
+| 13. 外部呼び出し | [about_Parsing - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_parsing?view=powershell-5.1) | ネイティブコマンドへの引数の結合、引用符のエスケープ、停止解析トークン `--%`、バッチファイルへの引数の扱いを示す。 |
+| 13. 外部呼び出し | [about_Redirection - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection?view=powershell-5.1) | `2>$null` と `2>&1` によるストリームのリダイレクトを定義する。 |
+| 13. 外部呼び出し | [CommandLineToArgvW function (shellapi.h) - Win32 apps \| Microsoft Learn](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-commandlinetoargvw) | Windows で広く使われる引用符とバックスラッシュの解析規則を示す。 |
+| 13. 外部呼び出し | [cmd \| Microsoft Learn](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cmd) | `cmd.exe` のメタ文字、環境変数展開、遅延展開の規則を示す。 |
+| 13. 外部呼び出し | [ProcessStartInfo.UseShellExecute Property (System.Diagnostics) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.useshellexecute?view=netframework-4.8.1) | .NET Framework での既定値と、ストリームのリダイレクトに `false` が必要であることを示す。 |
+| 13. 外部呼び出し | [ProcessStartInfo.WorkingDirectory Property (System.Diagnostics) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.workingdirectory?view=netframework-4.8.1) | `UseShellExecute` の値による作業ディレクトリの意味の違いを示す。 |
+| 13. 外部呼び出し | [ProcessStartInfo.RedirectStandardOutput Property (System.Diagnostics) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.redirectstandardoutput?view=netframework-4.8.1) | 標準出力と標準エラーを同時に読み取る際のデッドロックを説明する。 |
+| 13. 外部呼び出し | [about_Preference_Variables - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1) | `$OutputEncoding`、`$ProgressPreference` などのプリファレンス変数を定義する。 |
+| 13. 外部呼び出し | [Add-Type (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/add-type?view=powershell-5.1) | アセンブリと型を読み込む方法を示す。 |
+| 14. ファイル | [about_Path_Syntax - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-gb/powershell/module/microsoft.powershell.core/about/about_path_syntax?view=powershell-5.1) | `-Path` と `-LiteralPath` が解釈するパスの違いを示す。 |
+| 15. 通信 | [Invoke-RestMethod (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/Microsoft.PowerShell.Utility/invoke-restmethod?view=powershell-5.1) | REST API の応答をオブジェクトへ変換するコマンドのパラメーターを示す。 |
+| 15. 通信 | [Invoke-WebRequest (Microsoft.PowerShell.Utility) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-5.1) | `-UseBasicParsing` の指定と、HTML 解析の動作を示す。 |
+| 15. 通信 | [HttpClient Class (System.Net.Http) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=netframework-4.8.1) | HTTP 要求を送るクラスの使用方法と、インスタンスを再利用する必要性を示す。 |
+| 15. 通信 | [HttpCompletionOption Enum (System.Net.Http) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpcompletionoption?view=netframework-4.8.1) | 応答ヘッダーだけを先に読み込む指定を定義する。 |
+| 15. 通信 | [Transport Layer Security (TLS) best practices with .NET Framework \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls) | .NET Framework で TLS のバージョンを選択させる設定を示す。 |
+| 15. 通信 | [AngleSharp](https://github.com/AngleSharp/AngleSharp) | HTML を解析するライブラリの使用方法を示す。 |
+| 16. コードスタイル | [about_Scopes - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scopes?view=powershell-5.1) | 変数のスコープと、`$script:` の有効範囲を定義する。 |
+| 16. コードスタイル | [about_Parsing - PowerShell \| Microsoft Learn](https://learn.microsoft.com/ja-jp/powershell/module/microsoft.powershell.core/about/about_parsing?view=powershell-5.1) | バッククォートによる行継続の構文と、それを避ける理由を説明する。構文上改行できる位置と、引数が多い場合にスプラッティングを使う方法を示す。 |
+| 16. コードスタイル<br>17. ヘルプ | [PowerShell ドキュメントのスタイル ガイド - PowerShell \| Microsoft Learn](https://learn.microsoft.com/ja-jp/powershell/scripting/community/contributing/powershell-style-guide?view=powershell-7.6) | Microsoft の PowerShell ドキュメントのコード例で、行継続文字を避ける書き方、名前の正式な表記、キーワードと演算子の小文字表記を定める。プロンプト文字列の扱いと、実行するコードと実行結果を分ける方法を示す。 |
+| 16. コードスタイル | [about_Splatting - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_splatting?view=powershell-5.1) | ハッシュテーブルでパラメーターをまとめて渡す方法を示す。 |
+| 16. コードスタイル | [about_Comparison_Operators - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comparison_operators?view=powershell-5.1) | 比較演算子の動作と、`$null` を比較する場合の注意を示す。 |
+| 17. ヘルプ | [about_Comment_Based_Help - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-5.1) | コメントベースのヘルプのセクションと、記述する位置を定義する。 |
+| 18. 自動フォーマット | [Invoke-Formatter (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-formatter?view=ps-modules) | 設定に従ってコードを整形するコマンドの使用方法を示す。 |
+| 19. 構文チェック | [Parser Class (System.Management.Automation.Language) \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.parser?view=powershellsdk-7.4.0) | PowerShell コードを解析し、構文エラーを取得する方法を示す。 |
+| 20. 静的解析 | [Invoke-ScriptAnalyzer (PSScriptAnalyzer) - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/psscriptanalyzer/invoke-scriptanalyzer?view=ps-modules) | 静的解析を実行するコマンドのパラメーターと、設定ファイルの指定方法を示す。 |
+| 5. モジュールマニフェスト<br>20. 静的解析 | [PSScriptAnalyzer rules and recommendations - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules-recommendations?view=ps-modules) | 既定のルールと、その重大度を示す。 |
+| 20. 静的解析 | [PSCodeHealth](https://pscodehealth.readthedocs.io/en/latest/) | コードの品質指標を計測するモジュールの使用方法を示す。 |
+| 21. テスト | [Unit Testing within Modules \| Pester](https://pester.dev/docs/usage/modules/) | `InModuleScope` でモジュール内部の関数を検証する方法を示す。 |
+| 21. テスト | [Mocking with Pester \| Pester](https://pester.dev/docs/usage/mocking) | `Mock` で依存を置き換える方法と、呼び出しを検証する方法を示す。 |
+| 21. テスト | [Best practices for writing unit tests - .NET \| Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices) | Unit Test の設計で推奨される事項を示す。 |
+| 21. テスト | [Test Double - Martin Fowler](https://martinfowler.com/bliki/TestDouble.html) | Test Double の種類と、それぞれの役割を説明する。 |
+| 22. CI | [Workflow syntax for GitHub Actions - GitHub Docs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) | ワークフローファイルへ記述できる要素を定義する。 |
+| 2. 環境 | [Install a package manager for PowerShell - PowerShell \| Microsoft Learn](https://learn.microsoft.com/powershell/gallery/powershellget/update-powershell-51) | Windows PowerShell 5.1 へ PSResourceGet を導入する手順を示す。 |
+| 2. 環境<br>23. PowerShell Gallery | [Microsoft.PowerShell.PSResourceGet Module - PowerShell \| Microsoft Learn](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/?view=powershellget-3.x) | モジュールの検索、導入、公開を行うコマンドを示す。 |
