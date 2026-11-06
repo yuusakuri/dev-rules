@@ -21,7 +21,8 @@
 │   └── documentation/        # 文書作成のガイドライン
 ├── templates/
 │   ├── README.md             # テンプレート一覧
-│   └── documentation/        # ドキュメントのテンプレート
+│   ├── documentation/        # ドキュメントのテンプレート
+│   └── agent-harness/        # エージェントハーネスのテンプレート
 ├── tools/                    # 文書と図の変換ツール
 └── docker/                   # 変換ツールを実行するDockerイメージとその検証スクリプト
 ```
