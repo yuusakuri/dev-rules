@@ -17,10 +17,12 @@
 │   ├── development/          # リポジトリ、Git、バージョン管理、ソフトウェア使用のガイドライン
 │   ├── implementation/       # 技術固有の実装ガイドライン
 │   ├── ui/                   # UIデザインガイドライン
+│   ├── ai/                   # AIエージェントの運用のガイドライン
 │   └── documentation/        # 文書作成のガイドライン
 ├── templates/
 │   ├── README.md             # テンプレート一覧
-│   └── documentation/        # ドキュメントのテンプレート
+│   ├── documentation/        # ドキュメントのテンプレート
+│   └── agent-harness/        # エージェントハーネスのテンプレート
 ├── tools/                    # 文書と図の変換ツール
 └── docker/                   # 変換ツールを実行するDockerイメージとその検証スクリプト
 ```
