@@ -155,7 +155,7 @@ Slackアプリには、[表7](#table-7)のスコープを付与する。
 
 | トークン | スコープ | 用途 |
 | --- | --- | --- |
-| アプリレベルトークン | Socket Modeの接続 | イベントの受信。 |
+| アプリレベルトークン | `connections:write` | Socket Modeの接続によるイベントの受信。 |
 | ボットトークン | `chat:write` | スレッドへの返信。 |
 | ボットトークン | `app_mentions:read` | メンションの受信。メンション以外も受け取る場合は、`channels:history` 又は `groups:history` を加える。 |
 
@@ -225,5 +225,6 @@ Slackのスレッド一つに、エージェントのセッション一つを対
 | 4章 | [Use ChatGPT in Slack \| ChatGPT Learn](https://learn.chatgpt.com/docs/third-party/slack) | SlackからCodex Cloudのタスクを起動する前提、使い方、返信の公開範囲、制限を示す。 |
 | 5章 | [チャネルを使用して実行中のセッションにイベントをプッシュする - Claude Code Docs](https://code.claude.com/docs/ja/channels) | Claude Codeのチャネル機能と、リサーチプレビューに含まれるチャットのプラグインを示す。 |
 | 5章 | [Using Socket Mode \| Slack Developer Docs](https://docs.slack.dev/apis/events-api/using-socket-mode) | WebSocketによるイベントの受信、確認応答、再接続を定義する。 |
+| 5章 | [connections:write scope \| Slack Developer Docs](https://docs.slack.dev/reference/scopes/connections.write/) | Socket Modeの接続に必要なアプリレベルトークンのスコープを定義する。 |
 | 5章 | [Claude Code をプログラムで実行する - Claude Code Docs](https://code.claude.com/docs/ja/headless) | Claude Codeの非対話モードでの実行とセッションの再開を示す。 |
 | 5章 | [Non-interactive mode \| ChatGPT Learn](https://learn.chatgpt.com/docs/non-interactive-mode) | `codex exec` の出力形式とセッションの再開を定義する。 |
