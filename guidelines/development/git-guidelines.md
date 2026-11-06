@@ -29,6 +29,8 @@ PR マージ前にフォーマットチェック、静的解析 / lint、全テ�
 3. 作業ブランチをリモートリポジトリへpushする。
 4. Pull Requestを作成する。
 
+既存のプルリクエストを修正する場合は、明確な指示がある場合を除き、新たなプルリクエストを作成してはならない。
+
 ### 2.4 ブランチ名：Conventional Branch
 
 ブランチ名は [Conventional Branch](https://conventional-branch.github.io/) に従う。ただし、AI Agent Source Prefixes は使用しない。
