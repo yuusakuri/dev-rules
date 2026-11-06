@@ -18,6 +18,7 @@
 | 実装 | [Python実装ガイドライン](implementation/python-guidelines.md) | Python実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Windows PowerShellモジュール実装ガイドライン](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュール実装のガイドライン。 | ソフトウェア設計ガイドライン、リポジトリガイドライン |
+| AI | [AIエージェントの認証ガイドライン](ai/agent-authentication-guidelines.md) | AIエージェントがログインして作業するための認証方式のガイドライン。 | なし |
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現のガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
