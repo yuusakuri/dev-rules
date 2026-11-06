@@ -51,10 +51,6 @@ subtitle: 副題
 ---
 # 文書名
 
-## 目次
-
-- [章](#章)
-
 ## 章
 
 ### 節
@@ -83,9 +79,41 @@ subtitle: 副題
       }
       assert.equal(paragraphs.filter((p) => p.style === 'Subtitle').length, 1);
       assert.match(xml, /TOC[^<]*\\o &quot;2-2&quot;/);
-      assert.ok(paragraphs.some((p) => p.text.startsWith('章') && p.style === 'TOC2'));
+      assert.deepEqual(paragraphs.filter((p) => p.style === 'TOC2').map((p) => p.text), ['章']);
+      const order = paragraphs.map((p) => p.style);
+      assert.ok(order.indexOf('Subtitle') < order.indexOf('TOCHeading') && order.indexOf('TOCHeading') < order.indexOf('Heading2'));
       const styles = await archive.file('word/styles.xml').async('string');
       assert.match(styles, /w:styleId="Heading6"[^]*?<w:rFonts[^>]*w:eastAsia="Yu Gothic"/);
+    } finally {
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test(`${style}: --without-toc omits the TOC`, async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-toc-'));
+    try {
+      const source = path.join(directory, 'input.md');
+      const output = path.join(directory, 'output.docx');
+      await fs.writeFile(source, '# 文書名\n\n## 章\n');
+      execFileSync(process.execPath, [converter, '--input-file', source, '--without-toc', '--output-file', output, '--style', style]);
+      const xml = await (await JSZip.loadAsync(await fs.readFile(output))).file('word/document.xml').async('string');
+      assert.ok(!xml.includes('TOCHeading'));
+      assert.doesNotMatch(xml, /TOC[^<]*\\o/);
+    } finally {
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test(`${style}: a hand-written 目次 chapter is rejected`, async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'docx-toc-'));
+    try {
+      const source = path.join(directory, 'input.md');
+      const output = path.join(directory, 'output.docx');
+      await fs.writeFile(source, '# 文書名\n\n## 目次\n\n- [章](#章)\n\n## 章\n');
+      assert.throws(
+        () => execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style], { stdio: 'pipe' }),
+        /The 目次 heading is generated/,
+      );
     } finally {
       await fs.rm(directory, { recursive: true, force: true });
     }
@@ -188,7 +216,7 @@ for (const style of ['docx', 'google-docs']) {
 | 最後 | 本文 |
 `);
       await sharp({ create: { width: 2, height: 2, channels: 3, background: '#000' } }).png().toFile(path.join(directory, 'image.png'));
-      execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style]);
+      execFileSync(process.execPath, [converter, '--input-file', source, '--output-file', output, '--style', style, '--without-toc']);
       const archive = await JSZip.loadAsync(await fs.readFile(output));
       const xml = await archive.file('word/document.xml').async('string');
       const blocks = bodyBlocks(xml);

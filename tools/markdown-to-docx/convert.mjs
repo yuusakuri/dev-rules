@@ -12,16 +12,23 @@ import sharp from 'sharp';
 import { parse as parseYaml } from 'yaml';
 
 const args = process.argv.slice(2);
-const usage = 'Usage: node convert.mjs --input-file INPUT.md --output-file OUTPUT.docx [--style docx|google-docs]';
+const usage = 'Usage: node convert.mjs --input-file INPUT.md --output-file OUTPUT.docx [--style docx|google-docs] [--without-toc]';
 const validOptions = new Set(['--input-file', '--output-file', '--style']);
-if (args.length % 2 !== 0) throw new Error(usage);
+const validFlags = new Set(['--without-toc']);
 const options = new Map();
-for (let index = 0; index < args.length; index += 2) {
+for (let index = 0; index < args.length; index += 1) {
   const option = args[index];
+  if (options.has(option)) throw new Error(usage);
+  if (validFlags.has(option)) {
+    options.set(option, true);
+    continue;
+  }
   const value = args[index + 1];
-  if (!validOptions.has(option) || options.has(option) || !value || value.startsWith('--')) throw new Error(usage);
+  if (!validOptions.has(option) || !value || value.startsWith('--')) throw new Error(usage);
   options.set(option, value);
+  index += 1;
 }
+const withToc = !options.has('--without-toc');
 const sourceArg = options.get('--input-file');
 const outputArg = options.get('--output-file');
 const style = options.get('--style') ?? 'docx';
@@ -285,13 +292,26 @@ function renderBlockquote(token, depth = 1) {
     else rejectNestedBlock(part, 'blockquote');
   }
 }
-let tocListPending = false;
 const titleToken = tokens.find((token) => token.type === 'heading' && token.depth === 1);
+const chapterHeadings = tokens.filter((token) => token.type === 'heading' && token.depth === 2);
+// The TOC goes before the first chapter, so a hand-written 目次 chapter would appear twice.
+if (withToc && chapterHeadings.some((token) => plainText(token.tokens) === '目次')) {
+  throw new Error('The 目次 heading is generated; remove it from the Markdown or pass --without-toc');
+}
+function appendToc() {
+  appendParagraph(marked.lexer('## 目次')[0], { after: 150, paragraph: { style: 'TOCHeading', keepNext: true } });
+  // The TOC field lists Heading 2 paragraphs; the cache is shown until Word updates the field.
+  children.push(new TableOfContents('目次', {
+    hyperlink: true,
+    headingStyleRange: '2-2',
+    cachedEntries: chapterHeadings.map((token) => ({ title: plainText(token.tokens), level: 2 })),
+  }));
+}
 for (const [index, token] of tokens.entries()) {
   if (token.type === 'space' || token.type === 'hr' || token.type === 'html') continue;
   if (token.type === 'heading') {
-    tocListPending = token.text === '目次';
-    const heading = tocListPending ? 'TOCHeading' : token === titleToken ? 'Title' : HeadingLevel['HEADING_' + token.depth];
+    if (withToc && token === chapterHeadings[0]) appendToc();
+    const heading = token === titleToken ? 'Title' : HeadingLevel['HEADING_' + token.depth];
     appendParagraph(token, { after: token === titleToken ? 230 : 150, paragraph: { style: heading, keepNext: true } });
     if (token === titleToken && subtitle) children.push(new Paragraph({ text: subtitle, style: 'Subtitle' }));
   } else if (token.type === 'paragraph') {
@@ -311,15 +331,6 @@ for (const [index, token] of tokens.entries()) {
     }));
     children.push(makeTable(token));
   } else if (token.type === 'list') {
-    if (tocListPending) {
-      children.push(new TableOfContents('目次', {
-        hyperlink: true,
-        headingStyleRange: '2-2',
-        cachedEntries: token.items.map((item) => ({ title: cleanText(marked.parseInline(item.text)), level: 2 })),
-      }));
-      tocListPending = false;
-      continue;
-    }
     renderList(token);
   } else if (token.type === 'code') {
     renderCode(token);
