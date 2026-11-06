@@ -4,19 +4,31 @@
 
 ### 1.1 目的
 
-本書の目的は、Claude Code、CodexなどのAIエージェントをDiscordと連携させ、作業の通知及び実行中のエージェントとの対話を行えるようにすることである。
+本書の目的は、AIエージェントの運用者が、Discordから作業の状況を確認し、必要な指示をエージェントへ届けられるようにすることである。
 
 ### 1.2 適用範囲
 
 本書は、AIエージェントとDiscordとの連携の方法について規定する。個人の端末、サーバー又はクラウドのいずれでエージェントを実行する場合にも適用する。
 
----
+### 1.3 用語及び定義
+
+この文書で用いる主な用語及び定義は、[表1](#table-1)による。
+
+<a id="table-1"></a>表1−用語及び定義
+
+| 用語 | 定義 |
+| --- | --- |
+| ウェブフック | 指定したURLへのHTTP要求によって、外部からメッセージ又はイベントを送る仕組み。 |
+| ブリッジ | チャットサービスとエージェントとの間で、指示及び応答を中継するプログラム。 |
+| セッション | 会話履歴及び実行状態を引き継ぐ、エージェントとの作業の単位。 |
+| DM（direct message） | 指定した利用者又はボットと直接送受信するメッセージ。 |
+| MCP（Model Context Protocol） | AIアプリケーションと外部のツール又はデータを接続するための通信規約。 |
 
 ## 2 連携の型の選び方
 
-連携は、情報の向きと対応するツールによって、[表1](#table-1)の三つの型に分ける。目的に合う型を選び、複数の目的がある場合は型を組み合わせる。
+連携は、情報の向きと対応するツールによって、[表2](#table-2)の三つの型に分ける。目的に合う型を選び、複数の目的がある場合は型を組み合わせる。
 
-<a id="table-1"></a>表1−連携の型
+<a id="table-2"></a>表2−連携の型
 
 | 型 | 情報の向き | 対応するツール | 実現方法 | 適する用途 |
 | --- | --- | --- | --- | --- |
@@ -26,17 +38,15 @@
 
 Claude Codeだけを使用し、指示する人が自分だけの場合は、チャネルを使用し、ブリッジを作らない。ブリッジは、スレッドとセッションの対応づけ又は障害時の再開を自分で実装する必要がある。
 
----
-
 ## 3 通知
 
 ### 3.1 状態が変わった場合だけ送る
 
-通知は、人の対応が必要な状態か、作業の区切りに限定する。ツールの実行ごと又は応答ごとに送ると、重要な通知が埋もれる。例えば、1 000ファイルの移行では、1ファイルごとではなく、全件の完了、失敗の発生、確認待ちの場合に送る。
+通知は、人の対応が必要な状態又は作業の区切りに限定する。送信回数を抑え、確認待ち、完了及び失敗を識別しやすくする。例えば、1 000ファイルの移行では、1ファイルごとではなく、全件の完了、失敗の発生、確認待ちの場合に送る。
 
-通知のきっかけには、各ツールの[表2](#table-2)の機能を使用する。
+通知のきっかけには、各ツールの[表3](#table-3)の機能を使用する。
 
-<a id="table-2"></a>表2−状態ごとの通知の機能
+<a id="table-3"></a>表3−状態ごとの通知の機能
 
 | 状態 | Claude Code | Codex |
 | --- | --- | --- |
@@ -51,7 +61,7 @@ Stopフックを作業の継続の判断にも使用する場合は、通知の�
 
 通知だけを送る場合は、チャンネルのウェブフックを使用する。ウェブフックはボットを作らずに投稿できる。
 
-投稿には、`allowed_mentions` に空の `parse` を指定し、本文に含まれる `@everyone` やユーザーへのメンションで通知が飛ばないようにする。
+投稿には、`allowed_mentions` に空の `parse` を指定し、本文に含まれる `@everyone` 又はユーザーへのメンションで通知が飛ばないようにする。
 
 進捗を1件の投稿で示す場合は、`wait=true` を付けて投稿し、返された投稿のIDで同じ投稿を編集する。
 
@@ -64,9 +74,9 @@ Stopフックを作業の継続の判断にも使用する場合は、通知の�
 - 起きた事象（確認待ち、完了、失敗）。
 - 最後の応答の要約。
 
-通知の本文の例は、[表3](#table-3)による。
+通知の本文の例は、[表4](#table-4)による。
 
-<a id="table-3"></a>表3−通知の本文の例
+<a id="table-4"></a>表4−通知の本文の例
 
 | 事象 | 本文の例 |
 | --- | --- |
@@ -82,8 +92,6 @@ Stopフックを作業の継続の判断にも使用する場合は、通知の�
 
 DiscordのAPIは、HTTP 429で頻度の制限を知らせる。429が返った場合は、応答の `retry_after` の秒数だけ待ってから再送する。
 
----
-
 ## 4 Claude Codeのチャネルによる対話
 
 ### 4.1 仕組み
@@ -92,9 +100,9 @@ DiscordのAPIは、HTTP 429で頻度の制限を知らせる。429が返った�
 
 チャネルはリサーチプレビューであり、起動オプションと動作が変わることがある。メッセージは、セッションが動いている間だけ届く。常に受け付ける場合は、端末を閉じても止まらない常駐のプロセスでClaude Codeを実行する。
 
-チャネルの利用条件は、[表4](#table-4)による。
+チャネルの利用条件は、[表5](#table-5)による。
 
-<a id="table-4"></a>表4−チャネルの利用条件
+<a id="table-5"></a>表5−チャネルの利用条件
 
 | 項目 | 内容 |
 | --- | --- |
@@ -112,8 +120,6 @@ DiscordのAPIは、HTTP 429で頻度の制限を知らせる。429が返った�
 5. `--channels plugin:discord@claude-plugins-official` を付けてClaude Codeを起動する。
 6. ボットへDMを送り、返されたペアリングのコードをClaude Codeで承認する。
 
----
-
 ## 5 ブリッジによる対話の中継
 
 ### 5.1 構成
@@ -130,9 +136,9 @@ DiscordのAPIは、HTTP 429で頻度の制限を知らせる。429が返った�
 
 メッセージは、Gatewayに接続して受け取る。受け取る頻度が低い場合は、チャンネルのメッセージの取得APIを `after` で定期的に呼ぶ方法でもよい。
 
-ボットには、[表5](#table-5)の権限を付与する。
+ボットには、[表6](#table-6)の権限を付与する。
 
-<a id="table-5"></a>表5−ボットの権限
+<a id="table-6"></a>表6−ボットの権限
 
 | 権限 | 用途 |
 | --- | --- |
@@ -146,11 +152,11 @@ DiscordのAPIは、HTTP 429で頻度の制限を知らせる。429が返った�
 
 サーバーのチャンネルでは、Discordのスレッド一つに、エージェントのセッション一つを対応させる。最初の指示のメッセージからスレッドを作って新しいセッションを開始し、セッションIDとスレッドのIDの対応をファイルへ保存する。同じスレッドへの投稿は、そのセッションを再開して渡す。
 
-DMにはスレッドを作れない。DMでは、DMのチャンネルのIDとセッションIDの対応を保存し、同じDMへの投稿をそのセッションへ渡す。新しいセッションを始める指示（`new` など）を決め、受け取った場合に対応を作り直す。
+DMにはスレッドを作れない。DMでは、DMのチャンネルのID及びセッションIDの対応を保存し、同じDMへの投稿をそのセッションへ渡す。新しいセッションを始める指示（`new` など）を決め、受け取った場合に対応を作り直す。
 
-ツールごとのセッションの操作は、[表6](#table-6)による。
+ツールごとのセッションの操作は、[表7](#table-7)による。
 
-<a id="table-6"></a>表6−ツールごとのセッションの操作
+<a id="table-7"></a>表7−ツールごとのセッションの操作
 
 | ツール | 新しいセッション | セッションの再開 | セッションIDの取得 |
 | --- | --- | --- | --- |
@@ -165,11 +171,11 @@ DMにはスレッドを作れない。DMでは、DMのチャンネルのIDとセ
 
 ### 5.5 応答の返し方
 
-メッセージを受け取ったら、すぐに受け付けたことを返信し、エージェントの実行が終わってから結果を投稿する。エージェントの実行には数分から数時間かかるため、結果を待ってから最初の返信をしない。
+メッセージを受信したら受付を返信し、エージェントの実行後に結果を投稿する。実行には数分から数時間かかる場合があるため、利用者が依頼を受け付けたことを先に確認可能にする。
 
-応答の例は、[表7](#table-7)による。
+応答の例は、[表8](#table-8)による。
 
-<a id="table-7"></a>表7−応答の例
+<a id="table-8"></a>表8−応答の例
 
 | 時点 | 返信の例 |
 | --- | --- |
@@ -179,30 +185,26 @@ DMにはスレッドを作れない。DMでは、DMのチャンネルのIDとセ
 
 結果は、最後の応答を2 000文字以内に要約して投稿する。長い出力は、ファイルとして添付するか、作業環境に保存して場所を示す。投稿には `allowed_mentions` に空の `parse` を指定し、エージェントの出力でメンションの通知が飛ばないようにする。
 
----
-
 ## 6 チェックリスト
 
 - 通知、チャネルによる対話、ブリッジによる対話の中継から、目的と使用するツールに合う型を選んだ。
 - 通知は、確認待ち、完了、失敗などの状態の変化に限定し、本文にログ又は差分の全文を含めていない。
-- 通知と応答の投稿で、`allowed_mentions` によりメンションの通知を抑止している。
+- 通知と応答の投稿で、`allowed_mentions` によってメンションの通知を抑止している。
 - 通知の送信の失敗で、エージェントが止まらないことを確認した。
 - ブリッジは、メンションとDMだけを指示として扱い、ボットのメッセージを無視する。
 - ブリッジは、スレッド又はDMとセッションを対応させ、同じセッションを同時に実行しない。
-
----
 
 ## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 3章 | [Hooks リファレンス - Claude Code Docs](https://code.claude.com/docs/ja/hooks) | Claude CodeのNotification、Stop、StopFailure、SessionEndの各フックのきっかけと入力を定義する。 |
-| 3章 | [Advanced Configuration \| ChatGPT Learn](https://learn.chatgpt.com/docs/config-file/config-advanced) | Codexの `notify` の設定と、`agent-turn-complete` のJSONの項目を定義する。 |
-| 3章 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | CodexのPermissionRequest、Stop、SessionEndを含むフックのイベントを定義する。 |
-| 3章 | [Webhook Resource - Documentation - Discord](https://docs.discord.com/developers/resources/webhook) | ウェブフックによる投稿、`wait` による投稿の取得、投稿の編集、本文の長さ、`allowed_mentions` を定義する。 |
+| 3章 | [Hooks リファレンス - Claude Code Docs](https://code.claude.com/docs/ja/hooks) | Claude Codeのフックのイベント及び設定方法を定めたリファレンス。 |
+| 3章 | [Advanced Configuration \| ChatGPT Learn](https://learn.chatgpt.com/docs/config-file/config-advanced) | Codexの詳細な設定方法を示す文書。 |
+| 3章 | [Hooks \| ChatGPT Learn](https://learn.chatgpt.com/docs/hooks) | Codexのフックのイベント及び設定方法を示す文書。 |
+| 3章 | [Webhook Resource - Documentation - Discord](https://docs.discord.com/developers/resources/webhook) | DiscordのウェブフックAPIを定めたリファレンス。 |
 | 3章 | [Rate Limits - Documentation - Discord](https://docs.discord.com/developers/topics/rate-limits) | 頻度の制限と、HTTP 429の応答を定義する。 |
-| 4章 | [チャネルを使用して実行中のセッションにイベントをプッシュする - Claude Code Docs](https://code.claude.com/docs/ja/channels) | チャネルの仕組み、Discordプラグインの設定、組織の設定、リサーチプレビューの制約を示す。 |
-| 5章 | [Gateway - Documentation - Discord](https://docs.discord.com/developers/events/gateway) | Gatewayの接続と、Message Content Intentの対象と例外を定義する。 |
-| 5章 | [Message Resource - Documentation - Discord](https://docs.discord.com/developers/resources/message) | メッセージの取得と投稿のAPI、必要な権限、本文の長さ、`allowed_mentions` を定義する。 |
+| 4章 | [チャネルを使用して実行中のセッションにイベントをプッシュする - Claude Code Docs](https://code.claude.com/docs/ja/channels) | Claude Codeへ外部のイベントを届けるチャネル機能の利用ガイド。 |
+| 5章 | [Gateway - Documentation - Discord](https://docs.discord.com/developers/events/gateway) | DiscordのGateway接続及びイベントを定めたリファレンス。 |
+| 5章 | [Message Resource - Documentation - Discord](https://docs.discord.com/developers/resources/message) | DiscordのメッセージAPIを定めたリファレンス。 |
 | 5章 | [Claude Code をプログラムで実行する - Claude Code Docs](https://code.claude.com/docs/ja/headless) | Claude Codeの非対話モードでの実行とセッションの再開を示す。 |
 | 5章 | [Non-interactive mode \| ChatGPT Learn](https://learn.chatgpt.com/docs/non-interactive-mode) | `codex exec` の出力形式とセッションの再開を定義する。 |

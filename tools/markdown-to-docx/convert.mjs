@@ -12,16 +12,23 @@ import sharp from 'sharp';
 import { parse as parseYaml } from 'yaml';
 
 const args = process.argv.slice(2);
-const usage = 'Usage: node convert.mjs --input-file INPUT.md --output-file OUTPUT.docx [--style docx|google-docs]';
+const usage = 'Usage: node convert.mjs --input-file INPUT.md --output-file OUTPUT.docx [--style docx|google-docs] [--without-toc]';
 const validOptions = new Set(['--input-file', '--output-file', '--style']);
-if (args.length % 2 !== 0) throw new Error(usage);
+const validFlags = new Set(['--without-toc']);
 const options = new Map();
-for (let index = 0; index < args.length; index += 2) {
+for (let index = 0; index < args.length; index += 1) {
   const option = args[index];
+  if (options.has(option)) throw new Error(usage);
+  if (validFlags.has(option)) {
+    options.set(option, true);
+    continue;
+  }
   const value = args[index + 1];
-  if (!validOptions.has(option) || options.has(option) || !value || value.startsWith('--')) throw new Error(usage);
+  if (!validOptions.has(option) || !value || value.startsWith('--')) throw new Error(usage);
   options.set(option, value);
+  index += 1;
 }
+const withToc = !options.has('--without-toc');
 const sourceArg = options.get('--input-file');
 const outputArg = options.get('--output-file');
 const style = options.get('--style') ?? 'docx';
@@ -193,30 +200,13 @@ async function imageParagraph(token) {
     const imagePath = path.resolve(path.dirname(sourcePath), decodeHref(rel));
     const sourceData = await fs.readFile(imagePath);
     const sourceMeta = await sharp(sourceData).metadata();
-    let imageOptions;
-    let meta;
-    if (sourceMeta.format === 'svg') {
-      const longestSide = Math.max(sourceMeta.width, sourceMeta.height);
-      const rasterScale = Math.max(1, 3840 / longestSide);
-      // librsvg scales absolute units such as pt by the density twice, so the
-      // size grows with the square of the density. Measure how the size responds
-      // before choosing the density, or the render exceeds the pixel limit.
-      const probe = await sharp(sourceData, { density: 144 }).metadata();
-      const exponent = Math.log2(probe.width / sourceMeta.width) || 1;
-      const density = Math.min(100000, Math.ceil(72 * rasterScale ** (1 / exponent)));
-      const fallback = await sharp(sourceData, { density })
-        .resize({ width: Math.round(sourceMeta.width * rasterScale), height: Math.round(sourceMeta.height * rasterScale) })
-        .png().toBuffer();
-      imageOptions = { data: sourceData, type: 'svg', fallback: { data: fallback, type: 'png' } };
-      meta = sourceMeta;
-    } else {
-      const data = await sharp(sourceData).autoOrient().png().toBuffer();
-      imageOptions = { data, type: 'png' };
-      meta = await sharp(data).metadata();
-    }
+    // DOCX viewers render SVG differently, so vector figures arrive as PNG made with Chromium.
+    if (sourceMeta.format === 'svg') throw new Error(`Convert SVG to PNG before embedding: ${rel}`);
+    const data = await sharp(sourceData).autoOrient().png().toBuffer();
+    const meta = await sharp(data).metadata();
     const scale = Math.min(1, 590 / meta.width, 650 / meta.height);
     if (index) imageRuns.push(new TextRun({ break: 1 }));
-    imageRuns.push(new ImageRun({ ...imageOptions, transformation: { width: Math.round(meta.width * scale), height: Math.round(meta.height * scale) }, altText: { title: img.text ?? '', description: img.text ?? '', name: path.basename(rel) } }));
+    imageRuns.push(new ImageRun({ data, type: 'png', transformation: { width: Math.round(meta.width * scale), height: Math.round(meta.height * scale) }, altText: { title: img.text ?? '', description: img.text ?? '', name: path.basename(rel) } }));
   }
   return new Paragraph({ children: imageRuns, spacing: { before: 100, after: 100 }, keepNext: true });
 }
@@ -302,13 +292,26 @@ function renderBlockquote(token, depth = 1) {
     else rejectNestedBlock(part, 'blockquote');
   }
 }
-let tocListPending = false;
 const titleToken = tokens.find((token) => token.type === 'heading' && token.depth === 1);
+const chapterHeadings = tokens.filter((token) => token.type === 'heading' && token.depth === 2);
+// The TOC goes before the first chapter, so a hand-written 目次 chapter would appear twice.
+if (withToc && chapterHeadings.some((token) => plainText(token.tokens) === '目次')) {
+  throw new Error('The 目次 heading is generated; remove it from the Markdown or pass --without-toc');
+}
+function appendToc() {
+  appendParagraph(marked.lexer('## 目次')[0], { after: 150, paragraph: { style: 'TOCHeading', keepNext: true } });
+  // The TOC field lists Heading 2 paragraphs; the cache is shown until Word updates the field.
+  children.push(new TableOfContents('目次', {
+    hyperlink: true,
+    headingStyleRange: '2-2',
+    cachedEntries: chapterHeadings.map((token) => ({ title: plainText(token.tokens), level: 2 })),
+  }));
+}
 for (const [index, token] of tokens.entries()) {
   if (token.type === 'space' || token.type === 'hr' || token.type === 'html') continue;
   if (token.type === 'heading') {
-    tocListPending = token.text === '目次';
-    const heading = tocListPending ? 'TOCHeading' : token === titleToken ? 'Title' : HeadingLevel['HEADING_' + token.depth];
+    if (withToc && token === chapterHeadings[0]) appendToc();
+    const heading = token === titleToken ? 'Title' : HeadingLevel['HEADING_' + token.depth];
     appendParagraph(token, { after: token === titleToken ? 230 : 150, paragraph: { style: heading, keepNext: true } });
     if (token === titleToken && subtitle) children.push(new Paragraph({ text: subtitle, style: 'Subtitle' }));
   } else if (token.type === 'paragraph') {
@@ -328,15 +331,6 @@ for (const [index, token] of tokens.entries()) {
     }));
     children.push(makeTable(token));
   } else if (token.type === 'list') {
-    if (tocListPending) {
-      children.push(new TableOfContents('目次', {
-        hyperlink: true,
-        headingStyleRange: '2-2',
-        cachedEntries: token.items.map((item) => ({ title: cleanText(marked.parseInline(item.text)), level: 2 })),
-      }));
-      tocListPending = false;
-      continue;
-    }
     renderList(token);
   } else if (token.type === 'code') {
     renderCode(token);
