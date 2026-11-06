@@ -1,13 +1,13 @@
 # エージェントハーネス
 
-評価コマンドで成果を測れる目標に向けて、Claude CodeまたはCodexを終了時刻まで自律で動かすハーネスのひな形。構成は[ハーネスエンジニアリングガイドライン](../../guidelines/ai/harness-engineering-guidelines.md)に、ループの設計は[ループエンジニアリングガイドライン](../../guidelines/ai/loop-engineering-guidelines.md)の期限付きの最適化のループに従う。
+評価コマンドで成果を測れる目標に向けて、Claude Code又はCodexを終了時刻まで自律で動かすハーネスのひな形。構成は[ハーネスエンジニアリングガイドライン](../../guidelines/ai/harness-engineering-guidelines.md)に、ループの設計は[ループエンジニアリングガイドライン](../../guidelines/ai/loop-engineering-guidelines.md)の期限付きの最適化のループに従う。
 
 ## 必要なもの
 
-- LinuxまたはmacOS
+- Linux又はmacOS
 - Python 3.9以降
 - Git
-- Claude CodeまたはCodexのCLI
+- Claude Code又はCodexのCLI
 
 ## 導入
 
