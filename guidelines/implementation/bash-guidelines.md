@@ -142,6 +142,6 @@ GNU版とBSD版で挙動が異なる外部コマンドへ依存する前に、Ba
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
 | 2章<br>3章<br>5章<br>7章 | [Bash Reference Manual](https://www.gnu.org/software/bash/manual/bash.html) | Bashの構文及び組み込みコマンドの仕様を規定している。 |
-| 2章 | [Bash Changes (NEWS)](https://git.savannah.gnu.org/cgit/bash.git/tree/NEWS) | 各機能が追加されたバージョンを示している。 |
-| 11章 | [ShellCheck](https://www.shellcheck.net/) | シェルスクリプトの静的解析を行う。 |
-| 11章 | [Bats-core: Bash Automated Testing System](https://bats-core.readthedocs.io/en/stable/) | シェルスクリプトのテストを記述して実行する。 |
+| 2章 | [Bash NEWS](https://tiswww.case.edu/php/chet/bash/NEWS) | 各機能が追加されたバージョンを示している。 |
+| 11章 | [ShellCheck – shell script analysis tool](https://www.shellcheck.net/) | シェルスクリプトの静的解析を行う。 |
+| 11章 | [Welcome to bats-core’s documentation! — bats-core 1 documentation](https://bats-core.readthedocs.io/en/stable/) | シェルスクリプトのテストを記述して実行する。 |
