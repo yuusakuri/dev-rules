@@ -4,17 +4,17 @@
 
 ### 1.1 目的
 
-本書の目的は、TypeScriptの実装の構成と記述方法をそろえることである。
+本書の目的は、TypeScriptの実装の構成及び記述方法を統一することである。
 
 ### 1.2 適用範囲
 
 本書は、TypeScriptによる実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
----
+## 2 フォルダ構成
 
-## 2. フォルダ構成
+フォルダ構成は、[表1](#table-1)による。
 
-ソースルートは`src/`とし、「アプリケーション設計ガイドライン」のフォルダ構成をその下へ置く。TypeScript固有の配置を次に示す。
+<a id="table-1"></a>表1−フォルダ構成
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
@@ -23,22 +23,22 @@
 | `apps/<app-name>/src/<feature>/presentation/components/` | [Blueskyの`src/screens/Login/components`](https://github.com/bluesky-social/social-app/tree/main/src/screens/Login/components) | Featureが所有する表示で再利用するComponentを配置する。別Featureでも再利用するComponentは、`index.ts`から明示的にexportする。 |
 | `apps/<app-name>/src/<feature>/presentation/state/` | [Blueskyの`src/state/session`](https://github.com/bluesky-social/social-app/tree/main/src/state/session) | Signal、Store、Contextと表示状態の操作を配置する。 |
 | `<file>.test.ts`、`<component>.test.tsx` | [Blueskyの`bskylink/src/index.test.ts`](https://github.com/bluesky-social/social-app/blob/main/bskylink/src/index.test.ts) | 単体テストとComponentテストを、実装ファイルと同じフォルダへ配置する。 |
-| `apps/<app-name>/tests/integration/<feature>.test.ts` | [VS Codeの`test/integration/browser/src`](https://github.com/microsoft/vscode/tree/main/test/integration/browser/src) | Feature間またはFeatureと外部I/Oとの結合を検証するテストを配置する。 |
+| `apps/<app-name>/tests/integration/<feature>.test.ts` | [VS Codeの`test/integration/browser/src`](https://github.com/microsoft/vscode/tree/main/test/integration/browser/src) | Feature間又はFeatureと外部I/Oとの結合を検証するテストを配置する。 |
 | `apps/<app-name>/tests/e2e/<flow>.test.ts` | [Cal.comの`login.e2e.ts`](https://github.com/calcom/cal.com/blob/main/apps/web/playwright/login.e2e.ts) | E2Eテスト。 |
 
----
-
-## 3. 型
+## 3 型
 
 公開する関数、コンポーネント、コールバックの引数と戻り値の型を明示する。
 
----
-
-## 4. 検証
+## 4 検証
 
 ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 
 モノレポでは、ルートの`package.json`に`verify`スクリプトを定義し、表の検証を対象となるすべてのworkspaceで実行する。
+
+検証は、[表2](#table-2)による。
+
+<a id="table-2"></a>表2−検証
 
 | 目的 | 検証対象 | ツール |
 | --- | --- | --- |
@@ -52,13 +52,11 @@ ESLintは`eslint . --max-warnings 0`で実行し、警告を残さない。
 | 利用者の主要な操作と、停止時の影響が大きい処理経路の破壊を検出する。 | `tests/e2e/`に配置したE2Eテスト。 | `package.json`の`test:e2e`スクリプト |
 | 依存関係に含まれる既知の脆弱性を検出する。 | リポジトリ内のすべてのJavaScript向けロックファイル。 | `osv-scanner scan source -r .` |
 
----
-
 ## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 1 はじめに、4. 検証 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptの記述方法とコードレビューの基準を確認する。 |
-| 4. 検証 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を確認する。 |
-| 4. 検証 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を確認する。 |
-| 4. 検証 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を確認する。 |
+| 1章<br>4章 | [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) | TypeScriptのスタイルガイドを示す。 |
+| 4章 | [strict](https://www.typescriptlang.org/tsconfig/strict.html) | `strict`が有効にする型検査を示す。 |
+| 4章 | [Linting with Type Information](https://typescript-eslint.io/getting-started/typed-linting/) | 型情報を使用するlintの設定方法を示す。 |
+| 4章 | [max-depth](https://eslint.org/docs/latest/rules/max-depth) | ESLintが数えるブロックのネスト深度を示す。 |

@@ -8,8 +8,8 @@
 | --- | --- | --- | --- |
 | ソフトウェア設計 | [ソフトウェア設計ガイドライン](software/software-design-guidelines.md) | ソフトウェア開発の設計ガイドライン。 | なし |
 | ソフトウェア設計 | [アプリケーション設計ガイドライン](software/application-design-guidelines.md) | アプリケーション設計のガイドライン。 | ソフトウェア設計ガイドライン |
-| ソフトウェア設計 | [テストガイドライン](software/testing-guidelines.md) | テスト対象、テストケースの設計、検証方法を定めるガイドライン。 | ソフトウェア設計ガイドライン |
-| 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリのファイルとディレクトリの役割を定めるガイドライン。 | なし |
+| ソフトウェア設計 | [テストガイドライン](software/testing-guidelines.md) | テストの設計方法を定めるガイドライン。 | ソフトウェア設計ガイドライン |
+| 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリの構成を定めるガイドライン。 | なし |
 | 開発 | [Git規則](development/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 開発 | [バージョニング規則](development/versioning-guidelines.md) | バージョン番号を決める。 | なし |
 | 開発 | [ソフトウェア使用規則](development/software-usage-rules.md) | ソフトウェアの選定基準と、使用を許可、禁止するソフトウェアを定める規則。 | なし |
@@ -19,10 +19,9 @@
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Windows PowerShellモジュール実装ガイドライン](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュール実装のガイドライン。 | ソフトウェア設計ガイドライン、リポジトリガイドライン |
 | AI | [AIエージェントの認証ガイドライン](ai/agent-authentication-guidelines.md) | AIエージェントがログインして作業するための認証方式のガイドライン。 | なし |
-| UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現、レイアウト、状態、動きのガイドライン。 | なし |
+| UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現のガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
-| 文書 | [仕様書作成ガイドライン](documentation/specification-guidelines.md) | 仕様書作成のガイドライン。 | なし |
 | 文書 | [PowerPoint作成ガイドライン](documentation/powerpoint-guidelines.md) | PowerPointのプレゼンテーションの作成方法を定めるガイドライン。 | TypeScript実装ガイドライン、技術文書作成ガイドライン |
 | 文書 | [技術文書作成ガイドライン](documentation/technical-document-guidelines.md) | 技術文書の作成方法を定めるガイドライン。JIS Z 8301、ISO/IEC Directives, Part 2、ISO 24495-1及び公用文作成の考え方を参考に作成した。 | なし |
 | 文書 | [リファレンス文書作成ガイドライン](documentation/reference-guidelines.md) | リファレンス文書の作成方法を定めるガイドライン。Diátaxisを参考に作成した。 | 技術文書作成ガイドライン |
@@ -34,8 +33,7 @@
 | 文書 | [SVGからPNGへの変換ガイドライン](documentation/svg-to-png-guidelines.md) | SVGをPNGに変換するガイドライン。 | なし |
 | 文書 | [PDFからの画像抽出ガイドライン](documentation/pdf-image-extraction-guidelines.md) | PDFの図を、ベクター画像はSVGとして、埋め込み画像は元の画素のまま抽出するガイドライン。 | なし |
 | 文書 | [Webページからの画像取得ガイドライン](documentation/web-image-guidelines.md) | Webページの画像を、提供元が配布する画像ファイルから取得するガイドライン。 | なし |
-| 文書 | [UI仕様書作成ガイドライン](documentation/ui-specification-guidelines.md) | UI仕様書作成のガイドライン。 | 仕様書作成ガイドライン |
-| 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載内容と見出しの構成を定めるガイドライン。 | リポジトリガイドライン |
+| 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載方法を定めるガイドライン。 | リポジトリガイドライン |
 
 ## 適用手順
 
