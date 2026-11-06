@@ -1,35 +1,26 @@
 # Bash実装ガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [バージョン互換性](#2-バージョン互換性)
-3. [シェルオプション](#3-シェルオプション)
-4. [関数](#4-関数)
-5. [引数](#5-引数)
-6. [入力検査](#6-入力検査)
-7. [エラー処理](#7-エラー処理)
-8. [OS差分](#8-os差分)
-9. [外部依存](#9-外部依存)
-10. [読み込み時の副作用](#10-読み込み時の副作用)
-11. [検証](#11-検証)
-12. [参考資料](#12-参考資料)
+### 1.1 目的
+
+本書の目的は、Bash 3.2以上で動作するシェルスクリプト及び`source`して利用する関数ライブラリの実装をそろえることである。
+
+### 1.2 適用範囲
+
+本書は、Bashの言語に固有の実装規則について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)及び[Shell Style Guide](https://google.github.io/styleguide/shellguide.html)を前提とする。
+
+プロジェクトが公開する関数の一覧、コマンドライン引数の仕様及び特定サービス向けの処理は、利用側プロジェクトの仕様として定義する。
 
 ---
 
-## 1. 概要
-
-本書は、Bash 3.2以上で動作するシェルスクリプトと、`source`して利用する関数ライブラリの実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)と[Shell Style Guide](https://google.github.io/styleguide/shellguide.html)を前提とする。
-
-本書は言語に固有の規則だけを定義する。プロジェクトが公開する関数の一覧、コマンドライン引数の仕様、特定サービス向けの処理は、利用側プロジェクトの仕様として定義する。
-
----
-
-## 2. バージョン互換性
+## 2 バージョン互換性
 
 macOSに同梱されるBashは3.2であり、Bash 4以降を前提としたスクリプトはmacOSでそのまま動作しない。macOSとLinuxの両方で動作させるスクリプトは、Bash 3.2で解釈できる構文と機能だけを使用する。
 
-Bash 4以降で追加された次の機能は使用しない。
+Bash 4以降で追加された[表1](#table-1)の機能は使用しない。
+
+<a id="table-1"></a>表1−Bash 4以降で追加された機能
 
 | 機能 | 構文 | 追加バージョン |
 | --- | --- | --- |
@@ -43,11 +34,11 @@ Bash 4以降で追加された次の機能は使用しない。
 
 シェバンは`#!/usr/bin/env bash`とし、`bash`のパスとバージョンを固定しない。
 
-OS名やCPUアーキテクチャで分岐せず、実際に依存する機能またはコマンドの有無で分岐する。
+OS名又はCPUアーキテクチャで分岐せず、実際に依存する機能又はコマンドの有無で分岐する。
 
 ---
 
-## 3. シェルオプション
+## 3 シェルオプション
 
 `set -e`、`set -u`、`set -o pipefail`は、実行スクリプト自身が冒頭で設定する。
 
@@ -61,7 +52,7 @@ set -euo pipefail
 
 ---
 
-## 4. 関数
+## 4 関数
 
 関数は`<name>() { ... }`の形式で定義し、`function`キーワードを使用しない。
 
@@ -76,7 +67,7 @@ string::upper
 path::normalize
 ```
 
-名前空間は機能領域を表し、末尾は処理を表す動詞または動詞句とする。2階層で意味が十分な場合は2階層とし、必要な場合だけ3階層以上にする。
+名前空間は機能領域を表し、末尾は処理を表す動詞又は動詞句とする。2階層で意味が十分な場合は2階層とし、必要な場合だけ3階層以上にする。
 
 関数内の変数は`local`で宣言し、呼び出し元のスコープを汚さない。コマンドの出力を代入する場合は、宣言と代入を分ける。`local`は自身が成功するため、宣言と代入を1文で書くとコマンドの終了ステータスが失われる。
 
@@ -93,9 +84,13 @@ string::upper() {
 
 ---
 
-## 5. 引数
+## 5 引数
 
 引数の解析方法は、公開するインターフェースの形式に合わせて選ぶ。
+
+引数の形式ごとの解析方法は、[表2](#table-2)による。
+
+<a id="table-2"></a>表2−引数の形式ごとの解析方法
 
 | 形式 | 例 | 解析方法 |
 | --- | --- | --- |
@@ -141,7 +136,7 @@ user::create() {
 
 ---
 
-## 6. 入力検査
+## 6 入力検査
 
 公開する関数とスクリプトは、処理を開始する前に入力を検査する。必須値、数値、パス、列挙値、依存するコマンドの存在を検査対象に含める。
 
@@ -149,7 +144,7 @@ user::create() {
 
 ---
 
-## 7. エラー処理
+## 7 エラー処理
 
 `source`して利用する関数ライブラリの関数は、回復不能なエラーでも`exit`せず、非0の終了ステータスを`return`する。対話型シェルから読み込まれた場合、`exit`は利用者のシェルそのものを終了させる。
 
@@ -157,9 +152,9 @@ user::create() {
 
 ---
 
-## 8. OS差分
+## 8 OS差分
 
-macOSとLinuxで外部コマンドの有無やオプションに差がある場合は、その差分をユーティリティ関数の内部で吸収し、呼び出し側へ露出させない。
+macOSとLinuxで外部コマンドの有無又はオプションに差がある場合は、その差分をユーティリティ関数の内部で吸収し、呼び出し側へ露出させない。
 
 GNU版とBSD版で挙動が異なる外部コマンドへ依存する前に、Bashの組み込み機能だけで実現できないか検討する。
 
@@ -167,15 +162,15 @@ GNU版とBSD版で挙動が異なる外部コマンドへ依存する前に、Ba
 
 ---
 
-## 9. 外部依存
+## 9 外部依存
 
 標準的なBashの機能だけで実装できる処理に、外部のシェルスクリプトライブラリを追加しない。
 
-外部依存を採用するのは、Bash 3.2の機能だけでは合理的に実装できず、保守性または利用者体験が明確に改善する場合に限る。
+外部依存を採用するのは、Bash 3.2の機能だけでは合理的に実装できず、保守性又は利用者体験が明確に改善する場合に限る。
 
 ---
 
-## 10. 読み込み時の副作用
+## 10 読み込み時の副作用
 
 `source`しただけで、呼び出し元の環境を書き換えない。次のものを読み込み時に変更しない。
 
@@ -189,9 +184,13 @@ GNU版とBSD版で挙動が異なる外部コマンドへ依存する前に、Ba
 
 ---
 
-## 11. 検証
+## 11 検証
 
 実行コマンドは、各プロジェクトで定義する。
+
+検証の目的及びツールは、[表3](#table-3)による。
+
+<a id="table-3"></a>表3−検証の目的及びツール
 
 | 目的 | 検証対象 | ツール |
 | --- | --- | --- |
@@ -202,14 +201,14 @@ GNU版とBSD版で挙動が異なる外部コマンドへ依存する前に、Ba
 
 ---
 
-## 12. 参考資料
+## 参考文献
 
-| 本書の章 | 参考資料 | 説明 |
+| 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 1. 概要<br>4. 関数 | [Shell Style Guide](https://google.github.io/styleguide/shellguide.html) | シェルスクリプトの記述方法、関数の命名と名前空間、`local`の使い方を示している。 |
-| 2. バージョン互換性 | [Bash Reference Manual](https://www.gnu.org/software/bash/manual/bash.html) | Bashの構文と組み込みコマンドの仕様を規定している。 |
-| 2. バージョン互換性 | [Bash Changes (NEWS)](https://git.savannah.gnu.org/cgit/bash.git/tree/NEWS) | 各機能が追加されたバージョンを示している。 |
-| 3. シェルオプション<br>7. エラー処理 | [The Set Builtin](https://www.gnu.org/software/bash/manual/bash.html#The-Set-Builtin) | `set -e`、`set -u`、`set -o pipefail`の動作と適用範囲を規定している。 |
-| 5. 引数 | [Bash Builtin Commands: getopts](https://www.gnu.org/software/bash/manual/bash.html#index-getopts) | 短いオプションを解析する組み込みコマンドの仕様を規定している。 |
-| 11. 検証 | [ShellCheck](https://www.shellcheck.net/) | シェルスクリプトの静的解析を行う。 |
-| 11. 検証 | [Bats-core: Bash Automated Testing System](https://bats-core.readthedocs.io/en/stable/) | シェルスクリプトのテストを記述して実行する。 |
+| 1章<br>4章 | [Shell Style Guide](https://google.github.io/styleguide/shellguide.html) | シェルスクリプトの記述方法、関数の命名と名前空間、`local`の使い方を示している。 |
+| 2章 | [Bash Reference Manual](https://www.gnu.org/software/bash/manual/bash.html) | Bashの構文と組み込みコマンドの仕様を規定している。 |
+| 2章 | [Bash Changes (NEWS)](https://git.savannah.gnu.org/cgit/bash.git/tree/NEWS) | 各機能が追加されたバージョンを示している。 |
+| 3章<br>7章 | [The Set Builtin](https://www.gnu.org/software/bash/manual/bash.html#The-Set-Builtin) | `set -e`、`set -u`、`set -o pipefail`の動作と適用範囲を規定している。 |
+| 5章 | [Bash Builtin Commands: getopts](https://www.gnu.org/software/bash/manual/bash.html#index-getopts) | 短いオプションを解析する組み込みコマンドの仕様を規定している。 |
+| 11章 | [ShellCheck](https://www.shellcheck.net/) | シェルスクリプトの静的解析を行う。 |
+| 11章 | [Bats-core: Bash Automated Testing System](https://bats-core.readthedocs.io/en/stable/) | シェルスクリプトのテストを記述して実行する。 |
