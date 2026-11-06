@@ -4,15 +4,17 @@
 
 ### 1.1 目的
 
-本書の目的は、リポジトリに置くファイル、ディレクトリの構成を統一することである。
+本書の目的は、リポジトリに置くファイル及びディレクトリの構成を統一することである。
 
 ### 1.2 適用範囲
 
 本書は、使用する言語、フレームワーク、パッケージマネージャによらず、リポジトリに共通するファイル、ディレクトリの役割について規定する。
 
----
+## 2 構成
 
-## 2. 構成
+構成は、[表1](#table-1)による。
+
+<a id="table-1"></a>表1−構成
 
 | パス | 要否 | 説明 |
 | --- | --- | --- |
@@ -46,8 +48,6 @@
 | `docs/specifications/` | 任意 | API、UI、通信プロトコル、ネットワーク、アクセス制御、ハードウェアインターフェース、要求など、実装が従うべき正式な契約を記述する文書。 |
 | `LICENSES/` | 任意 | 依存関係やディレクトリごとにライセンスが異なる場合に、[REUSE](https://reuse.software/)仕様に従って各ライセンスの全文を格納する。各ソースファイルへSPDXライセンス識別子のヘッダーを付与する運用とセットで使用する。 |
 
----
-
 ## 参考文献
 
 | 参考文献 |
@@ -61,5 +61,3 @@
 | [OpenSSF Best Practices Badge](https://www.bestpractices.dev/) |
 | [Applying the Apache License, Version 2.0](https://www.apache.org/legal/apply-license.html) |
 | [List of maintainers - The Linux Kernel documentation](https://docs.kernel.org/process/maintainers.html) |
-
----
