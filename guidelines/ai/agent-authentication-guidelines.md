@@ -4,11 +4,11 @@
 
 ### 1.1 目的
 
-本書の目的は、Claude Code、CodexなどのAIエージェントが、ログインの画面で止まらずに、業務システム又はWebサービスを使用して作業できるようにすることである。
+本書の目的は、AIエージェントの運用者が、実行環境に応じた認証方式を選び、認証が必要な作業を継続可能にすることである。
 
 ### 1.2 適用範囲
 
-本書は、エージェント自身のログインと、エージェントが作業で使用するAPI、MCPサーバー、コマンド、ブラウザ、デスクトップアプリの認証の方式を規定する。対話で使用する場合と、無人で実行する場合の両方に適用する。
+本書は、Claude Code、Codexなどのエージェント自身及び作業で利用するシステムの認証方式について規定する。対話で利用する環境及び無人で実行する環境に適用する。
 
 ### 1.3 用語及び定義
 
@@ -18,6 +18,12 @@
 
 | 用語 | 定義 |
 | --- | --- |
+| API（application programming interface） | プログラムから他のシステムの機能又はデータを利用するためのインターフェース。 |
+| CLI（command-line interface） | コマンドを入力してプログラムを操作するインターフェース。 |
+| MCP（Model Context Protocol） | AIアプリケーションと外部のツール又はデータを接続するための通信規約。 |
+| OAuth | 利用者の承認に基づき、アプリケーションへアクセス権限を委任する仕組み。 |
+| CDP（Chrome DevTools Protocol） | Chromium系ブラウザを外部のプログラムから操作又は調査するための通信規約。 |
+| TOTP（time-based one-time password） | 共有する秘密値及び現在時刻から生成する、有効期間が短い認証コード。 |
 | 認証情報 | ログインに使用するパスワード、APIキー、トークン、ワンタイムコードなどの情報。 |
 | コンピュータ使用 | エージェントが画面を見て、クリックと入力でデスクトップアプリを操作する機能。 |
 | ストレージステート | ブラウザのCookie、ローカルストレージなどのログイン状態を保存したファイル。 |
@@ -25,13 +31,11 @@
 | パスワードマネージャー | 認証情報を保管し、要求に応じて提供するソフトウェア。 |
 | ペアリング | パスワードマネージャーの側とエージェントの側を接続するための、最初の登録の手順。 |
 
----
-
 ## 2 方式の選び方
 
 ### 2.1 APIに近い方式から順に検討する
 
-ログインの方式は、[表2](#table-2)の順で検討する。上の方式ほど速く、画面の変更に影響されず、無人で実行しやすい。
+認証方式は、[表2](#table-2)の順に検討し、作業に必要な操作を利用可能な方式から選ぶ。MCPサーバー、CLI及びAPIは、画面の配置に依存せずに操作を実行可能なため、画面操作より先に検討する。
 
 <a id="table-2"></a>表2−ログインの方式の検討順
 
@@ -58,7 +62,7 @@
 
 ### 2.3 認証情報を会話に入れない
 
-パスワードとトークンの値は、プロンプト、ツールの引数、ログ、スクリーンショットに入れない。会話に入れた値は履歴に残り、コンテキストの圧縮又は要約にも引き継がれる。エージェントには値ではなく、値を使用する手段を渡す。
+パスワードとトークンの値は、プロンプト、ツールの引数、ログ、スクリーンショットに入れない。会話に入れた値は履歴に残り、コンテキストの圧縮又は要約にも引き継がれる。エージェントには、認証済みの接続又は認証情報をコマンドへ渡す仕組みを提供する。
 
 認証情報の渡し方は、[表4](#table-4)による。
 
@@ -68,9 +72,7 @@
 | --- | --- |
 | プロンプトに“パスワードは xxxx”と書く。 | ログイン済みのブラウザを使わせる。 |
 | ブラウザのツールの入力の引数にパスワードを渡す。 | スクリプトが環境変数から読み取ってフォームへ入力する。 |
-| `cat .env` で値を読ませる。 | `op run` や `aac run` でコマンドの環境変数へ渡す。 |
-
----
+| `cat .env` で値を読ませる。 | `op run` 又は `aac run` でコマンドの環境変数へ渡す。 |
 
 ## 3 エージェント自身のログイン
 
@@ -105,8 +107,6 @@ Codexのログインの方式は、[表6](#table-6)による。
 
 Codex Cloudは、ChatGPTのログインを必要とする。
 
----
-
 ## 4 APIとMCPサーバーの認証
 
 ### 4.1 MCPサーバーはOAuthから使用する
@@ -138,8 +138,6 @@ MCPサーバーの認証の方式は、[表7](#table-7)による。
 | Slackの通知 | `chat:write` |
 | Slackの検索と通知 | `channels:read chat:write search:read` |
 | GitHubの課題の整理 | 対象のリポジトリの課題 |
-
----
 
 ## 5 コマンドへの認証情報の受け渡し
 
@@ -184,8 +182,6 @@ Agent Accessの手順は、[表10](#table-10)による。
 
 Agent Accessはearly previewであり、APIとプロトコルが変わることがある。継続的な業務に組み込む場合は、版を固定する。
 
----
-
 ## 6 ブラウザのログイン
 
 ### 6.1 方式を比べて選ぶ
@@ -204,11 +200,11 @@ Agent Accessはearly previewであり、APIとプロトコルが変わること�
 
 ### 6.2 Chromeを共有して、ログインの画面だけ人が操作する
 
-Claude Codeの `--chrome` は、Chromeのログイン状態を共有し、Google Docs、Gmail、Notionなどをコネクターなしで操作できる。ログインの画面又はCAPTCHAに遭遇すると一時停止するため、人がログインしてから再開を指示する。Chrome統合は `/login` でのサインインを必要とし、APIキーや `claude setup-token` のトークンでは使用できない。
+Claude Codeの `--chrome` は、Chromeのログイン状態を共有し、Google Docs、Gmail、Notionなどをコネクターなしで操作できる。ログインの画面又はCAPTCHAに遭遇すると一時停止するため、人がログインしてから再開を指示する。Chrome統合は `/login` でのサインインを必要とし、APIキー又は `claude setup-token` のトークンでは使用できない。
 
 Playwright MCPの `--extension` は、実行中のChrome又はEdgeのタブに接続して、同じようにログイン状態を使用する。
 
-### 6.3 専用のログイン状態を一度作って使い回す
+### 6.3 専用のログイン状態を保存して再利用する
 
 ログイン状態を保存する手段は、[表13](#table-13)による。
 
@@ -225,7 +221,7 @@ Playwright MCPの `--extension` は、実行中のChrome又はEdgeのタブに�
 
 ### 6.4 フォームへの入力はスクリプトに任せる
 
-ブラウザのツールの入力の引数にパスワードを渡すと、会話に残る。利用者の検証では、[表14](#table-14)の手順でClaude CodeのPlaywright MCPをログイン済みにしている。
+パスワードをフォームへ入力する場合は、値を会話に渡さず、環境変数から読み込むスクリプトで入力する。Claude CodeのPlaywright MCPへ認証済みのブラウザを接続する手順の実施例を[表14](#table-14)に示す。導入前に、対象のサービスで同じ接続方法を利用可能か確認する。
 
 <a id="table-14"></a>表14−スクリプトによるログインの手順
 
@@ -242,13 +238,11 @@ Playwright MCPの `--secrets` は、ツールの応答に現れた値を置き�
 
 1Password for Agentsは、エージェントがログインの画面に到達すると、利用者の端末で承認を求め、承認の後に入力する。エージェントはパスワードを受け取らない。製品のページはClaudeとChatGPT Workを連携先に挙げているが、提供中の一覧には含まれていない。Codexの記載はない。導入の前に、使用するエージェントと環境で動くことを確認する。
 
----
-
 ## 7 コンピュータ使用のログイン
 
 ### 7.1 先に人がログインしておく
 
-コンピュータ使用は、画面の操作を伴う最も遅い方式である。他の方式で扱えないデスクトップアプリに限って使用し、作業の前に人がアプリへログインしておく。
+他の方式で扱えないデスクトップアプリには、コンピュータ使用を利用する。作業の前に人がアプリへログインし、認証済みの状態でエージェントへ引き継ぐ。
 
 コンピュータ使用の対応は、[表15](#table-15)による。
 
@@ -275,8 +269,6 @@ Playwright MCPの `--secrets` は、ツールの応答に現れた値を置き�
 
 無人で実行するデスクトップの作業は、セッションの有効期間が長いアプリに限る。Claude Codeのコンピュータ使用は `-p` では使用できない。
 
----
-
 ## 8 二段階認証
 
 二段階認証の種類ごとの扱いは、[表17](#table-17)による。
@@ -287,14 +279,12 @@ Playwright MCPの `--secrets` は、ツールの応答に現れた値を置き�
 | --- | --- | --- |
 | TOTP | スクリプトで処理できる。 | パスワードマネージャーのシークレットからコードを生成して入力する。Agent Accessでは `totp` にコードではなくシークレットが入る。 |
 | メールのコード | メールを読めれば処理できる。 | メールのMCPサーバーで、送信元と時刻で絞り、最新の1通からコードを取り出す。 |
-| SMSのコード | 人が処理する。 | 人がコードを伝える。コードは使い捨てのため、ツールの引数で入力してよい。 |
+| SMSのコード | 人が処理する。 | 人がログイン画面へコードを入力し、完了後にエージェントを再開する。 |
 | パスキー | ログイン状態を再利用する。 | 人が一度ログインしてログイン状態を保存する。Agent Accessはパスキーを扱えない。 |
 | 認証アプリのプッシュ通知 | 人が処理する。 | 人が端末で承認する。 |
 | CAPTCHA | 人が処理する。 | エージェントを止めて、人が操作する。Chrome統合は一時停止する。 |
 
 人の操作が頻繁に必要なサービスは、API又はサービスアカウントへの切り替えを先に検討する。
-
----
 
 ## 9 ログインの維持と失効
 
@@ -332,11 +322,9 @@ Playwright MCPの `--secrets` は、ツールの応答に現れた値を置き�
 
 例 `[経費精算] ログインが必要：セッションが切れた。ログインしたら“続けて”と返信する。未処理は残り12件`
 
----
-
 ## 10 実現手段
 
-### 10.1 一般
+### 10.1 認証及び操作に使用する手段
 
 実現手段は、[表20](#table-20)による。
 
@@ -368,8 +356,6 @@ Playwright MCPの `--secrets` は、ツールの応答に現れた値を置き�
 | CIでコマンドを実行する。 | サービスアカウントと `op run`、又はCIのシークレットの環境変数。 |
 | 複数のSaaSを横断する。 | MCPサーバーのOAuthを優先し、MCPサーバーのないサービスだけブラウザを使用する。 |
 
----
-
 ## 11 チェックリスト
 
 - サービスごとに、MCPサーバー、CLI、API、ブラウザ、コンピュータ使用の順で方式を検討した。
@@ -386,21 +372,19 @@ Playwright MCPの `--secrets` は、ツールの応答に現れた値を置き�
 - 人の操作が必要な場合に、通知が届く。
 - early previewの手段は、版を固定している。
 
----
-
 ## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 3章<br>9章 | [認証 - Claude Code Docs](https://code.claude.com/docs/ja/authentication) | ログインの方式、認証の優先順位、`claude setup-token`、`apiKeyHelper`、失効の警告を定義する。 |
-| 3章<br>9章 | [Authentication \| ChatGPT Learn](https://learn.chatgpt.com/docs/auth) | ChatGPTのログイン、APIキー、デバイスコード、アクセストークンを定義する。 |
-| 4章<br>9章 | [MCP を使用して Claude Code をツールに接続する - Claude Code Docs](https://code.claude.com/docs/ja/mcp) | OAuth、事前登録したクライアント、`headersHelper`、環境変数の展開、スコープの指定を定義する。 |
+| 3章<br>9章 | [認証 - Claude Code Docs](https://code.claude.com/docs/ja/authentication) | Claude Codeの認証方式及び設定方法を示す文書。 |
+| 3章<br>9章 | [Authentication \| ChatGPT Learn](https://learn.chatgpt.com/docs/auth) | Codexの認証方式及び設定方法を示す文書。 |
+| 4章<br>9章 | [MCP を使用して Claude Code をツールに接続する - Claude Code Docs](https://code.claude.com/docs/ja/mcp) | Claude CodeとMCPサーバーとの接続方法を示す文書。 |
 | 5章<br>8章<br>10章 | [GitHub - bitwarden/agent-access](https://github.com/bitwarden/agent-access) | Agent Accessの導入、`aac connect` と `aac run`、提供の段階を示す。 |
-| 5章<br>6章<br>8章<br>9章 | [BitwardenのAgent Accessで、クラウドのClaude Codeから安全に認証情報を受け取る #AI - Qiita](https://qiita.com/getty104/items/583f2f5ecf473ddc4539) | クラウドのClaude Codeでの検証の結果、拒否と時間切れの原因、CDPによるログイン、二段階認証の扱いを報告する。 |
+| 5章<br>6章<br>8章<br>9章 | [BitwardenのAgent Accessで、クラウドのClaude Codeから安全に認証情報を受け取る #AI - Qiita](https://qiita.com/getty104/items/583f2f5ecf473ddc4539) | Agent Accessを利用したクラウド環境の認証手順を検証した記事。 |
 | 5章<br>10章 | [Load secrets into the environment - 1Password Developer](https://www.1password.dev/cli/secrets-environment-variables/) | `op run` でコマンドの環境変数へ値を渡す方法と、サービスアカウントを定義する。 |
-| 6章<br>7章<br>8章 | [Chrome で Claude Code を使用する - Claude Code Docs](https://code.claude.com/docs/ja/chrome) | ログイン状態の共有、ログインの画面とCAPTCHAでの一時停止、利用の条件を定義する。 |
-| 6章<br>10章 | [GitHub - microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) | `--extension`、`--user-data-dir`、`--storage-state`、`--secrets`、`--cdp-endpoint` を定義する。 |
-| 6章 | [Authentication \| Playwright](https://playwright.dev/docs/auth) | ストレージステートの保存と再利用、役割ごとのファイル、セッションストレージの扱いを定義する。 |
+| 6章<br>7章<br>8章 | [Chrome で Claude Code を使用する - Claude Code Docs](https://code.claude.com/docs/ja/chrome) | Claude CodeのChrome統合の利用方法を示す文書。 |
+| 6章<br>10章 | [GitHub - microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) | Playwrightを通じてブラウザを操作するMCPサーバーの公式リポジトリ。 |
+| 6章 | [Authentication \| Playwright](https://playwright.dev/docs/auth) | Playwrightで認証状態を保存及び再利用する方法を示す文書。 |
 | 6章<br>10章 | [GitHub - browser-use/browser-use](https://github.com/browser-use/browser-use) | Chromeのプロファイルの再利用とプロファイルの同期を示す。 |
 | 6章<br>10章 | [1Password for Agents: Secure AI Password Manager \| 1Password](https://1password.com/personal-agents) | 承認の流れ、自動入力、連携するエージェントを示す。 |
 | 7章<br>10章 | [Claude に CLI からコンピュータを使用させる - Claude Code Docs](https://code.claude.com/docs/ja/computer-use) | 対応の環境、アプリの承認、操作の範囲を定義する。 |
