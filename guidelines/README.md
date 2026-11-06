@@ -13,7 +13,7 @@
 | 開発 | [Git規則](development/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 開発 | [バージョニング規則](development/versioning-guidelines.md) | バージョン番号を決める。 | なし |
 | 開発 | [ソフトウェア使用規則](development/software-usage-rules.md) | ソフトウェアの選定基準と、使用を許可、禁止するソフトウェアを定める規則。 | なし |
-| 実装 | [TypeScript実装ガイドライン](implementation/typescript-guidelines.md) | TypeScript実装及びJavaScriptのパッケージ管理のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
+| 実装 | [JavaScript実装ガイドライン](implementation/javascript-guidelines.md) | TypeScript及びpnpmを使用するJavaScript実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Rust実装ガイドライン](implementation/rust-guidelines.md) | Rust実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Python実装ガイドライン](implementation/python-guidelines.md) | Python実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
@@ -21,7 +21,7 @@
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現のガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
-| 文書 | [PowerPoint作成ガイドライン](documentation/powerpoint-guidelines.md) | PowerPointのプレゼンテーションの作成方法を定めるガイドライン。 | TypeScript実装ガイドライン、技術文書作成ガイドライン |
+| 文書 | [PowerPoint作成ガイドライン](documentation/powerpoint-guidelines.md) | PowerPointのプレゼンテーションの作成方法を定めるガイドライン。 | JavaScript実装ガイドライン、技術文書作成ガイドライン |
 | 文書 | [技術文書作成ガイドライン](documentation/technical-document-guidelines.md) | 技術文書の作成方法を定めるガイドライン。JIS Z 8301、ISO/IEC Directives, Part 2、ISO 24495-1及び公用文作成の考え方を参考に作成した。 | なし |
 | 文書 | [リファレンス文書作成ガイドライン](documentation/reference-guidelines.md) | リファレンス文書の作成方法を定めるガイドライン。Diátaxisを参考に作成した。 | 技術文書作成ガイドライン |
 | 文書 | [解説文書作成ガイドライン](documentation/explanation-guidelines.md) | 解説文書の作成方法を定めるガイドライン。Diátaxisを参考に作成した。 | 技術文書作成ガイドライン |
