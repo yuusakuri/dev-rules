@@ -387,13 +387,13 @@ Agent Accessの承認には通知がなく、約120秒で時間切れになる�
 | 3章<br>9章 | [認証 - Claude Code Docs](https://code.claude.com/docs/ja/authentication) | Claude Codeの認証方式及び設定方法を示す文書。 |
 | 3章<br>9章 | [Authentication \| ChatGPT Learn](https://learn.chatgpt.com/docs/auth) | Codexの認証方式及び設定方法を示す文書。 |
 | 4章<br>9章 | [MCP を使用して Claude Code をツールに接続する - Claude Code Docs](https://code.claude.com/docs/ja/mcp) | Claude CodeとMCPサーバーとの接続方法を示す文書。 |
-| 5章<br>8章<br>10章 | [GitHub - bitwarden/agent-access](https://github.com/bitwarden/agent-access) | Agent Accessの導入、`aac connect`、`aac run` 及び提供の段階を示す。 |
+| 5章<br>8章<br>10章 | [GitHub - bitwarden/agent-access: Agent Access is an open protocol, CLI tool, and SDK to provide agents with credentials without exposing their entire vault · GitHub](https://github.com/bitwarden/agent-access) | Agent Accessの導入、`aac connect`、`aac run` 及び提供の段階を示す。 |
 | 5章<br>6章<br>8章<br>9章 | [BitwardenのAgent Accessで、クラウドのClaude Codeから安全に認証情報を受け取る #AI - Qiita](https://qiita.com/getty104/items/583f2f5ecf473ddc4539) | Agent Accessを利用したクラウド環境の認証手順を検証した記事。 |
 | 5章<br>10章 | [Load secrets into the environment - 1Password Developer](https://www.1password.dev/cli/secrets-environment-variables/) | `op run` でコマンドの環境変数へ値を渡す方法及びサービスアカウントを定義する。 |
 | 6章<br>7章<br>8章 | [Chrome で Claude Code を使用する - Claude Code Docs](https://code.claude.com/docs/ja/chrome) | Claude CodeのChrome統合の利用方法を示す文書。 |
-| 6章<br>10章 | [GitHub - microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) | Playwrightを通じてブラウザを操作するMCPサーバーの公式リポジトリ。 |
+| 6章<br>10章 | [GitHub - microsoft/playwright-mcp: Playwright MCP server · GitHub](https://github.com/microsoft/playwright-mcp) | Playwrightを通じてブラウザを操作するMCPサーバーの公式リポジトリ。 |
 | 6章 | [Authentication \| Playwright](https://playwright.dev/docs/auth) | Playwrightで認証状態を保存及び再利用する方法を示す文書。 |
-| 6章<br>10章 | [GitHub - browser-use/browser-use](https://github.com/browser-use/browser-use) | Chromeのプロファイルの再利用及びプロファイルの同期を示す。 |
+| 6章<br>10章 | [GitHub - browser-use/browser-use: Open-source Python library for AI browser agents, plus Browser Use Cloud: stealth browsers and a hosted agent API. · GitHub](https://github.com/browser-use/browser-use) | Chromeのプロファイルの再利用及びプロファイルの同期を示す。 |
 | 6章<br>10章 | [1Password for Agents: Secure AI Password Manager \| 1Password](https://1password.com/personal-agents) | 承認の流れ、自動入力及び連携するエージェントを示す。 |
 | 7章<br>10章 | [Claude に CLI からコンピュータを使用させる - Claude Code Docs](https://code.claude.com/docs/ja/computer-use) | 対応の環境、アプリの承認及び操作の範囲を定義する。 |
 | 7章<br>10章 | [Computer Use \| ChatGPT Learn](https://learn.chatgpt.com/docs/computer-use) | Codexのコンピュータ使用の対応の環境、アプリの承認及び認証情報を必要とする作業の扱いを定義する。 |
