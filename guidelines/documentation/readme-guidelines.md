@@ -1,19 +1,36 @@
 # READMEガイドライン
 
-本書は、リポジトリの `README.md` の書き方を定めます。
+## 1 はじめに
+
+### 1.1 目的
+
+本書の目的は、READMEの構成を統一することです。
+
+### 1.2 適用範囲
+
+本書は、リポジトリの `README.md` に記載する内容と見出しの構成について規定します。
+
 [リポジトリガイドライン](../development/repository-guidelines.md)を前提とします。
 
-## 記載の方針
+## 2 記載の方針
 
 READMEを読んだ人が、そのプロジェクトが何をするものか、なぜ役に立つのか、どう使い始めるのか、どこで助けを得られるのかを短時間で理解できるようにまとめます。
+
 説明は簡潔にし、ほかの文書と重複した説明は残しません。
+
 プロジェクトに関係のない見出しは省きます。
 
-## 見出しの構成
+## 3 見出しの構成
 
 見出しは次の順序で並べ、名前は表に示したとおりに記載します。
+
 日本語で書くREADMEでは日本語の名前を使い、日本語の名前がない見出しは英語のまま記載します。
+
 順序と役割は、どちらの言語でも変えません。
+
+見出しの構成は、[表1](#table-1)による。
+
+<a id="table-1"></a>表1−見出しの構成
 
 | 英語見出し | 日本語見出し | 記載 | 内容 |
 | --- | --- | --- | --- |
@@ -34,28 +51,30 @@ READMEを読んだ人が、そのプロジェクトが何をするものか、�
 
 READMEを新しく作るときは、[oss-repo-template](https://github.com/yuusakuri/oss-repo-template)の `README.md` をひな形として使います。
 
-## 専用文書との分担
+## 4 専用文書との分担
 
 詳細な説明や利用ガイドは、別の場所で管理しているものも含め、READMEからリンクして案内します。
 
 貢献の手順は `CONTRIBUTING.md`、ライセンス本文は `LICENSE` で管理し、READMEには短い案内文とリンクだけを記載します。
 
-## リンク
+## 5 リンク
 
 同じリポジトリのファイルへは、READMEがあるディレクトリを基準とした相対リンクを使用します。
+
 リポジトリの外にある文書へは、その文書のURLを指定します。
+
 リンク切れがないことを確認します。
 
 ## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 記載の方針 | [リポジトリの README ファイルについて - GitHub Docs](https://docs.github.com/ja/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) | READMEに記載する情報を説明しています。 |
-| 見出しの構成<br>リンク | [Standard Readme — Specification](https://github.com/RichardLitt/standard-readme/blob/main/spec.md) | READMEの見出しの規定を示しています。 |
-| 見出しの構成<br>専用文書との分担 | [READMEs - Google Style Guides](https://google.github.io/styleguide/docguide/READMEs.html) | READMEの構成例を示しています。 |
-| 記載の方針<br>専用文書との分担 | [Documentation Best Practices - Google Style Guides](https://google.github.io/styleguide/docguide/best_practices.html) | READMEの簡潔な書き方を説明しています。 |
-| 専用文書との分担 | [リポジトリコントリビューターのためのガイドラインを定める - GitHub Docs](https://docs.github.com/ja/communities/setting-up-your-project-for-healthy-contributions/setting-guidelines-for-repository-contributors) | 貢献の手順を専用ファイルで管理する方法を説明しています。 |
-| 専用文書との分担 | [リポジトリのライセンス - GitHub Docs](https://docs.github.com/ja/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) | ライセンスファイルの配置を示しています。 |
-| 記載の方針<br>見出しの構成 | [Best-README-Template](https://github.com/othneildrew/Best-README-Template/blob/main/README.md) | READMEの書き方を示しています。 |
-| 見出しの構成 | [Awesome README](https://github.com/matiassingers/awesome-readme) | スクリーンショットやGIFを使ったREADMEの実例を紹介しています。 |
-| 記載の方針<br>見出しの構成 | [Zalando's README Template](https://github.com/zalando/zalando-howto-open-source/blob/master/READMEtemplate.md) | READMEのテンプレートです（アーカイブ済み）。 |
+| 2章 | [リポジトリの README ファイルについて - GitHub Docs](https://docs.github.com/ja/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) | READMEに記載する情報を説明しています。 |
+| 3章<br>5章 | [Standard Readme — Specification](https://github.com/RichardLitt/standard-readme/blob/main/spec.md) | READMEの見出しの規定を示しています。 |
+| 3章<br>4章 | [READMEs - Google Style Guides](https://google.github.io/styleguide/docguide/READMEs.html) | READMEの構成例を示しています。 |
+| 2章<br>4章 | [Documentation Best Practices - Google Style Guides](https://google.github.io/styleguide/docguide/best_practices.html) | READMEの簡潔な書き方を説明しています。 |
+| 4章 | [リポジトリコントリビューターのためのガイドラインを定める - GitHub Docs](https://docs.github.com/ja/communities/setting-up-your-project-for-healthy-contributions/setting-guidelines-for-repository-contributors) | 貢献の手順を専用ファイルで管理する方法を説明しています。 |
+| 4章 | [リポジトリのライセンス - GitHub Docs](https://docs.github.com/ja/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) | ライセンスファイルの配置を示しています。 |
+| 2章<br>3章 | [Best-README-Template](https://github.com/othneildrew/Best-README-Template/blob/main/README.md) | READMEの書き方を示しています。 |
+| 3章 | [Awesome README](https://github.com/matiassingers/awesome-readme) | スクリーンショットやGIFを使ったREADMEの実例を紹介しています。 |
+| 2章<br>3章 | [Zalando's README Template](https://github.com/zalando/zalando-howto-open-source/blob/master/READMEtemplate.md) | READMEのテンプレートです（アーカイブ済み）。 |

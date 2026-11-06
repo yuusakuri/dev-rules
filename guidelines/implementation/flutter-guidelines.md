@@ -1,32 +1,31 @@
 # Flutter実装ガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [フォルダ構成](#2-フォルダ構成)
-3. [検証](#3-検証)
-4. [参考文献](#4-参考文献)
+### 1.1 目的
 
----
+本書の目的は、Flutterアプリケーションの構成及び検証方法を統一することである。
 
-## 1. 概要
+### 1.2 適用範囲
 
-本書は、Dartで実装するFlutterアプリケーションの実装ガイドラインを定義する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)を前提とする。
+本書は、Dartで実装するFlutterアプリケーションの実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)を前提とする。
 
----
+## 2 フォルダ構成
 
-## 2. フォルダ構成
+ソースルートは`lib/`とし、“アプリケーション設計ガイドライン”のフォルダ構成をその下へ置く。Flutter固有の配置を次に示す。
 
-ソースルートは`lib/`とし、「アプリケーション設計ガイドライン」のフォルダ構成をその下へ置く。Flutter固有の配置を次に示す。
+本書において、表示状態の管理にはBLoCを使用する前提で記載する。Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定める配置へ置き換える。方式が配置を定めない場合は、“参考文献”のFlutterアーキテクチャガイドに合わせて`view_models/`を使用する。
 
-本書において、表示状態の管理にはBLoCを使用する前提で記載する。Provider、Riverpodなどを採用する場合は、`bloc/`をその方式が定める配置へ置き換える。方式が配置を定めない場合は、「参考文献」のFlutterアーキテクチャガイドに合わせて`view_models/`を使用する。
+フォルダ構成は、[表1](#table-1)による。
+
+<a id="table-1"></a>表1−フォルダ構成
 
 | パス | 例 | 説明 |
 | --- | --- | --- |
 | `apps/<app-name>/pubspec.yaml` | [flutter_todosの`pubspec.yaml`](https://github.com/felangel/bloc/blob/master/examples/flutter_todos/pubspec.yaml) | パッケージ、アセット、フォント、Flutterの設定を定義する。生成した多言語対応コードを使用する場合は、`flutter`の`generate`に`true`を指定する。 |
 | `apps/<app-name>/l10n.yaml` | [flutter_todosの`l10n.yaml`](https://github.com/felangel/bloc/blob/master/examples/flutter_todos/l10n.yaml) | 多言語対応コードの`arb-dir`、`template-arb-file`、`output-localization-file`を定義する。`synthetic-package`を持つバージョンでは`false`を指定する。 |
 | `apps/<app-name>/assets/<asset-type>/` | [flutter_weatherの`assets`](https://github.com/felangel/bloc/tree/master/examples/flutter_weather/assets) | 画像、アイコン、フォントなど、アプリケーションへ同梱するリソースを種類ごとに配置する。 |
-| `apps/<app-name>/lib/app/router/` | [compass_appの`lib/routing`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | ルーティングと、ルートまたは共通の親が所有するBLoCの生成、接続を定義する。各Featureの公開APIだけを参照する。 |
+| `apps/<app-name>/lib/app/router/` | [compass_appの`lib/routing`](https://github.com/flutter/samples/tree/main/compass_app/app/lib/routing) | ルーティングと、ルート又は共通の親が所有するBLoCの生成、接続を定義する。各Featureの公開APIだけを参照する。 |
 | `apps/<app-name>/lib/app/theme/` | [flutter_todosの`lib/theme`](https://github.com/felangel/bloc/tree/master/examples/flutter_todos/lib/theme) | Theme、色、文字スタイル、余白など、アプリケーション全体のデザイン値を定義する。 |
 | `apps/<app-name>/lib/l10n/` | [flutter_todosの`lib/l10n/app_en.arb`](https://github.com/felangel/bloc/blob/master/examples/flutter_todos/lib/l10n/app_en.arb) | ARB形式の翻訳データを配置する。文言へ埋め込む数値、日付の書式は、プレースホルダーの`format`で指定する。 |
 | `apps/<app-name>/lib/locale_format/` | [compass_appの`date_format_start_end.dart`](https://github.com/flutter/samples/blob/main/compass_app/app/lib/ui/core/ui/date_format_start_end.dart) | 文言の外側で使う数値、日付、通貨などの書式処理を`intl`パッケージで定義する。 |
@@ -38,11 +37,13 @@
 | `apps/<app-name>/integration_test/<feature>_test.dart` | [compass_appの`app_server_data_test.dart`](https://github.com/flutter/samples/blob/main/compass_app/app/integration_test/app_server_data_test.dart) | Featureと実際の外部I/Oとの接続を検証する結合テストを配置する。 |
 | `apps/<app-name>/integration_test/<flow>_test.dart` | [flutter_counterの`app_test.dart`](https://github.com/felangel/bloc/blob/master/examples/flutter_counter/integration_test/app_test.dart) | 利用者の主要な操作をアプリケーション全体で検証するE2Eテストを配置する。 |
 
----
-
-## 3. 検証
+## 3 検証
 
 モノレポでは、書式検査と脆弱性検査をリポジトリルートで実行する。静的解析と単体テストは各Flutterパッケージで、結合テストとE2Eテストは各アプリケーションで実行する。
+
+検証は、[表2](#table-2)による。
+
+<a id="table-2"></a>表2−検証
 
 | 目的 | 検証対象 | ツール |
 | --- | --- | --- |
@@ -52,13 +53,11 @@
 | Feature、外部I/O、実行環境を結合した主要フローの破壊を検出する。 | `integration_test/`に配置した結合テストとE2Eテスト。 | `flutter test integration_test` |
 | 依存関係に含まれる既知の脆弱性を検出する。 | リポジトリ内のすべての`pubspec.lock`。 | `osv-scanner scan source -r .` |
 
----
-
-## 4. 参考文献
+## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 2. フォルダ構成 | [Flutterアーキテクチャガイド](https://docs.flutter.dev/app-architecture/guide) | Flutterが推奨するアプリケーションの構成を示す。 |
-| 2. フォルダ構成 | [Internationalizing Flutter apps](https://docs.flutter.dev/ui/internationalization) | Flutterアプリケーションの多言語対応の方法を示す。 |
-| 3. 検証 | [Testing Flutter apps](https://docs.flutter.dev/testing/overview) | Flutterアプリケーションのテストの種類を示す。 |
-| 3. 検証 | [Check app functionality with an integration test](https://docs.flutter.dev/testing/integration-tests) | `integration_test`による主要フローの検証方法を示す。 |
+| 2章 | [Flutterアーキテクチャガイド](https://docs.flutter.dev/app-architecture/guide) | Flutterが推奨するアプリケーションの構成を示す。 |
+| 2章 | [Internationalizing Flutter apps](https://docs.flutter.dev/ui/internationalization) | Flutterアプリケーションの多言語対応の方法を示す。 |
+| 3章 | [Testing Flutter apps](https://docs.flutter.dev/testing/overview) | Flutterアプリケーションのテストの種類を示す。 |
+| 3章 | [Check app functionality with an integration test](https://docs.flutter.dev/testing/integration-tests) | `integration_test`による主要フローの検証方法を示す。 |

@@ -1,20 +1,20 @@
 # リポジトリガイドライン
 
-## 目次
+## 1 はじめに
 
-1. [概要](#1-概要)
-2. [構成](#2-構成)
-3. [参考文献](#3-参考文献)
+### 1.1 目的
 
----
+本書の目的は、リポジトリに置くファイル及びディレクトリの構成を統一することである。
 
-## 1. 概要
+### 1.2 適用範囲
 
-本書は、リポジトリの構成を定義する。
+本書は、使用する言語、フレームワーク、パッケージマネージャによらず、リポジトリに共通するファイル、ディレクトリの役割について規定する。
 
----
+## 2 構成
 
-## 2. 構成
+構成は、[表1](#table-1)による。
+
+<a id="table-1"></a>表1−構成
 
 | パス | 要否 | 説明 |
 | --- | --- | --- |
@@ -23,7 +23,7 @@
 | `CONTRIBUTING.md` | 推奨 | 開発環境の構築、ブランチ運用、テスト実行、コーディング規約、PRの出し方など、貢献に必要な手順を記載する。 |
 | `CODE_OF_CONDUCT.md` | 任意 | コミュニティ内での行動規範と、違反時の連絡先、対応手順を定める。Contributor Covenantなど既存の規範を採用してよい。 |
 | `SECURITY.md` | 任意 | 脆弱性を公開Issueではなく非公開で報告する方法と、対応対象バージョンを明記する。 |
-| `CHANGELOG.md` | 推奨 | バージョンごとの変更点を時系列で記録する。[Keep a Changelog](https://keepachangelog.com/)の形式に従う。 |
+| `CHANGELOG.md` | 任意 | バージョンごとの変更点を時系列で記録する。[Keep a Changelog](https://keepachangelog.com/)の形式に従う。 |
 | `MAINTAINERS` | 任意 | 各領域の責任者を、担当範囲とともに一覧化する。バージョン管理システムやホスティングサービスに依存せず読める形式にする。 |
 | `SUPPORT.md` | 任意 | 質問や利用相談の受付先（Issue、Discussions、メーリングリストなど）を明記する。 |
 | `GOVERNANCE.md` | 任意 | 意思決定の方法、メンテナへの昇格基準など、プロジェクトの運営体制を定める。 |
@@ -48,9 +48,7 @@
 | `docs/specifications/` | 任意 | API、UI、通信プロトコル、ネットワーク、アクセス制御、ハードウェアインターフェース、要求など、実装が従うべき正式な契約を記述する文書。 |
 | `LICENSES/` | 任意 | 依存関係やディレクトリごとにライセンスが異なる場合に、[REUSE](https://reuse.software/)仕様に従って各ライセンスの全文を格納する。各ソースファイルへSPDXライセンス識別子のヘッダーを付与する運用とセットで使用する。 |
 
----
-
-## 3. 参考文献
+## 参考文献
 
 | 参考文献 |
 | --- |
@@ -63,5 +61,3 @@
 | [OpenSSF Best Practices Badge](https://www.bestpractices.dev/) |
 | [Applying the Apache License, Version 2.0](https://www.apache.org/legal/apply-license.html) |
 | [List of maintainers - The Linux Kernel documentation](https://docs.kernel.org/process/maintainers.html) |
-
----
