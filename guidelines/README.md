@@ -15,6 +15,7 @@
 | 開発 | [ソフトウェア使用規則](development/software-usage-rules.md) | ソフトウェアの選定基準と、使用を許可、禁止するソフトウェアを定める規則。 | なし |
 | 実装 | [TypeScript実装ガイドライン](implementation/typescript-guidelines.md) | TypeScript実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Rust実装ガイドライン](implementation/rust-guidelines.md) | Rust実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
+| 実装 | [Python実装ガイドライン](implementation/python-guidelines.md) | Python実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Windows PowerShellモジュール実装ガイドライン](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュール実装のガイドライン。 | ソフトウェア設計ガイドライン、リポジトリガイドライン |
 | AI | [ハーネスエンジニアリングガイドライン](ai/harness-engineering-guidelines.md) | AIエージェントを取り囲む仕組みを設計するガイドライン。 | なし |
