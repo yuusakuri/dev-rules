@@ -525,7 +525,7 @@ AI組織の評価では、同じ作業を一つのエージェントでも実行
 | 3章<br>10章 | [Hierarchical Process - CrewAI](https://docs.crewai.com/en/learn/hierarchical-process) | 管理のエージェントが委任と検証を行う階層型の処理を定義する。 |
 | 3章<br>5章<br>6章<br>7章<br>10章 | [Claude Code セッションのチームを調整する - Claude Code Docs](https://code.claude.com/docs/ja/agent-teams) | Claude Codeのエージェントチームの構成及び運用方法を示す文書。 |
 | 6章<br>7章<br>8章 | [Building a C compiler with parallel Claudes \ Anthropic](https://www.anthropic.com/engineering/building-c-compiler) | 複数のAIエージェントによるCコンパイラー開発の実験結果を報告する記事。 |
-| 6章<br>8章<br>10章 | [GitHub - paperclipai/paperclip](https://github.com/paperclipai/paperclip) | 複数のAIエージェントの業務を管理するアプリケーションの公式リポジトリ。 |
+| 6章<br>8章<br>10章 | [GitHub - paperclipai/paperclip: The open-source app everyone uses to manage agents at work · GitHub](https://github.com/paperclipai/paperclip) | 複数のAIエージェントの業務を管理するアプリケーションの公式リポジトリ。 |
 | 9章 | [[2503.13657] Why Do Multi-Agent LLM Systems Fail?](https://arxiv.org/abs/2503.13657) | 複数のエージェントの失敗を、システムの設計、エージェント間の連携及びタスクの検証に分類する。 |
 | 10章 | [Subagents \| ChatGPT Learn](https://learn.chatgpt.com/docs/agent-configuration/subagents) | Codexのサブエージェントの定義及び読み取りの多い作業から開始する方針を示す。 |
 | 10章 | [A2A Protocol](https://a2a-protocol.org/latest/) | エージェント間の連携の規格及びMCPとの関係を定義する。 |
