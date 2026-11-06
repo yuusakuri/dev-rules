@@ -4,11 +4,11 @@
 
 ### 1.1 目的
 
-本書の目的は、複数のAIエージェントを人の組織のように役割分担させて運用する仕組みを、成果、費用、管理のしやすさを一貫した基準で設計できるようにすることである。
+本書の目的は、複数のAIエージェントを運用する設計者が、成果及び費用を評価しながら、役割分担と作業の管理方法を設計可能にすることである。
 
 ### 1.2 適用範囲
 
-本書は、調査、資料の作成、データの分析、顧客対応、ソフトウェアの開発などの業務を複数のAIエージェントで進める構成の、導入の判断、組織の型、役割、委任、タスク、検証、予算、評価を規定する。
+本書は、複数のAIエージェントが業務を分担する構成の設計及び運用について規定する。調査、文書作成、データ分析、顧客対応及びソフトウェア開発などの業務に適用する。
 
 ### 1.3 用語及び定義
 
@@ -18,6 +18,8 @@
 
 | 用語 | 定義 |
 | --- | --- |
+| LLM（large language model、大規模言語モデル） | 大量の文章を学習し、文章の生成又は分析を行うモデル。 |
+| MCP（Model Context Protocol） | AIアプリケーションと外部のツール又はデータを接続するための通信規約。 |
 | AI組織 | 複数のAIエージェントに役割、指示系統、目標、予算を与えて、業務を分担させる構成。 |
 | マルチエージェント | 複数のエージェントが協調して一つの目的を達成する方式。 |
 | オーケストレーション | エージェントの実行の順序、作業の割り当て、結果の統合を制御すること。 |
@@ -26,9 +28,7 @@
 | チームメイト | 共有のタスクリストとメッセージで、他のエージェントと直接協調するエージェント。 |
 | ハンドオフ | 作業と会話の制御を、別のエージェントへ渡すこと。 |
 | タスクリスト | 作業の項目、担当、状態、依存関係を共有する一覧。 |
-| 品質ゲート | タスクの完了又は工程の移行の前に、条件を満たすかを確認する関門。 |
-
----
+| 品質ゲート | タスクの完了又は工程の移行の前に、条件を満たすかを確認する仕組み。 |
 
 ## 2 導入の判断
 
@@ -80,8 +80,6 @@ Anthropicの調査システムでは、幅広い方向を同時に調査する�
 | 人の部署と同じ数のエージェントを置く。 | 並行して進められる作業の数だけ、エージェントを置く。 |
 | 管理の層を増やして品質を上げる。 | 明確な手順と、実際の結果による検証で品質を上げる。 |
 
----
-
 ## 3 組織の型の選び方
 
 ### 3.1 作業の流れに合う型を選ぶ
@@ -118,8 +116,6 @@ Anthropicの調査システムでは、幅広い方向を同時に調査する�
 ### 3.3 階層を増やさない
 
 階層は、まず2段（リーダーとその下の担当）で構成する。Claude Codeのエージェントチームでは、チームメイトは自分のチームメイトを生成できず、リーダーは一つのセッションに固定される。3段以上にするのは、チームごとに目標と予算を分けて管理する必要がある場合に限る。
-
----
 
 ## 4 役割の設計
 
@@ -161,7 +157,7 @@ Anthropicの調査システムでは、幅広い方向を同時に調査する�
 
 ### 4.4 監督の役割を結果で確認する
 
-監督のエージェントは、監督される側と同じ弱点を持つことがある。Project Vendでは、経営者のエージェントは、顧客への値引きなどの甘い要求を、却下のおよそ8倍承認した。監督の役割の判断は、売上、誤りの件数、差し戻しの件数のような実際の結果と比べて確認する。可能な場合は、異なるモデルや、決定論的な検査を併用する。
+監督するエージェントの判断は、売上、誤りの件数又は差し戻しの件数などの実績と比較して評価する。同じモデルには共通の弱点があるため、異なるモデル又は同じ入力に同じ結果を返す検査を併用する。Project Vendでは、経営者のエージェントが値引きなどの要求を承認した回数は、却下した回数のおよそ8倍だった。
 
 ### 4.5 モデルを役割で使い分ける
 
@@ -176,8 +172,6 @@ Anthropicの調査システムでは、幅広い方向を同時に調査する�
 | レビュー | 判断に強いモデル。作成者と異なるモデルも検討する。 | 報告書の結論と根拠を照合する。 |
 
 Anthropicの調査システムでは、リーダーにClaude Opus 4、サブエージェントにClaude Sonnet 4を使用した。
-
----
 
 ## 5 委任と情報共有
 
@@ -205,14 +199,14 @@ Anthropicの調査システムでは、リーダーにClaude Opus 4、サブエ�
 | 作業の難しさ | 人数の目安 | 例 |
 | --- | --- | --- |
 | 単純な事実の確認 | 一つのエージェント（ツールの呼び出しは3〜10回） | 特定の製品の発売日を調査する。 |
-| 直接の比較 | 2〜四つのサブエージェント（それぞれ10〜15回） | 三つのプランの料金と機能を比べる。 |
+| 直接の比較 | 2〜4のサブエージェント（それぞれ10〜15回） | 三つのプランの料金と機能を比べる。 |
 | 複雑な調査 | 10を超えるサブエージェント | 業界全体の主要企業の役員を調査する。 |
 
 数値は、Anthropicの調査システムの目安である。人数の規則がないと、単純な質問に50のサブエージェントを生成するような誤りが起きる。
 
 ### 5.3 共通の前提を文書で共有する
 
-エージェントの行動には、暗黙の判断が含まれる。前提を共有しないと、Cognitionの例のように、背景の担当と鳥の担当が別々の見た目のゲームを作り、統合できなくなる。作業を分割する前に、全員に共通する判断を文書にする。
+作業を分割する前に、全員が従う判断を文書で共有する。各エージェントが異なる前提で作業すると、個別の成果物を統合できなくなる。Cognitionは、ゲームの背景と鳥を別々の担当が作成し、見た目が一致しなかった例を報告している。
 
 共有する前提の例は、[表12](#table-12)による。
 
@@ -228,7 +222,7 @@ Anthropicの調査システムでは、リーダーにClaude Opus 4、サブエ�
 
 ### 5.4 成果物はファイルに置き、参照を渡す
 
-リーダーエージェントを介して長い本文を受け渡すと、要約のたびに情報が失われ、トークンも増える。サブエージェントは、成果物をファイル又は外部のシステムに保存し、保存先と短い要約を返す。
+サブエージェントは、成果物をファイル又は外部のシステムに保存し、保存先及び短い要約を返す。長い本文を会話で繰り返し受け渡す場合に比べ、要約による情報の欠落及びトークンの消費を抑制することが可能になる。
 
 成果物の渡し方は、[表13](#table-13)による。
 
@@ -245,9 +239,7 @@ Anthropicの調査システムでは、リーダーにClaude Opus 4、サブエ�
 
 ### 5.6 連絡は必要な場合に限る
 
-エージェントどうしの連絡が多いと、互いの作業を妨げ、トークンを消費する。全員への連絡は避け、相手を指定する。連絡の内容は、完了、確認の依頼、前提の変更、作業の停止に限る。
-
----
+連絡は、完了、確認の依頼、前提の変更及び作業の停止に限定し、必要な相手を指定する。全員への連絡を繰り返すと、各担当の作業が中断し、トークンの消費も増える。
 
 ## 6 タスクの管理
 
@@ -304,9 +296,7 @@ Claude Codeのエージェントチームの資料は、[表16](#table-16)の目
 
 ### 6.5 全員が同じ所で止まる場合は分割し直す
 
-大きな一つの作業では、全員が同じ問題に当たり、並行の効果が消える。AnthropicのCコンパイラの例では、16のエージェントがLinuxカーネルのコンパイルで同じ不具合に当たった。GCCで大半のファイルをコンパイルし、一部だけを自作のコンパイラでコンパイルする構成にして、担当ごとに別の不具合を直せるようにした。
-
----
+全員が同じ問題で停止する場合は、独立して進められる単位へ作業を再分割する。AnthropicのCコンパイラの例では、16のエージェントがLinuxカーネルのコンパイルで同じ不具合に当たった。GCCで大半のファイルをコンパイルし、一部だけを自作のコンパイラでコンパイルする構成にして、担当ごとに別の不具合を直せるようにした。
 
 ## 7 検証と人の関与
 
@@ -327,9 +317,9 @@ Claude Codeのエージェントチームの資料は、[表16](#table-16)の目
 
 エージェントの自律性が高いほど、検証の精度が結果を左右する。Cコンパイラの例では、ほぼ完全な検証がなければ、エージェントは誤った問題を解くと報告している。
 
-### 7.2 リーダーの完了の判断を鵜呑みにしない
+### 7.2 成果物及び検査結果で完了を確認する
 
-リーダーエージェントは、全てのタスクが終わる前に完了と判断することがある。チームメイトも、完了の記録を忘れて依存するタスクを止めることがある。タスクリストの状態ではなく、成果物と検査の結果で完了を確認する。
+完了は、成果物及び検査結果で確認する。リーダーエージェントが全てのタスクの終了前に完了と判断する場合、又はチームメイトが状態の記録を忘れる場合があるため、タスクリストの表示だけで判断しない。
 
 ### 7.3 人が判断する点を決める
 
@@ -349,8 +339,6 @@ Claude Codeのエージェントチームの資料は、[表16](#table-16)の目
 ### 7.4 長時間の放置を避ける
 
 人の確認なしに長く実行するほど、無駄な作業が増える。導入の初期は短い間隔で進捗を確認し、問題の出ない工程から確認の間隔を広げる。止めやすく、担当を入れ替えやすい構成にする。
-
----
 
 ## 8 予算と起動
 
@@ -390,9 +378,7 @@ AI組織の担当は、常に実行せず、必要な場合に起動する。
 
 ### 8.3 途中から再開できるようにする
 
-エラーのたびに最初からやり直すと、費用が増える。計画、タスクの状態、成果物をファイル又はデータベースに保存し、途中から再開する。Anthropicの調査システムでは、リーダーエージェントが計画をメモリへ保存し、コンテキストが圧縮されても計画を失わないようにしている。
-
----
+計画、タスクの状態及び成果物をファイル又はデータベースに保存し、停止した位置から再開する。完了済みの作業を繰り返さずに済み、再実行に伴う費用を抑制することが可能になる。Anthropicの調査システムでは、リーダーエージェントが計画をメモリへ保存し、コンテキストが圧縮されても計画を失わないようにしている。
 
 ## 9 評価と改善
 
@@ -447,8 +433,6 @@ AI組織の評価では、同じ作業を一つのエージェントでも実行
 
 モデルの更新で不要になった役割がないかを定期的に確認する。役割を一つ外して評価し、結果が変わらなければ外す。
 
----
-
 ## 10 実現手段
 
 ### 10.1 エージェントの実行環境の機能
@@ -466,8 +450,6 @@ AI組織の評価では、同じ作業を一つのエージェントでも実行
 
 ### 10.2 オープンソースのソフトウェア
 
-GitHubのStarが2 000以上で、継続して更新されているものを挙げる。
-
 オープンソースのソフトウェアは、[表25](#table-25)による。
 
 <a id="table-25"></a>表25−オープンソースのソフトウェア
@@ -477,7 +459,7 @@ GitHubのStarが2 000以上で、継続して更新されているものを挙�
 | 組織の運用 | [Paperclip](https://github.com/paperclipai/paperclip) | 組織図、目標、予算、ハートビート、承認、チケットで、複数のエージェントを組織として運用するアプリケーション。Claude Code、Codexなどを担当として使用する。 |
 | フレームワーク | [CrewAI](https://github.com/crewAIInc/crewAI) | 役割、目標、背景を持つエージェントを、シーケンシャル又は階層型で協調させる。 |
 | フレームワーク | [LangGraph](https://github.com/langchain-ai/langgraph) | 状態を持つグラフでエージェントの流れを制御し、サブエージェント、ハンドオフなどを組み立てる。 |
-| フレームワーク | [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) | AutoGenとSemantic Kernelの後継。シーケンシャル、並行、ハンドオフ、グループチャット、Magenticの型を持つ。 |
+| フレームワーク | [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) | AutoGen及びSemantic Kernelを引き継ぎ、複数のエージェントの実行順序及び引継ぎを制御する機能を提供する。 |
 | フレームワーク | [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) | エージェントをツールとして呼ぶ方式と、ハンドオフで、複数のエージェントの流れを作る。 |
 | フレームワーク | [Agent Development Kit](https://github.com/google/adk-python) | コードでエージェントとその協調を定義し、評価と実行を行う。 |
 | 役割の分担の例 | [ChatDev](https://github.com/OpenBMB/ChatDev) | 複数の役割のエージェントの協調で、ソフトウェアの開発などを進める。 |
@@ -496,8 +478,6 @@ GitHubのStarが2 000以上で、継続して更新されているものを挙�
 | 自社のアプリケーションに組み込む。 | OpenAI Agents SDK、LangGraph、Microsoft Agent Framework、CrewAIなどで、工程をコードで制御する。 |
 | 複数の継続的な業務を組織として管理する。 | Paperclipと、Claude Code、Codexなどの担当 |
 | 異なる提供元のエージェントを連携させる。 | A2Aで接続し、それぞれのツールはMCPで接続する。 |
-
----
 
 ## 11 チェックリスト
 
@@ -523,24 +503,22 @@ GitHubのStarが2 000以上で、継続して更新されているものを挙�
 - 全ての実行の記録をたどれ、失敗を原因ごとに分類している。
 - 不要な役割を外せるか定期的に確認している。
 
----
-
 ## 参考文献
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 2章<br>4章<br>5章<br>8章<br>9章 | [How we built our multi-agent research system \ Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system) | 単独のエージェントとの比較、トークンの倍率、委任の4項目、作業の量に応じた人数、参照の受け渡し、計画の保存、約20件から始める評価を示す。 |
+| 2章<br>4章<br>5章<br>8章<br>9章 | [How we built our multi-agent research system \ Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system) | 複数のAIエージェントを用いた調査システムの設計及び評価を説明する記事。 |
 | 2章<br>5章 | [Don’t Build Multi-Agents \| Cognition](https://cognition.com/blog/dont-build-multi-agents) | 文脈の共有と暗黙の判断の問題、分担した作業が噛み合わない例を示す。 |
-| 2章<br>4章 | [Project Vend: Phase two \ Anthropic](https://www.anthropic.com/research/project-vend-2) | 経営者のエージェントの限界、役割を分けたエージェントの成果、手順の効果を示す。 |
-| 4章 | [Harness design for long-running apps \ Anthropic](https://www.anthropic.com/engineering/harness-design-long-running-apps) | エージェントが自分の成果物を甘く評価すること、作る役割と評価する役割を分ける方法を示す。 |
-| 2章<br>10章 | [Microsoft Agent Framework Overview \| Microsoft Learn](https://learn.microsoft.com/en-us/agent-framework/overview/) | エージェントとワークフローの使い分け、関数で書ける処理はエージェントを使用しないこと、AutoGenとSemantic Kernelとの関係を示す。 |
-| 2章<br>3章 | [Multi-agent - Docs by LangChain](https://docs.langchain.com/oss/python/langchain/multi-agent) | 複数のエージェントが必要な場面と、サブエージェント、ハンドオフ、スキル、ルーターの比較を示す。 |
-| 3章 | [Agent Framework のワークフロー オーケストレーション \| Microsoft Learn](https://learn.microsoft.com/ja-jp/agent-framework/workflows/orchestrations/) | シーケンシャル、並行、ハンドオフ、グループチャット、Magenticの型を定義する。 |
+| 2章<br>4章 | [Project Vend: Phase two \ Anthropic](https://www.anthropic.com/research/project-vend-2) | AIエージェントによる店舗運営の実験結果を報告する記事。 |
+| 4章 | [Harness design for long-running apps \ Anthropic](https://www.anthropic.com/engineering/harness-design-long-running-apps) | 長時間のアプリケーション開発を支えるハーネスの設計を説明する記事。 |
+| 2章<br>10章 | [Microsoft Agent Framework Overview \| Microsoft Learn](https://learn.microsoft.com/en-us/agent-framework/overview/) | Microsoft Agent Frameworkの構成及び用途を説明する文書。 |
+| 2章<br>3章 | [Multi-agent - Docs by LangChain](https://docs.langchain.com/oss/python/langchain/multi-agent) | LangChainで複数のエージェントを構成する方式を説明する文書。 |
+| 3章 | [Agent Framework のワークフロー オーケストレーション \| Microsoft Learn](https://learn.microsoft.com/ja-jp/agent-framework/workflows/orchestrations/) | Agent Frameworkでエージェントの処理を連携する方式を説明する文書。 |
 | 3章<br>10章 | [Agent orchestration - OpenAI Agents SDK](https://openai.github.io/openai-agents-python/multi_agent/) | LLMによる制御とコードによる制御、エージェントをツールとして呼ぶ方式とハンドオフを定義する。 |
 | 3章<br>10章 | [Hierarchical Process - CrewAI](https://docs.crewai.com/en/learn/hierarchical-process) | 管理のエージェントが委任と検証を行う階層型の処理を定義する。 |
-| 3章<br>5章<br>6章<br>7章<br>10章 | [Claude Code セッションのチームを調整する - Claude Code Docs](https://code.claude.com/docs/ja/agent-teams) | エージェントチームの構成、サブエージェントとの違い、タスクリスト、品質ゲートのフック、人数とタスクの目安、制限を定義する。 |
-| 6章<br>7章<br>8章 | [Building a C compiler with parallel Claudes \ Anthropic](https://www.anthropic.com/engineering/building-c-compiler) | 16のエージェントの協調、ロックのファイルによるタスクの取得、検証の重要性、作業の分割の見直し、費用を示す。 |
-| 6章<br>8章<br>10章 | [GitHub - paperclipai/paperclip](https://github.com/paperclipai/paperclip) | 組織図、目標、予算、ハートビート、承認、チェックアウトのロックを持つ運用のアプリケーションを示す。 |
+| 3章<br>5章<br>6章<br>7章<br>10章 | [Claude Code セッションのチームを調整する - Claude Code Docs](https://code.claude.com/docs/ja/agent-teams) | Claude Codeのエージェントチームの構成及び運用方法を示す文書。 |
+| 6章<br>7章<br>8章 | [Building a C compiler with parallel Claudes \ Anthropic](https://www.anthropic.com/engineering/building-c-compiler) | 複数のAIエージェントによるCコンパイラー開発の実験結果を報告する記事。 |
+| 6章<br>8章<br>10章 | [GitHub - paperclipai/paperclip](https://github.com/paperclipai/paperclip) | 複数のAIエージェントの業務を管理するアプリケーションの公式リポジトリ。 |
 | 9章 | [[2503.13657] Why Do Multi-Agent LLM Systems Fail?](https://arxiv.org/abs/2503.13657) | 複数のエージェントの失敗を、システムの設計、エージェント間の連携、タスクの検証に分類する。 |
 | 10章 | [Subagents \| ChatGPT Learn](https://learn.chatgpt.com/docs/agent-configuration/subagents) | Codexのサブエージェントの定義と、読み取りの多い作業から始めることを示す。 |
 | 10章 | [A2A Protocol](https://a2a-protocol.org/latest/) | エージェント間の連携の規格と、MCPとの関係を定義する。 |
