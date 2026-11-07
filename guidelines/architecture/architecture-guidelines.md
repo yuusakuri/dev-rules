@@ -19,8 +19,7 @@
 | Webサイト及びWebアプリケーション | [Webアーキテクチャガイドライン](web-architecture-guidelines.md) |
 | 通信方式の選択 | [通信方式ガイドライン](communication-protocol-guidelines.md) |
 | 地図を表示するアプリケーション | [地図アプリケーション設計ガイドライン](map-application-guidelines.md) |
-| 画像の受付からAI処理まで | [画像AI処理設計ガイドライン](image-ai-pipeline-guidelines.md) |
-| LLMを組み込んだ機能 | [LLMアプリケーション設計ガイドライン](../ai/llm-application-guidelines.md) |
+| テキスト、画像、動画、音声などを扱うAI機能 | [AI機能設計ガイドライン](../ai/ai-feature-design-guidelines.md) |
 
 ### 1.3 用語及び定義
 
