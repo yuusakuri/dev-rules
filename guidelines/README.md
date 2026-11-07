@@ -9,6 +9,10 @@
 | ソフトウェア設計 | [ソフトウェア設計ガイドライン](software/software-design-guidelines.md) | ソフトウェア開発の設計ガイドライン。 | なし |
 | ソフトウェア設計 | [アプリケーション設計ガイドライン](software/application-design-guidelines.md) | アプリケーション設計のガイドライン。 | ソフトウェア設計ガイドライン |
 | ソフトウェア設計 | [テストガイドライン](software/testing-guidelines.md) | テストの設計方法を定めるガイドライン。 | ソフトウェア設計ガイドライン |
+| アーキテクチャ | [アーキテクチャ設計ガイドライン](architecture/architecture-guidelines.md) | 性能を最優先に、システムの構成を要件と品質特性から選ぶガイドライン。 | なし |
+| アーキテクチャ | [Webアーキテクチャガイドライン](architecture/web-architecture-guidelines.md) | Webサイト及びWebアプリケーションの用途から、性能を最大にする構成を選ぶガイドライン。 | アーキテクチャ設計ガイドライン |
+| アーキテクチャ | [通信方式ガイドライン](architecture/communication-protocol-guidelines.md) | 通信の用途から、遅延とスループットが最も良い通信方式を選ぶガイドライン。 | アーキテクチャ設計ガイドライン |
+| アーキテクチャ | [地図アプリケーション設計ガイドライン](architecture/map-application-guidelines.md) | 大量の地理データを、滑らかな操作と速い読込みで表示する設計のガイドライン。 | Webアーキテクチャガイドライン |
 | 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリの構成を定めるガイドライン。 | なし |
 | 開発 | [Git規則](development/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 開発 | [バージョニング規則](development/versioning-guidelines.md) | バージョン番号を決める。 | なし |
@@ -19,6 +23,7 @@
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Windows PowerShellモジュール実装ガイドライン](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュール実装のガイドライン。 | ソフトウェア設計ガイドライン、リポジトリガイドライン |
 | AI | [ハーネスエンジニアリングガイドライン](ai/harness-engineering-guidelines.md) | AIエージェントの指示、検査及び実行の制御の仕組みを設計するガイドライン。 | なし |
+| AI | [AI機能設計ガイドライン](ai/ai-feature-design-guidelines.md) | テキスト、画像、動画、音声などを扱うAI機能及びエージェント型の機能の設計と、運用のガイドライン。 | アーキテクチャ設計ガイドライン、通信方式ガイドライン |
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現のガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
@@ -34,6 +39,23 @@
 | 文書 | [PDFからの画像抽出ガイドライン](documentation/pdf-image-extraction-guidelines.md) | PDFの図を、ベクター画像はSVGとして、埋め込み画像は元の画素のまま抽出するガイドライン。 | なし |
 | 文書 | [Webページからの画像取得ガイドライン](documentation/web-image-guidelines.md) | Webページの画像を、提供元が配布する画像ファイルから取得するガイドライン。 | なし |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載方法を定めるガイドライン。 | リポジトリガイドライン |
+
+## 設計の対象から選ぶ
+
+設計では、設計の対象から[表1](#table-1)で文書を選ぶ。利用側プロジェクトが別の優先順位を定めていない場合は、各文書の選択表から、要件を満たす中で性能が最も高い選択肢を選ぶ。
+
+<a id="table-1"></a>表1−設計の対象と適用する文書
+
+| 設計の対象 | 適用する文書 |
+| --- | --- |
+| システム全体の構成、実行単位の分け方、データストア、配置先 | [アーキテクチャ設計ガイドライン](architecture/architecture-guidelines.md) |
+| 実行単位の内部のフォルダ及びモジュールの構成 | [アプリケーション設計ガイドライン](software/application-design-guidelines.md) |
+| Webサイト及びWebアプリケーションのレンダリング方式、キャッシュ、配信、表示の速さ | [Webアーキテクチャガイドライン](architecture/web-architecture-guidelines.md)、[Web UIガイドライン](ui/web-ui-guidelines.md) |
+| API、リアルタイム通信、サーバー間の通信、機器との通信の方式 | [通信方式ガイドライン](architecture/communication-protocol-guidelines.md) |
+| 業務ロジック、状態遷移、エラーハンドリング、並行処理 | [ソフトウェア設計ガイドライン](software/software-design-guidelines.md) |
+| 地図での大量データの表示、地図の操作性と性能 | [地図アプリケーション設計ガイドライン](architecture/map-application-guidelines.md) |
+| テキスト、画像、動画、音声などを扱うAI機能、エージェント型の機能、LLMOps | [AI機能設計ガイドライン](ai/ai-feature-design-guidelines.md) |
+| 開発の作業をAIエージェントに任せる仕組み | [ハーネスエンジニアリングガイドライン](ai/harness-engineering-guidelines.md) |
 
 ## 適用手順
 

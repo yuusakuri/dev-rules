@@ -14,10 +14,11 @@
 ├── guidelines/
 │   ├── README.md             # ガイドライン一覧と適用手順
 │   ├── software/             # ソフトウェアとアプリケーションの設計ガイドライン
+│   ├── architecture/         # システム構成と用途別の設計ガイドライン
 │   ├── development/          # リポジトリ、Git、バージョン管理、ソフトウェア使用のガイドライン
 │   ├── implementation/       # 技術固有の実装ガイドライン
 │   ├── ui/                   # UIデザインガイドライン
-│   ├── ai/                   # AIエージェントの運用のガイドライン
+│   ├── ai/                   # AIエージェントの運用とAI機能の設計のガイドライン
 │   └── documentation/        # 文書作成のガイドライン
 ├── templates/
 │   ├── README.md             # テンプレート一覧
