@@ -9,12 +9,10 @@
 | ソフトウェア設計 | [ソフトウェア設計ガイドライン](software/software-design-guidelines.md) | ソフトウェア開発の設計ガイドライン。 | なし |
 | ソフトウェア設計 | [アプリケーション設計ガイドライン](software/application-design-guidelines.md) | アプリケーション設計のガイドライン。 | ソフトウェア設計ガイドライン |
 | ソフトウェア設計 | [テストガイドライン](software/testing-guidelines.md) | テストの設計方法を定めるガイドライン。 | ソフトウェア設計ガイドライン |
-| ソフトウェア設計 | [ロジック設計ガイドライン](software/logic-design-guidelines.md) | 業務ルール、状態及び整合性を扱うロジックの設計のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | アーキテクチャ | [アーキテクチャ設計ガイドライン](architecture/architecture-guidelines.md) | 性能を最優先に、システムの構成を要件と品質特性から選ぶガイドライン。 | なし |
 | アーキテクチャ | [Webアーキテクチャガイドライン](architecture/web-architecture-guidelines.md) | Webサイト及びWebアプリケーションの用途から、性能を最大にする構成を選ぶガイドライン。 | アーキテクチャ設計ガイドライン |
 | アーキテクチャ | [通信方式ガイドライン](architecture/communication-protocol-guidelines.md) | 通信の用途から、遅延とスループットが最も良い通信方式を選ぶガイドライン。 | アーキテクチャ設計ガイドライン |
 | アーキテクチャ | [地図アプリケーション設計ガイドライン](architecture/map-application-guidelines.md) | 大量の地理データを、滑らかな操作と速い読込みで表示する設計のガイドライン。 | Webアーキテクチャガイドライン |
-| アーキテクチャ | [画像AI処理設計ガイドライン](architecture/image-ai-pipeline-guidelines.md) | 画像のアップロードからAIによる処理及び結果の提示までの設計のガイドライン。 | 通信方式ガイドライン |
 | 開発 | [リポジトリガイドライン](development/repository-guidelines.md) | リポジトリの構成を定めるガイドライン。 | なし |
 | 開発 | [Git規則](development/git-guidelines.md) | Gitを使った開発フローの規則。 | なし |
 | 開発 | [バージョニング規則](development/versioning-guidelines.md) | バージョン番号を決める。 | なし |
@@ -25,7 +23,7 @@
 | 実装 | [Flutter実装ガイドライン](implementation/flutter-guidelines.md) | Flutterアプリケーション実装のガイドライン。 | ソフトウェア設計ガイドライン、アプリケーション設計ガイドライン |
 | 実装 | [Windows PowerShellモジュール実装ガイドライン](implementation/windows-powershell-module-guidelines.md) | Windows PowerShell 5.1向けモジュール実装のガイドライン。 | ソフトウェア設計ガイドライン、リポジトリガイドライン |
 | AI | [ハーネスエンジニアリングガイドライン](ai/harness-engineering-guidelines.md) | AIエージェントの指示、検査及び実行の制御の仕組みを設計するガイドライン。 | なし |
-| AI | [LLMアプリケーション設計ガイドライン](ai/llm-application-guidelines.md) | LLMを組み込んだ機能及びエージェント型の機能の設計と、LLMOpsのガイドライン。 | アーキテクチャ設計ガイドライン |
+| AI | [AI機能設計ガイドライン](ai/ai-feature-design-guidelines.md) | テキスト、画像、動画、音声などを扱うAI機能及びエージェント型の機能の設計と、運用のガイドライン。 | アーキテクチャ設計ガイドライン、通信方式ガイドライン |
 | UI | [デザインシステムガイドライン](ui/design-system.md) | UIの視覚表現のガイドライン。 | なし |
 | UI | [Web UIガイドライン](ui/web-ui-guidelines.md) | Web UIのデザインガイドライン。 | デザインシステムガイドライン |
 | 文書 | [Markdown記述ガイドライン](documentation/markdown-guidelines.md) | Markdownの記述ガイドライン。 | なし |
@@ -54,10 +52,9 @@
 | 実行単位の内部のフォルダ及びモジュールの構成 | [アプリケーション設計ガイドライン](software/application-design-guidelines.md) |
 | Webサイト及びWebアプリケーションのレンダリング方式、キャッシュ、配信、表示の速さ | [Webアーキテクチャガイドライン](architecture/web-architecture-guidelines.md)、[Web UIガイドライン](ui/web-ui-guidelines.md) |
 | API、リアルタイム通信、サーバー間の通信、機器との通信の方式 | [通信方式ガイドライン](architecture/communication-protocol-guidelines.md) |
-| 業務ルール、状態遷移、トランザクション、同時実行、べき等性 | [ロジック設計ガイドライン](software/logic-design-guidelines.md)、[ソフトウェア設計ガイドライン](software/software-design-guidelines.md) |
+| 業務ロジック、状態遷移、エラーハンドリング、並行処理 | [ソフトウェア設計ガイドライン](software/software-design-guidelines.md) |
 | 地図での大量データの表示、地図の操作性と性能 | [地図アプリケーション設計ガイドライン](architecture/map-application-guidelines.md) |
-| 画像のアップロードと、AIによる画像の処理 | [画像AI処理設計ガイドライン](architecture/image-ai-pipeline-guidelines.md)、[LLMアプリケーション設計ガイドライン](ai/llm-application-guidelines.md) |
-| LLMを組み込んだ機能、エージェント型の機能、LLMOps | [LLMアプリケーション設計ガイドライン](ai/llm-application-guidelines.md) |
+| テキスト、画像、動画、音声などを扱うAI機能、エージェント型の機能、LLMOps | [AI機能設計ガイドライン](ai/ai-feature-design-guidelines.md) |
 | 開発の作業をAIエージェントに任せる仕組み | [ハーネスエンジニアリングガイドライン](ai/harness-engineering-guidelines.md) |
 
 ## 適用手順

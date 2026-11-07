@@ -16,7 +16,7 @@
 設計では、次の手順で最適な設計を選ぶ。
 
 1. [`guidelines/README.md`](guidelines/README.md) の「設計の対象から選ぶ」から、適用する文書を選ぶ。
-2. [ロジック設計ガイドライン](guidelines/software/logic-design-guidelines.md) の2.1の事項のうち、設計の対象に関係するものを確認し、確定していない事項は依頼者に確認する。
+2. [アーキテクチャ設計ガイドライン](guidelines/architecture/architecture-guidelines.md) の3.1の要件及び制約を確認し、確定していない事項は依頼者に確認する。
 3. 選んだ文書の選択表から候補を絞り、利用側プロジェクトが別の優先順位を定めていない場合は、要件を満たす中で性能が最も高い案を選ぶ。
 4. 選んだ案と理由、比較した他の案、未確定の事項を示す。決定は [ADRテンプレート](templates/documentation/architecture-decision-record.md) で記録する。
 
