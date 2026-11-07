@@ -4,17 +4,17 @@
 
 ### 1.1 目的
 
-この文書の目的は、AIを使う機能を、扱うデータの種類によらず、品質、応答の速さ及び費用を管理しながら設計し、運用するための判断基準を共有することである。想定する読者は、AIを使う機能を設計する開発者及びAIエージェントである。
+本書の目的は、AIを使う機能を、扱うデータの種類によらず、品質、応答の速さ及び費用を管理しながら設計し、運用するための判断基準を共有することである。
 
 ### 1.2 適用範囲
 
-この文書は、テキスト、画像、動画、音声、文書及び表形式のデータを入力又は出力とし、LLM、マルチモーダルモデル、専用モデル、画像及び動画の生成モデル、埋め込み、並びに機械学習の予測モデルを使う機能の設計について規定する。
+本書は、テキスト、画像、動画、音声、文書及び表形式のデータを入力又は出力とし、LLM、マルチモーダルモデル、専用モデル、画像及び動画の生成モデル、埋め込み、並びに機械学習の予測モデルを使う機能の設計について規定する。
 
-この文書は、[アーキテクチャ設計ガイドライン](../architecture/architecture-guidelines.md)及び[通信方式ガイドライン](../architecture/communication-protocol-guidelines.md)を前提とする。開発の作業にAIエージェントを使う仕組みは、[ハーネスエンジニアリングガイドライン](harness-engineering-guidelines.md)による。
+本書は、[アーキテクチャ設計ガイドライン](../architecture/architecture-guidelines.md)及び[通信方式ガイドライン](../architecture/communication-protocol-guidelines.md)を前提とする。開発の作業にAIエージェントを使う仕組みは、[ハーネスエンジニアリングガイドライン](harness-engineering-guidelines.md)による。
 
 ### 1.3 用語及び定義
 
-この文書で用いる主な用語及び定義は、[表1](#table-1)によるほか、[アーキテクチャ設計ガイドライン](../architecture/architecture-guidelines.md)及び[通信方式ガイドライン](../architecture/communication-protocol-guidelines.md)による。
+本書で用いる主な用語及び定義は、[表1](#table-1)によるほか、[アーキテクチャ設計ガイドライン](../architecture/architecture-guidelines.md)及び[通信方式ガイドライン](../architecture/communication-protocol-guidelines.md)による。
 
 <a id="table-1"></a>表1−用語及び定義
 
