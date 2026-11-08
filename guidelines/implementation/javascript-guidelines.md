@@ -4,11 +4,11 @@
 
 ### 1.1 目的
 
-この文書は、JavaScriptを使用した開発における作業効率の向上及び品質の安定化を目的とする。
+本書は、JavaScriptを使用した開発の作業効率の向上及び品質の安定化を目的とする。
 
 ### 1.2 適用範囲
 
-この文書は、Node.js及びブラウザーで実行するJavaScriptの実装について規定する。この文書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
+本書は、Node.js及びブラウザーで実行するJavaScriptの実装について規定する。本書は、[ソフトウェア設計ガイドライン](../software/software-design-guidelines.md)、[アプリケーション設計ガイドライン](../software/application-design-guidelines.md)、[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)を前提とする。
 
 ## 2 言語及びパッケージマネージャー
 
