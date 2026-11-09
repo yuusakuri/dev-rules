@@ -1,6 +1,6 @@
 # テンプレート
 
-文書を書き始めるためのひな形である。`<>`又は`［］`で囲んだ箇所をプロジェクトの内容へ置き換えて使う。
+文書及びハーネスを作り始めるためのひな形である。`<>`又は`［］`で囲んだ箇所をプロジェクトの内容へ置き換えて使う。
 
 ## テンプレート一覧
 
@@ -17,3 +17,4 @@
 | テスト | [Test Detail](documentation/test-detail.md) | テストの入力及び件数を具体化するテンプレート。 |
 | テスト | [Test Case Specification](documentation/test-case-specification.md) | テストの実施手順、期待結果及び判定を記録するテンプレート。 |
 | テスト | [Test Log](documentation/test-log.md) | テストの実行経過及び結果を記録するテンプレート。 |
+| ハーネス | [エージェントハーネス](agent-harness/README.md) | 評価コマンドで測れる目標に向けて、Claude Code又はCodexを終了時刻まで自律で改善させるハーネスのテンプレート。 |
