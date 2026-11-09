@@ -9,5 +9,7 @@
 | 要件定義 | [製品要求仕様書](documentation/product-requirements-document.md) | 製品要求仕様書のテンプレート。 |
 | 要件定義 | [ソフトウェア要求仕様書](documentation/software-requirements-specification.md) | ソフトウェア要求仕様書のテンプレート。JIS X 0166（ISO/IEC/IEEE 29148）を参考に作成した。 |
 | 設計 | [ソフトウェア設計記述書](documentation/software-design-description.md) | ソフトウェア設計記述書のテンプレート。IEEE 1016及びISO/IEC/IEEE 42010を参考に作成した。 |
+| 設計 | [UI仕様書](documentation/ui-specification.md) | 製品全体に共通するユーザインタフェースの仕様のテンプレート。ISO/IEC 40500（WCAG 2.2）及びISO 9241-110を参考に作成した。 |
+| 設計 | [画面設計書](documentation/screen-design-document.md) | 画面ごとの設計のテンプレート。ISO/IEC 40500（WCAG 2.2）及びISO 9241-110を参考に作成した。 |
 | 技術文書 | [技術文書](documentation/technical-document.md) | 技術文書のテンプレート。JIS Z 8301及びISO/IEC Directives, Part 2を参考に作成した。 |
 | ハーネス | [エージェントハーネス](agent-harness/README.md) | 評価コマンドで測れる目標に向けて、Claude Code又はCodexを終了時刻まで自律で改善させるハーネスのテンプレート。 |
