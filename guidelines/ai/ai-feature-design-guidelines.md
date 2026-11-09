@@ -14,7 +14,7 @@
 
 ### 1.3 用語及び定義
 
-本書で用いる主な用語及び定義は、[表1](#table-1)によるほか、[アーキテクチャ設計ガイドライン](../architecture/architecture-guidelines.md)及び[通信方式ガイドライン](../architecture/communication-protocol-guidelines.md)による。
+本書で用いる主な用語及び定義は、[表1](#table-1)によるほか、[アーキテクチャ設計ガイドライン](../architecture/architecture-guidelines.md)及び[通信方式ガイドライン](../architecture/communication-protocol-guidelines.md)による。これらにないAIの概念の用語は、JIS X 22989:2023による。
 
 <a id="table-1"></a>表1−用語及び定義
 
@@ -34,6 +34,9 @@
 | プロンプトインジェクション | 入力又は取得した資料に含まれる文章によって、LLMに意図しない動作をさせる攻撃。 |
 | 信頼度 | モデルが出力した結果について、モデルが示す確からしさの値。 |
 | 評価セット | 入力と、期待する出力又は採点の基準とを組にした、品質の測定用のデータ。 |
+| 頑健性（robustness） | 入力の条件が変わっても、機能の品質を保つ能力。ISO/IEC 25059で、信頼性の副特性として定義される。 |
+| 透明性（transparency） | 利害関係者が、AIシステムについて必要な情報を得られる度合い。ISO/IEC 25059で定義される。 |
+| ユーザ制御性（user controllability） | 利用者が、AIシステムの動作に適切に介入できる度合い。ISO/IEC 25059で定義される。 |
 | トレース | 一つの要求で行ったモデルの呼出し、ツールの実行及びその入出力の記録。 |
 | LLMOps | 評価、版の管理、監視及び変更の展開によって、LLMを使う機能の品質を運用の中で維持する活動。 |
 | ジョブ | 一つの入力に対する一連の非同期の処理の単位。状態をもつ。 |
@@ -295,9 +298,22 @@ APIキー、パスワードなどの機密情報を、プロンプトに含め�
 
 ### 11.1 評価
 
-評価は、次によって行う。
+機能の成功の基準は、ISO/IEC 25059の品質特性及び副特性ごとに、測定できる指標及び目標値で決める。正答率だけを基準にすると、条件の違う入力での品質の低下、遅延及び費用の増加を見逃す。
 
-- 機能の成功の基準を、正答率、形式の適合率、遅延、費用など、測定できる指標及び目標値で決める。
+評価の指標の例は、[表4](#table-4)による。
+
+<a id="table-4"></a>表4−評価の指標の例
+
+| 品質特性又は副特性 | 評価の観点 | 指標の例 |
+| --- | --- | --- |
+| 機能正確性 | 出力が正しいか。AIの出力は全ての入力では正しくならないため、割合で測る。 | 正答率<br>採点の基準の合格率<br>構造化出力のスキーマへの適合率 |
+| 頑健性 | 画質、雑音、話者、言い回し、境界の事例など、入力の条件が変わっても品質を保つか。 | 条件ごとの正答率と、基準の条件からの低下幅 |
+| 時間効率性 | 利用者を待たせないか。 | 最初の出力までの時間及び完了までの時間の95パーセンタイル |
+| 資源効率性 | 計算資源及び費用を効率よく使うか。 | 入力一つ当たりのトークン数及び費用 |
+| 透明性 | 利用者が、出力の根拠及び確からしさを確認できるか。 | 出典を示した回答の割合<br>出典が回答の内容を裏付ける割合 |
+| ユーザ制御性 | 利用者が、結果の確認、訂正、再実行及び中断をできるか。 | 信頼度の低い結果のうち、人の確認に回した割合<br>利用者による訂正の割合 |
+
+評価は、次によって行う。
 
 - 評価セットは、実際の利用で想定する入力の分布に、境界の事例及び攻撃的な入力を加えて作る。画像、音声及び動画では、画質、雑音、話者などの条件の違いを含める。
 
@@ -345,6 +361,8 @@ APIキー、パスワードなどの機密情報を、プロンプトに含め�
 
 - [表2](#table-2)で、評価の目標を満たす最も単純な構成を選んでいる。
 
+- 成功の基準が、[表4](#table-4)の品質特性又は副特性ごとに、指標及び目標値で決まっている。
+
 - データの種類ごとに、[表3](#table-3)の方式を選んでいる。
 
 - モデルを、版を固定した識別子で指定している。
@@ -383,6 +401,8 @@ APIキー、パスワードなどの機密情報を、プロンプトに含め�
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
+| 1章 | [ISO/IEC 22989:2022 - Information technology — Artificial intelligence — Artificial intelligence concepts and terminology](https://www.iso.org/standard/74296.html) | AIの概念及び用語を定義する国際規格。対応する日本産業規格は、JIS X 22989:2023である。 |
+| 1章<br>11章 | [ISO/IEC 25059:2023 - Software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Quality model for AI systems](https://www.iso.org/standard/80655.html) | ISO/IEC 25010の品質モデルを、AIシステム向けに拡張した品質モデルを定義する国際規格。 |
 | 2章<br>6章 | [Building effective AI agents \ Anthropic](https://www.anthropic.com/engineering/building-effective-agents) | ワークフロー及びエージェントの構成を示し、最も単純な構成から始める方針を示す。 |
 | 3章 | [プロンプトキャッシング](https://platform.claude.com/docs/ja/build-with-claude/prompt-caching) | プロンプトの共通の先頭部分をキャッシュし、遅延及び費用を減らす方法を示す。 |
 | 3章 | [バッチ処理](https://platform.claude.com/docs/ja/build-with-claude/batch-processing) | 急がない大量の要求をまとめて安く処理するAPIを示す。 |
@@ -391,11 +411,11 @@ APIキー、パスワードなどの機密情報を、プロンプトに含め�
 | 4章 | [Resumable upload protocol](https://tus.io/protocols/resumable-upload) | 中断したアップロードを再開する通信規約を定義する。 |
 | 4章 | [File Upload Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) | アップロードされたファイルの検証及び保存の方法を示す。 |
 | 4章 | [ビジョン](https://platform.claude.com/docs/ja/build-with-claude/vision) | 画像を入力とするモデルの解像度の上限、及び事前に縮小する推奨を示す。 |
-| 5章 | [要求チェック パターン](https://learn.microsoft.com/ja-jp/azure/architecture/patterns/claim-check) | 大きなデータを保存先に置き、メッセージには参照だけを載せる設計パターンを示す。 |
+| 5章 | [Claim Check パターン](https://learn.microsoft.com/ja-jp/azure/architecture/patterns/claim-check) | 大きなデータを保存先に置き、メッセージには参照だけを載せる設計パターンを示す。 |
 | 5章 | [Amazon SQS の可視性タイムアウト](https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html) | 処理中のメッセージを、他の受信者から見えなくする時間の設定を示す。 |
-| 6章 | [Writing effective tools for agents — with agents \ Anthropic](https://www.anthropic.com/engineering/writing-tools-for-agents) | エージェントが使うツールの設計及び評価の方法を示す。 |
+| 6章 | [Writing effective tools for AI agents \ Anthropic](https://www.anthropic.com/engineering/writing-tools-for-agents) | エージェントが使うツールの設計及び評価の方法を示す。 |
 | 6章 | [Model Context Protocol](https://modelcontextprotocol.io/specification/latest) | AIアプリケーションとツールとを接続する通信規約を定義する。 |
-| 8章 | [Introducing Contextual Retrieval \ Anthropic](https://www.anthropic.com/news/contextual-retrieval) | キーワード検索、埋め込み検索及び並べ替えを組み合わせた、検索の精度の改善を示す。 |
+| 8章 | [Contextual retrieval in AI systems \ Anthropic](https://www.anthropic.com/news/contextual-retrieval) | キーワード検索、埋め込み検索及び並べ替えを組み合わせた、検索の精度の改善を示す。 |
 | 9章 | [OWASP Top 10 for LLM Applications 2025](https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/) | LLMアプリケーションの主要なセキュリティ上の危険を示す。 |
-| 11章 | [Define success criteria and build evaluations](https://platform.claude.com/docs/en/test-and-evaluate/develop-tests) | 測定できる成功の基準及び評価セットの作り方を示す。 |
-| 11章 | [Semantic conventions for generative AI systems](https://opentelemetry.io/docs/specs/semconv/gen-ai/) | 生成AIの呼出しをトレースとして記録する属性を定義する。 |
+| 11章 | [成功基準を定義し、評価を構築する](https://platform.claude.com/docs/ja/test-and-evaluate/develop-tests) | 測定できる成功の基準及び評価セットの作り方を示す。 |
+| 11章 | [Semantic conventions for generative AI systems](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md) | 生成AIの呼出しをトレースとして記録する属性を定義する。 |

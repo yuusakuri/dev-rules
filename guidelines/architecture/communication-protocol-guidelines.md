@@ -35,7 +35,8 @@
 | HLS（HTTP Live Streaming）、DASH（Dynamic Adaptive Streaming over HTTP） | 動画を短い区間のファイルに分け、回線の速度に合わせた画質でHTTPによって配信する方式。 |
 | MQTT | 発行及び購読の形式で、小さなメッセージを送る軽量の通信規約。 |
 | Webhook | イベントの発生時に、提供者が、登録されたURLへHTTPの要求を送る仕組み。 |
-| べき等 | 同じ要求を複数回行っても、1回行った場合と結果が同じである性質。 |
+| べき等 | 同じ要求を複数回送っても、サーバーに対する意図した効果が、1回送った場合と同じである性質。HTTPでは、RFC 9110が、GET、HEAD、OPTIONS、TRACE、PUT及びDELETEのメソッドをべき等と定める。 |
+| 範囲要求 | `Range`ヘッダーで、リソースの一部だけを要求すること。RFC 9110で定義される。 |
 | デッドレターキュー | 処理に繰り返し失敗したメッセージを移すキュー。 |
 
 ## 2 選択の手順
@@ -183,6 +184,7 @@ Webhookを受信する場合は、署名を検証した後すぐに2xxを返し�
 | 1章<br>4章 | [RFC 9114: HTTP/3](https://www.rfc-editor.org/rfc/rfc9114) | HTTP/3を定義する。 |
 | 1章<br>4章 | [RFC 9000: QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000) | QUICを定義する。 |
 | 4章 | [RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3](https://www.rfc-editor.org/rfc/rfc8446) | TLS 1.3及び0-RTTのデータの再送の危険を定義する。 |
+| 1章<br>3章<br>5章 | [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110) | HTTPのメソッド、べき等なメソッド、範囲要求及び状態コードを定義する。 |
 | 3章 | [OpenAPI Specification](https://spec.openapis.org/oas/latest.html) | HTTPのAPIの記述形式を定義する。 |
 | 3章 | [GraphQL Specification](https://spec.graphql.org/) | GraphQLの問合せ言語を定義する。 |
 | 3章 | [Introduction to gRPC](https://grpc.io/docs/what-is-grpc/introduction/) | gRPC及びProtocol Buffersの仕組みを示す。 |
@@ -191,7 +193,7 @@ Webhookを受信する場合は、署名を検証した後すぐに2xxを返し�
 | 3章 | [WebTransport](https://www.w3.org/TR/webtransport/) | WebTransportのAPIを定義する。 |
 | 3章 | [WebRTC API](https://developer.mozilla.org/ja/docs/Web/API/WebRTC_API) | WebRTCの構成要素を示す。 |
 | 3章 | [MQTT Version 5.0](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html) | MQTT及び配信の保証の水準を定義する。 |
-| 3章 | [非同期要求-応答パターン](https://learn.microsoft.com/ja-jp/azure/architecture/patterns/async-request-reply) | 非同期の処理の受付及び完了の通知の設計パターンを示す。 |
+| 3章 | [非同期リクエスト-リプライパターン](https://learn.microsoft.com/ja-jp/azure/architecture/patterns/async-request-reply) | 非同期の処理の受付及び完了の通知の設計パターンを示す。 |
 | 5章 | [The Idempotency-Key HTTP Header Field](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/) | べき等キーをHTTPヘッダーで送る方法を定義する。 |
 | 5章 | [Amazon SQS でのデッドレターキューの使用](https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html) | 処理に繰り返し失敗したメッセージを分離する方法を示す。 |
 | 5章<br>6章 | [Standard Webhooks](https://www.standardwebhooks.com/) | Webhookの署名、再送及び重複の扱いを定める。 |

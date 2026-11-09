@@ -195,7 +195,7 @@ LCPの対象となる画像及び文字は、次によって最も早く表示�
 
 - 多言語のページには、`hreflang`で言語ごとのURLを示す。
 
-- URLを変更する場合は、旧URLから新URLへ、恒久的なリダイレクト（301又は308）を設定する。
+- URLを変更する場合は、旧URLから新URLへ、恒久的なリダイレクトを設定する。ページのURLには、301又は308を使う。フォームの送信先など、GET以外のメソッドで要求を受けるURLには、308を使う。301では、ブラウザーがPOSTをGETに変えて送り直すことがある。
 
 ## 8 セッション及びセキュリティ
 
@@ -249,17 +249,18 @@ LCPの対象となる画像及び文字は、次によって最も早く表示�
 
 | 本書の章 | 参考文献 | 概要 |
 | --- | --- | --- |
-| 2章<br>3章 | [Rendering on the Web](https://web.dev/articles/rendering-on-the-web) | レンダリング方式ごとの性能の違い及び選び方を示す。 |
+| 2章<br>3章 | [ウェブでのレンダリング](https://web.dev/articles/rendering-on-the-web?hl=ja) | レンダリング方式ごとの性能の違い及び選び方を示す。 |
 | 2章<br>3章 | [Islands Architecture](https://www.patterns.dev/vanilla/islands-architecture) | 操作が必要な部分だけをハイドレーションする構成を示す。 |
-| 2章 | [プログレッシブウェブアプリ](https://developer.mozilla.org/ja/docs/Web/Progressive_web_apps) | PWAの構成要素を示す。 |
+| 2章 | [プログレッシブウェブアプリ (PWA)](https://developer.mozilla.org/ja/docs/Web/Progressive_web_apps) | PWAの構成要素を示す。 |
 | 5章 | [RFC 9111: HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111) | HTTPキャッシュの動作及びCache-Controlを定義する。 |
 | 5章 | [RFC 5861: HTTP Cache-Control Extensions for Stale Content](https://www.rfc-editor.org/rfc/rfc5861) | `stale-while-revalidate`を定義する。 |
 | 5章 | [HTTP キャッシュを使用して不要なネットワーク リクエストを防止する](https://web.dev/articles/http-cache?hl=ja) | 応答の種類ごとのキャッシュの設定例を示す。 |
 | 6章 | [Web Vitals](https://web.dev/articles/vitals) | Core Web Vitalsの指標及び目標値を定義する。 |
 | 6章 | [Largest Contentful Paint を最適化する](https://web.dev/articles/optimize-lcp?hl=ja) | LCPを短くする方法を示す。 |
 | 6章 | [Core Web Vitals を改善する最も効果的な方法](https://web.dev/articles/top-cwv?hl=ja) | LCP、INP及びCLSを改善する効果の大きい方法を示す。 |
-| 6章 | [Performance budgets 101](https://web.dev/articles/performance-budgets-101) | 性能の予算の決め方を示す。 |
+| 6章 | [パフォーマンス バジェット入門ガイド](https://web.dev/articles/performance-budgets-101?hl=ja) | 性能の予算の決め方を示す。 |
+| 7章 | [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110) | HTTPのメソッド及び状態コードを定義し、301及び308のリダイレクトの違いを定める。 |
 | 7章 | [JavaScript SEO の基本を理解する](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics?hl=ja) | JavaScriptで描画するページを検索エンジンが処理する方法を示す。 |
-| 8章 | [OAuth 2.0 for Browser-Based Applications](https://datatracker.ietf.org/doc/draft-ietf-oauth-browser-based-apps/) | ブラウザーで動作するアプリケーションでのOAuthの構成及びBFFを示す。 |
+| 8章 | [RFC 10017: OAuth 2.0 for Browser-Based Applications](https://www.rfc-editor.org/rfc/rfc10017) | ブラウザーで動作するアプリケーションでのOAuthの構成及びBFFを示す。 |
 | 8章 | [Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html) | セッションのCookieの属性及び管理の方法を示す。 |
 | 8章 | [HTTP Headers Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html) | セキュリティに関するHTTPヘッダーの設定を示す。 |

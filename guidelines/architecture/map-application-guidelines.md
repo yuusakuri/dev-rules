@@ -22,7 +22,9 @@
 | --- | --- |
 | 地物 | 地図上に表示する点、線又は面の一つ一つ。 |
 | ズームレベル | 地図の縮尺を示す段階。値が1増えるごとに、縮尺が2倍になる。 |
-| タイル | 地図を、ズームレベルごとに格子状に分割した区画。`z/x/y`で位置を表す。 |
+| タイル | 地図を、ズームレベルごとに格子状に分割した区画。WebMercatorQuadでは、`z/x/y`（ズームレベル、列及び行）で位置を表す。 |
+| TileMatrixSet | ズームレベルごとのタイルの格子について、座標参照系、原点、タイルの大きさ及び縮尺を定めたもの。OGC Two Dimensional Tile Matrix Set and Tile Set Metadataで定義される。 |
+| WebMercatorQuad | Webメルカトルで、ズームレベル0の地図全体を1枚のタイルとし、ズームレベルが1増えるごとに縦横を2分割するTileMatrixSet。 |
 | ベクタタイル | 地物の形状及び属性をタイルごとに格納したデータ。描画はクライアントで行う。 |
 | MVT（Mapbox Vector Tile） | ベクタタイルをProtocol Buffersで符号化する形式の仕様。 |
 | PMTiles | 全てのタイルを一つのファイルにまとめ、HTTPの範囲要求で必要なタイルだけを読む形式。 |
@@ -30,8 +32,9 @@
 | 空間索引 | 位置の範囲で地物を高速に検索するための索引。 |
 | クラスタリング | 近くにある複数の点を、一つの集約した点として表示する処理。 |
 | 表示範囲 | 画面に表示している地図の範囲。南西及び北東の座標で表す。 |
-| WGS 84（EPSG:4326） | 緯度及び経度で位置を表す座標参照系。 |
-| Webメルカトル（EPSG:3857） | Webの地図で広く使われる投影法による座標参照系。 |
+| 座標参照系 | 座標を地球上の位置に対応付けるための、測地基準系と座標系との組合せ。ISO 19111で定義される。 |
+| WGS 84（EPSG:4326） | 緯度及び経度で位置を表す座標参照系。EPSGの定義では、座標の順序は緯度、経度である。 |
+| Webメルカトル（EPSG:3857） | WGS 84の緯度及び経度を、地球を球とみなしたメルカトル図法で平面に投影した座標参照系。Webの地図で広く使われる。 |
 
 ## 2 表示方式の選択
 
@@ -84,7 +87,15 @@
 
 座標は、WGS 84で保存する。距離及び面積は、測地線で計算する型又は適切な投影法で計算し、Webメルカトルの座標で計算しない。Webメルカトルでは、緯度が高いほど距離及び面積が拡大される。
 
-### 3.4 タイルをキャッシュする
+座標の順序は、形式ごとに確認する。GeoJSON及びMVTは経度、緯度の順であり、EPSG:4326の定義は緯度、経度の順である。座標を受け渡す箇所では、座標参照系と座標の順序とを明示する。順序を取り違えると、地物が別の場所に表示される。
+
+### 3.4 タイルの格子を標準に合わせる
+
+タイルの格子は、WebMercatorQuadに合わせ、独自の格子を定義しない。標準の格子に合わせれば、背景地図、自ら生成したタイル及び描画ライブラリを、変換なしで組み合わせられる。
+
+他のシステムへタイルを提供するAPIは、OGC API - Tilesに従う。自らのアプリケーションだけで使うタイルは、[表2](#table-2)のとおり、PMTilesなどのファイルでCDNから配信する。
+
+### 3.5 タイルをキャッシュする
 
 ベクタタイル及びラスタのタイルは、CDNでキャッシュする。事前に生成したタイルは、データの版をURLに含め、無期限にキャッシュする。要求ごとに生成するタイルは、データの更新の頻度に合わせた期限でキャッシュする。
 
@@ -162,6 +173,10 @@
 
 - 距離及び面積を、Webメルカトルの座標で計算していない。
 
+- 座標を受け渡す箇所で、座標参照系と座標の順序とを明示している。
+
+- タイルの格子が、WebMercatorQuadに合っている。
+
 - タイルを、CDNでキャッシュしている。
 
 - 重い処理を、Web Workerで行っている。
@@ -178,6 +193,9 @@
 | --- | --- | --- |
 | 1章<br>3章 | [RFC 7946: The GeoJSON Format](https://www.rfc-editor.org/rfc/rfc7946) | GeoJSON、及びWGS 84を座標参照系とすることを定義する。 |
 | 1章<br>2章 | [Mapbox Vector Tile Specification](https://github.com/mapbox/vector-tile-spec) | ベクタタイルの符号化の形式を定義する。 |
+| 1章<br>3章 | [ISO 19111:2019 - Geographic information — Referencing by coordinates](https://www.iso.org/standard/74039.html) | 座標参照系及び座標の変換を記述するための概念を定める国際規格。 |
+| 1章<br>3章 | [OGC Two Dimensional Tile Matrix Set and Tile Set Metadata](https://docs.ogc.org/is/17-083r4/17-083r4.html) | タイルの格子の定義の方法と、WebMercatorQuadなどの共通の格子を定める。 |
+| 3章 | [OGC API - Tiles - Part 1: Core](https://docs.ogc.org/is/20-057/20-057.html) | タイルを提供するWeb APIの動作を定める。ISO 19177-1:2026として国際規格にもなっている。 |
 | 2章<br>3章 | [PMTiles Concepts](https://docs.protomaps.com/pmtiles/) | タイルを一つのファイルにまとめ、範囲要求で読む形式を示す。 |
 | 2章<br>3章<br>4章 | [Optimising MapLibre Performance: Tips for Large GeoJSON Datasets](https://maplibre.org/maplibre-gl-js/docs/guides/large-data/) | 大量のGeoJSONを、軽量化、クラスタリング及びベクタタイルで表示する方法を示す。 |
 | 2章 | [supercluster](https://github.com/mapbox/supercluster) | クライアントで大量の点を高速にクラスタリングするライブラリ。 |
