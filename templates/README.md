@@ -17,6 +17,7 @@
 | テスト | [Test Detail](documentation/test-detail.md) | テストの入力及び件数を具体化するテンプレート。 |
 | テスト | [Test Case Specification](documentation/test-case-specification.md) | テストの実施手順、期待結果及び判定を記録するテンプレート。 |
 | テスト | [Test Log](documentation/test-log.md) | テストの実行経過及び結果を記録するテンプレート。 |
+| テスト | [Test Status Report](documentation/test-status-report.md) | 報告期間ごとのテストの進捗、阻害要因及びリスクを報告するテンプレート。 |
 | テスト | [Incident Report](documentation/incident-report.md) | テストで検出した事象を開発者へ伝え、修正までの経過を記録するテンプレート。 |
 | テスト | [Test Charter](documentation/test-charter.md) | 探索的テストのセッションの対象、目的及び結果を記録するテンプレート。 |
 | テスト | [Test Completion Report](documentation/test-completion-report.md) | テストの結果及び残っているリスクを報告するテンプレート。 |
