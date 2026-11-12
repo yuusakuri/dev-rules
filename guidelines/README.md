@@ -34,6 +34,7 @@
 | 文書 | [PDFからの画像抽出ガイドライン](documentation/pdf-image-extraction-guidelines.md) | PDFの図を、ベクター画像はSVGとして、埋め込み画像は元の画素のまま抽出するガイドライン。 | なし |
 | 文書 | [Webページからの画像取得ガイドライン](documentation/web-image-guidelines.md) | Webページの画像を、提供元が配布する画像ファイルから取得するガイドライン。 | なし |
 | 文書 | [READMEガイドライン](documentation/readme-guidelines.md) | リポジトリのREADMEの記載方法を定めるガイドライン。 | リポジトリガイドライン |
+| 文書 | [画面設計書作成ガイドライン](documentation/screen-design-guidelines.md) | 画面の配置及び項目を設計書に記述する方法を定めるガイドライン。 | 技術文書作成ガイドライン、リファレンス文書作成ガイドライン |
 
 ## 適用手順
 
