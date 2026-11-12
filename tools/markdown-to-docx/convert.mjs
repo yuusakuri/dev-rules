@@ -248,7 +248,7 @@ function appendParagraph(token, options = {}) {
 function renderCode(token, indent) {
   const lines = token.text.split('\n');
   for (const [lineIndex, line] of lines.entries()) children.push(new Paragraph({
-    children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 18 })],
+    children: [new TextRun({ text: line || ' ', font: fontFor(codeFont), size: 22 })],
     spacing: { before: children.at(-1) instanceof Table ? 120 : undefined, after: lineIndex === lines.length - 1 ? 80 : 0, line: 220 },
     indent: indent ? { left: indent } : undefined,
     shading: { fill: 'F4F4F4' },

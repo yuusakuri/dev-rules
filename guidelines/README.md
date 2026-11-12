@@ -27,7 +27,7 @@
 | 文書 | [リファレンス文書作成ガイドライン](documentation/reference-guidelines.md) | リファレンス文書の作成方法を定めるガイドライン。Diátaxisを参考に作成した。 | 技術文書作成ガイドライン |
 | 文書 | [解説文書作成ガイドライン](documentation/explanation-guidelines.md) | 解説文書の作成方法を定めるガイドライン。Diátaxisを参考に作成した。 | 技術文書作成ガイドライン |
 | 文書 | [手順書作成ガイドライン](documentation/how-to-guidelines.md) | 手順書の作成方法を定めるガイドライン。Diátaxisを参考に作成した。 | 技術文書作成ガイドライン |
-| 文書 | [MarkdownからDOCXへの変換ガイドライン](documentation/docx-export-guidelines.md) | MarkdownからDOCXへの変換ガイドライン。Googleドキュメントへの変換も扱う。 | Markdown記述ガイドライン |
+| 文書 | [MarkdownからDOCXへの変換ガイドライン](documentation/md-to-docx-guidelines.md) | MarkdownからDOCXへの変換ガイドライン。Googleドキュメントへの変換も扱う。 | Markdown記述ガイドライン |
 | 文書 | [Mermaid図の画像変換ガイドライン](documentation/mermaid-image-guidelines.md) | MermaidをSVG又はPNGに変換するガイドライン。 | なし |
 | 文書 | [PlantUML図の画像変換ガイドライン](documentation/plantuml-image-guidelines.md) | PlantUMLをSVGに変換し、SVGからPNGを作るガイドライン。 | SVGからPNGへの変換ガイドライン |
 | 文書 | [SVGからPNGへの変換ガイドライン](documentation/svg-to-png-guidelines.md) | SVGをPNGに変換するガイドライン。 | なし |
