@@ -97,7 +97,7 @@ DOCXを最終成果物とする場合の書式を[表3](#table-3)に示す。
 | 見出し6 | `######` | Heading 6 | Aptos Display | 11 pt |
 | 通常のテキスト | 段落 | Normal | Aptos | 12 pt |
 | インラインコード | 行内のコード | Normal内の文字書式 | Consolas | 11 pt |
-| コードブロック | コードフェンス | Normal | Consolas | 9 pt |
+| コードブロック | コードフェンス | Normal | Consolas | 11 pt |
 
 ### 4.2 最終的な成果物がGoogleドキュメントの場合
 
@@ -117,7 +117,7 @@ Googleドキュメント向けの書式を[表4](#table-4)に示す。DOCXを生
 | 見出し6 | `######` | 見出し6 | Arial | 11 pt |
 | 通常のテキスト | 段落 | 標準テキスト | Arial | 11 pt |
 | インラインコード | 行内のコード | 標準テキスト内の文字書式 | Roboto Mono | 11 pt |
-| コードブロック | コードフェンス | 標準テキストの段落 | Roboto Mono | 9 pt |
+| コードブロック | コードフェンス | 標準テキストの段落 | Roboto Mono | 11 pt |
 
 [表3](#table-3)及び[表4](#table-4)のフォント欄は欧文に適用し、日本語にはYu Gothicを指定する。
 
